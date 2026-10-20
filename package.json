@@ -1,0 +1,1 @@
+﻿{"name":"ocomon","version":"1.0.0","description":"Sistema de gestão de chamados (OCOMON)","type":"module","main":"server.js","scripts":{"start":"node server.js"},"engines":{"node":">=22.13"}}
