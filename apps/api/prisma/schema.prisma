@@ -1,0 +1,1024 @@
+// apps/api/prisma/schema.prisma — Prisma ORM 7.10.1 (versão exata).
+// URL do banco: prisma.config.ts. Model/campo pt-BR camelCase; tabela/coluna snake_case;
+// datas @db.Timestamptz(3); enums UPPER_SNAKE. busca/busca_norm são mantidas por TRIGGER.
+// Toda @relation com fields declara onDelete explícito (em relação opcional o padrão do Prisma é SetNull).
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  moduleFormat    = "esm"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ═════════════════════════════ ENUMS ═════════════════════════════
+
+enum Perfil {
+  ADMIN
+  OPERADOR
+  USUARIO
+
+  @@map("perfil")
+}
+
+enum EstadoSessao {
+  PENDENTE_MFA
+  CADASTRO_MFA
+  TROCA_SENHA
+  ATIVA
+
+  @@map("estado_sessao")
+}
+
+enum Tema {
+  CLARO
+  ESCURO
+  SISTEMA
+
+  @@map("tema")
+}
+
+enum Densidade {
+  CONFORTAVEL
+  COMPACTA
+
+  @@map("densidade")
+}
+
+enum AtorAuditoria {
+  USUARIO
+  TOKEN
+  SISTEMA
+
+  @@map("ator_auditoria")
+}
+
+enum PresencaManual {
+  OCUPADO
+  AUSENTE
+
+  @@map("presenca_manual")
+}
+
+enum TipoStatus {
+  ABERTO
+  EM_ATENDIMENTO
+  PENDENTE
+  AGENDADO
+  CONCLUIDO
+  ENCERRADO
+
+  @@map("tipo_status")
+}
+
+/// Papel de sistema do status: destino das ações (no máximo um status por papel)
+enum PapelStatus {
+  INICIAL
+  EM_ATENDIMENTO
+  ENCAMINHADO
+  AGUARDANDO_SOLICITANTE
+  AGENDADO
+  CONCLUIDO
+  ENCERRADO
+  CANCELADO
+
+  @@map("papel_status")
+}
+
+enum TipoAssentamento {
+  COMENTARIO
+  SISTEMA
+
+  @@map("tipo_assentamento")
+}
+
+enum TipoEvento {
+  CRIADO
+  COMENTARIO
+  ASSUMIDO
+  ENCAMINHADO
+  STATUS_ALTERADO
+  PRIORIDADE_ALTERADA
+  CLASSIFICACAO_ALTERADA
+  TAGS_ALTERADAS
+  AGENDADO
+  RETORNO_AGENDAMENTO
+  CONCLUIDO
+  APROVADO
+  REJEITADO
+  AUTO_APROVADO
+  REABERTO
+  CANCELADO
+  ANEXO_ADICIONADO
+  ANEXO_REMOVIDO
+  SLA_RISCO
+  SLA_ESTOURADO
+  SLA_RESPOSTA_ESTOURADO
+
+  @@map("tipo_evento")
+}
+
+enum TipoNotificacao {
+  MENCAO
+  ATRIBUIDO
+  NOVO_NA_FILA
+  COMENTARIO
+  STATUS
+  ATUALIZACAO
+  SLA
+  AVALIACAO_PENDENTE
+  AVALIACAO_RECEBIDA
+  REJEITADO
+
+  @@map("tipo_notificacao")
+}
+
+enum MotivoSeguir {
+  SOLICITANTE
+  ABRIU
+  ATRIBUIDO
+  COMENTOU
+  MENCIONADO
+  MANUAL
+
+  @@map("motivo_seguir")
+}
+
+enum NotaAvaliacao {
+  OTIMO
+  BOM
+  REGULAR
+  RUIM
+
+  @@map("nota_avaliacao")
+}
+
+enum SituacaoAtivo {
+  EM_USO
+  EM_ESTOQUE
+  EM_MANUTENCAO
+  BAIXADO
+
+  @@map("situacao_ativo")
+}
+
+enum SituacaoArtigo {
+  RASCUNHO
+  PUBLICADO
+  ARQUIVADO
+
+  @@map("situacao_artigo")
+}
+
+enum VisibilidadeArtigo {
+  PUBLICO
+  INTERNO
+
+  @@map("visibilidade_artigo")
+}
+
+// ═════════════════════════ ORGANIZAÇÃO ═════════════════════════
+
+model Unidade {
+  id           Int      @id @default(autoincrement())
+  nome         String   @unique @db.VarChar(120)
+  endereco     String?  @db.VarChar(300)
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  departamentos Departamento[]
+
+  @@map("unidades")
+}
+
+/// Departamento/setor (antigo "locais"). IDs da v1 preservados
+model Departamento {
+  id           Int      @id @default(autoincrement())
+  unidadeId    Int      @map("unidade_id")
+  nome         String   @db.VarChar(120)
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  unidade  Unidade   @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
+  usuarios Usuario[]
+  chamados Chamado[]
+  ativos   Ativo[]
+
+  @@unique([unidadeId, nome])
+  @@map("departamentos")
+}
+
+/// Área (fila de atendimento quando atende = true). IDs da v1 preservados
+model Area {
+  id           Int      @id @default(autoincrement())
+  nome         String   @unique @db.VarChar(120)
+  atende       Boolean  @default(true)
+  /// jornada de SLA (null = config sla.jornadaPadraoId)
+  jornadaId    Int?     @map("jornada_id")
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  jornada             Jornada?      @relation(fields: [jornadaId], references: [id], onDelete: Restrict)
+  usuarios            Usuario[]
+  usuariosSecundarios UsuarioArea[]
+  problemas           ProblemaArea[]
+  problemasPadrao     Problema[]
+  chamados            Chamado[]
+
+  @@index([jornadaId], map: "ix_areas_jornada")
+  @@map("areas")
+}
+
+// ═════════════════════════ ACESSO ═════════════════════════
+
+model Usuario {
+  id                    Int        @id @default(autoincrement())
+  /// minúsculo, ^[a-z0-9._@-]{3,64}$ (CHECK)
+  login                 String     @unique @db.VarChar(64)
+  nome                  String     @db.VarChar(120)
+  /// minúsculo (CHECK)
+  email                 String?    @unique @db.VarChar(254)
+  telefone              String?    @db.VarChar(30)
+  /// argon2id (PHC) ou legado scrypt "salt:hash"; null = login impossível até redefinição
+  senhaHash             String?    @map("senha_hash") @db.VarChar(255)
+  deveTrocarSenha       Boolean    @default(false) @map("deve_trocar_senha")
+  senhaAlteradaEm       DateTime?  @map("senha_alterada_em") @db.Timestamptz(3)
+  perfil                Perfil     @default(USUARIO)
+  /// área primária (obrigatória para OPERADOR — CHECK)
+  areaId                Int?       @map("area_id")
+  departamentoId        Int?       @map("departamento_id")
+  ativo                 Boolean    @default(true)
+  /// "v1:<iv b64>:<tag b64>:<ct b64>" — AES-256-GCM com ENCRYPTION_KEY
+  totpSecretEnc         String?    @map("totp_secret_enc") @db.VarChar(255)
+  totpSecretPendenteEnc String?    @map("totp_secret_pendente_enc") @db.VarChar(255)
+  /// último time-step aceito (anti-replay)
+  totpUltimoPasso       Int?       @map("totp_ultimo_passo")
+  mfaAtivadoEm          DateTime?  @map("mfa_ativado_em") @db.Timestamptz(3)
+  ultimoLoginEm         DateTime?  @map("ultimo_login_em") @db.Timestamptz(3)
+  anonimizadoEm         DateTime?  @map("anonimizado_em") @db.Timestamptz(3)
+  tema                  Tema       @default(SISTEMA)
+  /// null = padrão do perfil (COMPACTA para equipe, CONFORTAVEL para USUARIO)
+  densidade             Densidade?
+  enviarComEnter        Boolean    @default(true) @map("enviar_com_enter")
+  criadoEm              DateTime   @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm          DateTime   @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+  /// trigger: lower(f_unaccent(nome login email))
+  buscaNorm             String?    @map("busca_norm") @db.Text
+
+  area         Area?         @relation(fields: [areaId], references: [id], onDelete: Restrict)
+  departamento Departamento? @relation(fields: [departamentoId], references: [id], onDelete: Restrict)
+
+  areasSecundarias        UsuarioArea[]
+  sessoes                 Sessao[]
+  codigosRecuperacao      CodigoRecuperacao[]
+  auditorias              Auditoria[]
+  presenca                PresencaUsuario?
+  preferenciasNotificacao PreferenciaNotificacao[]
+  chamadosSolicitados     Chamado[]                @relation("ChamadoSolicitante")
+  chamadosRegistrados     Chamado[]                @relation("ChamadoAbertoPor")
+  chamadosAtendidos       Chamado[]                @relation("ChamadoOperador")
+  estagiosComoOperador    ChamadoEstagio[]         @relation("EstagioOperador")
+  estagiosAlterados       ChamadoEstagio[]         @relation("EstagioAutor")
+  eventos                 ChamadoEvento[]
+  assentamentos           Assentamento[]
+  mencoes                 Mencao[]
+  seguindo                ChamadoSeguidor[]
+  leituras                ChamadoLeitura[]
+  anexosEnviados          Anexo[]
+  avaliacoes              AvaliacaoChamado[]
+  notificacoes            Notificacao[]
+  ativosResponsavel       Ativo[]
+  artigos                 Artigo[]
+  votosArtigo             ArtigoVoto[]
+
+  @@index([areaId], map: "ix_usuarios_area")
+  @@index([departamentoId], map: "ix_usuarios_departamento")
+  @@index([buscaNorm(ops: raw("gin_trgm_ops"))], type: Gin, map: "ix_usuarios_busca_norm_trgm")
+  @@map("usuarios")
+}
+
+/// Áreas secundárias do usuário (entram em areaIds do escopo)
+model UsuarioArea {
+  usuarioId Int @map("usuario_id")
+  areaId    Int @map("area_id")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  area    Area    @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, areaId])
+  @@index([areaId], map: "ix_usuario_areas_area")
+  @@map("usuario_areas")
+}
+
+/// Sessão web/socket. O cookie leva o token; o banco guarda só sha256(token) em hex
+model Sessao {
+  id              String       @id @default(uuid(7)) @db.Uuid
+  usuarioId       Int          @map("usuario_id")
+  tokenHash       String       @unique @map("token_hash") @db.Char(64)
+  estado          EstadoSessao
+  /// falhas de TOTP nesta sessão pendente (5 = revoga)
+  falhasMfa       Int          @default(0) @map("falhas_mfa") @db.SmallInt
+  criadaEm        DateTime     @default(now()) @map("criada_em") @db.Timestamptz(3)
+  /// atualizado no máximo 1x/60 s; o heartbeat do socket não atualiza
+  ultimoUsoEm     DateTime     @default(now()) @map("ultimo_uso_em") @db.Timestamptz(3)
+  /// expiração absoluta
+  expiraEm        DateTime     @map("expira_em") @db.Timestamptz(3)
+  revogadaEm      DateTime?    @map("revogada_em") @db.Timestamptz(3)
+  motivoRevogacao String?      @map("motivo_revogacao") @db.VarChar(40)
+  ip              String?      @db.VarChar(45)
+  userAgent       String?      @map("user_agent") @db.VarChar(256)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId], map: "ix_sessoes_usuario_ativas", where: raw("revogada_em IS NULL"))
+  @@index([expiraEm], map: "ix_sessoes_expira_em")
+  @@map("sessoes")
+}
+
+/// Falhas de login (bloqueio persistido; expurgo > 24 h)
+model FalhaLogin {
+  id               Int      @id @default(autoincrement())
+  loginNormalizado String   @map("login_normalizado") @db.VarChar(64)
+  ip               String   @db.VarChar(45)
+  criadoEm         DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  @@index([loginNormalizado, criadoEm], map: "ix_falhas_login_login")
+  @@index([ip, criadoEm], map: "ix_falhas_login_ip")
+  @@map("falhas_login")
+}
+
+/// Códigos de recuperação do 2FA (sha256 hex; uso único)
+model CodigoRecuperacao {
+  id         Int       @id @default(autoincrement())
+  usuarioId  Int       @map("usuario_id")
+  codigoHash String    @map("codigo_hash") @db.Char(64)
+  usadoEm    DateTime? @map("usado_em") @db.Timestamptz(3)
+  criadoEm   DateTime  @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId], map: "ix_codigos_recuperacao_usuario")
+  @@map("codigos_recuperacao")
+}
+
+/// Trilha de auditoria — somente inserção (trigger)
+model Auditoria {
+  id         Int           @id @default(autoincrement())
+  criadoEm   DateTime      @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atorTipo   AtorAuditoria @map("ator_tipo")
+  atorId     Int?          @map("ator_id")
+  /// ex.: login.sucesso, cadastro.criado, usuario.alterado, config.alterada
+  acao       String        @db.VarChar(60)
+  entidade   String        @db.VarChar(60)
+  entidadeId String?       @map("entidade_id") @db.VarChar(40)
+  ip         String?       @db.VarChar(45)
+  userAgent  String?       @map("user_agent") @db.VarChar(256)
+  requestId  String?       @map("request_id") @db.VarChar(64)
+  /// { antes?, depois?, ... } sem segredos
+  dados      Json?
+
+  ator Usuario? @relation(fields: [atorId], references: [id], onDelete: Restrict)
+
+  @@index([criadoEm], type: Brin, map: "ix_auditoria_criado_em_brin")
+  @@index([entidade, entidadeId], map: "ix_auditoria_entidade")
+  @@index([atorId, criadoEm(sort: Desc)], map: "ix_auditoria_ator")
+  @@map("auditoria")
+}
+
+/// Presença manual e "visto por último" (conexões ficam só em memória)
+model PresencaUsuario {
+  usuarioId     Int             @id @map("usuario_id")
+  estadoManual  PresencaManual? @map("estado_manual")
+  manualAte     DateTime?       @map("manual_ate") @db.Timestamptz(3)
+  ultimoVistoEm DateTime?       @map("ultimo_visto_em") @db.Timestamptz(3)
+  atualizadoEm  DateTime        @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("presencas_usuarios")
+}
+
+/// Preferência por tipo (linha ausente = padrão do código). Coluna e-mail entra na Fase 2
+model PreferenciaNotificacao {
+  usuarioId Int             @map("usuario_id")
+  tipo      TipoNotificacao
+  inApp     Boolean         @map("in_app")
+  desktop   Boolean
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, tipo])
+  @@map("preferencias_notificacao")
+}
+
+// ═════════════════════════ CATÁLOGOS ═════════════════════════
+
+model Prioridade {
+  id             Int     @id @default(autoincrement())
+  nome           String  @unique @db.VarChar(60)
+  /// cor base; o front deriva texto/fundo com contraste AA
+  cor            String  @default("#888888") @db.Char(7)
+  ordem          Int     @default(0)
+  /// exatamente uma padrão (garantido pelo service em transação)
+  padrao         Boolean @default(false)
+  slaRespostaMin Int?    @map("sla_resposta_min")
+  slaSolucaoMin  Int?    @map("sla_solucao_min")
+  ativo          Boolean @default(true)
+
+  chamados Chamado[]
+
+  @@map("prioridades")
+}
+
+model Status {
+  id       Int          @id @default(autoincrement())
+  nome     String       @unique @db.VarChar(60)
+  tipo     TipoStatus   @default(EM_ATENDIMENTO)
+  papel    PapelStatus? @unique
+  cor      String       @default("#888888") @db.Char(7)
+  /// para o relógio do SLA de solução (obrigatório em CONCLUIDO/ENCERRADO — CHECK)
+  pausaSla Boolean      @default(false) @map("pausa_sla")
+  /// some de listas/painel/relatórios/busca (C02)
+  ignorado Boolean      @default(false)
+  ordem    Int          @default(0)
+  ativo    Boolean      @default(true)
+
+  chamados Chamado[]
+  estagios ChamadoEstagio[]
+
+  @@unique([id, tipo], map: "uq_status_id_tipo")
+  @@map("status")
+}
+
+/// Tipo de problema (abertura dinâmica: define áreas possíveis e SLA). IDs da v1 preservados
+model Problema {
+  id             Int     @id @default(autoincrement())
+  nome           String  @unique @db.VarChar(120)
+  descricao      String? @db.VarChar(500)
+  /// precisa estar entre as áreas do problema (service)
+  areaPadraoId   Int?    @map("area_padrao_id")
+  slaRespostaMin Int?    @map("sla_resposta_min")
+  slaSolucaoMin  Int?    @map("sla_solucao_min")
+  ativo          Boolean @default(true)
+
+  areaPadrao Area?            @relation(fields: [areaPadraoId], references: [id], onDelete: Restrict)
+  areas      ProblemaArea[]
+  chamados   Chamado[]
+  artigos    ArtigoProblema[]
+
+  @@index([areaPadraoId], map: "ix_problemas_area_padrao")
+  @@map("problemas")
+}
+
+model ProblemaArea {
+  problemaId Int @map("problema_id")
+  areaId     Int @map("area_id")
+
+  problema Problema @relation(fields: [problemaId], references: [id], onDelete: Cascade)
+  area     Area     @relation(fields: [areaId], references: [id], onDelete: Restrict)
+
+  @@id([problemaId, areaId])
+  @@index([areaId], map: "ix_problema_areas_area")
+  @@map("problema_areas")
+}
+
+model Canal {
+  id      Int     @id @default(autoincrement())
+  nome    String  @unique @db.VarChar(60)
+  /// canais de sistema não podem ser excluídos
+  sistema Boolean @default(false)
+  ativo   Boolean @default(true)
+
+  chamados Chamado[]
+
+  @@map("canais")
+}
+
+model Tag {
+  id              Int      @id @default(autoincrement())
+  nome            String   @db.VarChar(30)
+  /// lower(btrim(nome)) — CHECK; unicidade sem distinção de maiúsculas
+  nomeNormalizado String   @unique @map("nome_normalizado") @db.VarChar(30)
+  ativo           Boolean  @default(true)
+  criadoEm        DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  chamados ChamadoTag[]
+
+  @@map("tags")
+}
+
+// ═════════════════════════ SLA ═════════════════════════
+
+model Jornada {
+  id           Int      @id @default(autoincrement())
+  nome         String   @unique @db.VarChar(80)
+  /// IANA, ex.: America/Sao_Paulo
+  timezone     String   @default("America/Sao_Paulo") @db.VarChar(64)
+  /// 24x7: ignora horários e feriados
+  ininterrupta Boolean  @default(false)
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  horarios JornadaHorario[]
+  feriados Feriado[]
+  areas    Area[]
+  chamados Chamado[]
+
+  @@map("jornadas")
+}
+
+/// Janela útil [inicio_min, fim_min) em hora local; várias por dia; sem atravessar meia-noite
+model JornadaHorario {
+  id        Int @id @default(autoincrement())
+  jornadaId Int @map("jornada_id")
+  /// 0=domingo … 6=sábado
+  diaSemana Int @map("dia_semana") @db.SmallInt
+  inicioMin Int @map("inicio_min") @db.SmallInt
+  /// exclusivo; 1440 = 24:00
+  fimMin    Int @map("fim_min") @db.SmallInt
+
+  jornada Jornada @relation(fields: [jornadaId], references: [id], onDelete: Cascade)
+
+  @@unique([jornadaId, diaSemana, inicioMin])
+  @@map("jornada_horarios")
+}
+
+/// Feriado = sem expediente. recorrente usa dia/mês (convenção: ano 2000)
+model Feriado {
+  id         Int      @id @default(autoincrement())
+  data       DateTime @db.Date
+  nome       String   @db.VarChar(120)
+  recorrente Boolean  @default(false)
+  /// null = vale para todas as jornadas
+  jornadaId  Int?     @map("jornada_id")
+  criadoEm   DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  jornada Jornada? @relation(fields: [jornadaId], references: [id], onDelete: Cascade)
+
+  @@index([data], map: "ix_feriados_data")
+  @@index([jornadaId], map: "ix_feriados_jornada")
+  @@map("feriados")
+}
+
+// ═════════════════════════ CHAMADOS ═════════════════════════
+
+/// Chamado. Nunca excluído. IDs da v1 preservados
+model Chamado {
+  id                          Int        @id @default(autoincrement())
+  assunto                     String     @db.VarChar(150)
+  /// Markdown, ≤ 20.000 (CHECK)
+  descricao                   String     @db.Text
+  solucao                     String?    @db.Text
+  descricaoTecnica            String?    @map("descricao_tecnica") @db.Text
+  contato                     String?    @db.VarChar(120)
+  contatoEmail                String?    @map("contato_email") @db.VarChar(254)
+  telefone                    String?    @db.VarChar(30)
+  solicitanteId               Int        @map("solicitante_id")
+  /// quem registrou (≠ solicitante quando aberto "em nome de")
+  abertoPorId                 Int        @map("aberto_por_id")
+  operadorId                  Int?       @map("operador_id")
+  areaId                      Int        @map("area_id")
+  problemaId                  Int?       @map("problema_id")
+  prioridadeId                Int        @map("prioridade_id")
+  canalId                     Int        @map("canal_id")
+  statusId                    Int        @map("status_id")
+  /// cópia de status.tipo garantida pela FK composta
+  statusTipo                  TipoStatus @map("status_tipo")
+  /// início do status atual (vira ChamadoEstagio na próxima transição)
+  statusDesde                 DateTime   @default(now()) @map("status_desde") @db.Timestamptz(3)
+  departamentoId              Int?       @map("departamento_id")
+  ativoId                     Int?       @map("ativo_id")
+  abertoEm                    DateTime   @default(now()) @map("aberto_em") @db.Timestamptz(3)
+  /// só com tipo AGENDADO (CHECK)
+  agendadoPara                DateTime?  @map("agendado_para") @db.Timestamptz(3)
+  primeiraRespostaEm          DateTime?  @map("primeira_resposta_em") @db.Timestamptz(3)
+  /// solução registrada ou cancelamento; null = EM ABERTO
+  concluidoEm                 DateTime?  @map("concluido_em") @db.Timestamptz(3)
+  encerradoEm                 DateTime?  @map("encerrado_em") @db.Timestamptz(3)
+  /// prazo da validação pelo solicitante (só tipo CONCLUIDO)
+  validacaoLimiteEm           DateTime?  @map("validacao_limite_em") @db.Timestamptz(3)
+  cancelado                   Boolean    @default(false)
+  rejeicoes                   Int        @default(0)
+  /// snapshot de SLA (abertura, troca de problema/prioridade/área)
+  jornadaId                   Int        @map("jornada_id")
+  slaRespostaMin              Int?       @map("sla_resposta_min")
+  slaSolucaoMin               Int?       @map("sla_solucao_min")
+  prazoRespostaEm             DateTime?  @map("prazo_resposta_em") @db.Timestamptz(3)
+  alertaRespostaEm            DateTime?  @map("alerta_resposta_em") @db.Timestamptz(3)
+  /// null com SLA definido = relógio parado
+  prazoSolucaoEm              DateTime?  @map("prazo_solucao_em") @db.Timestamptz(3)
+  alertaSolucaoEm             DateTime?  @map("alerta_solucao_em") @db.Timestamptz(3)
+  slaPausado                  Boolean    @default(false) @map("sla_pausado")
+  slaPausadoSeg               Int        @default(0) @map("sla_pausado_seg")
+  slaRespostaCumprido         Boolean?   @map("sla_resposta_cumprido")
+  slaSolucaoCumprido          Boolean?   @map("sla_solucao_cumprido")
+  tempoRespostaUtilMin        Int?       @map("tempo_resposta_util_min")
+  tempoSolucaoUtilMin         Int?       @map("tempo_solucao_util_min")
+  slaAvisoRiscoEm             DateTime?  @map("sla_aviso_risco_em") @db.Timestamptz(3)
+  slaAvisoEstouroEm           DateTime?  @map("sla_aviso_estouro_em") @db.Timestamptz(3)
+  slaAvisoRespostaEm          DateTime?  @map("sla_aviso_resposta_em") @db.Timestamptz(3)
+  /// desnormalizados sem FK (indicadores da lista e "não lido")
+  ultimoAssentamentoId        Int?       @map("ultimo_assentamento_id")
+  ultimoAssentamentoPublicoId Int?       @map("ultimo_assentamento_publico_id")
+  ultimaInteracaoEm           DateTime?  @map("ultima_interacao_em") @db.Timestamptz(3)
+  ultimaInteracaoAutorId      Int?       @map("ultima_interacao_autor_id")
+  /// só muda em evento público (nota interna não altera: evita sinal lateral)
+  ultimaAtividadeEm           DateTime   @default(now()) @map("ultima_atividade_em") @db.Timestamptz(3)
+  /// lock otimista
+  versao                      Int        @default(0)
+  atualizadoEm                DateTime   @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+  /// trigger: lower(f_unaccent(assunto + left(descricao, 2000)))
+  buscaNorm                   String?    @map("busca_norm") @db.Text
+
+  solicitante  Usuario       @relation("ChamadoSolicitante", fields: [solicitanteId], references: [id], onDelete: Restrict)
+  abertoPor    Usuario       @relation("ChamadoAbertoPor", fields: [abertoPorId], references: [id], onDelete: Restrict)
+  operador     Usuario?      @relation("ChamadoOperador", fields: [operadorId], references: [id], onDelete: Restrict)
+  area         Area          @relation(fields: [areaId], references: [id], onDelete: Restrict)
+  problema     Problema?     @relation(fields: [problemaId], references: [id], onDelete: Restrict)
+  prioridade   Prioridade    @relation(fields: [prioridadeId], references: [id], onDelete: Restrict)
+  canal        Canal         @relation(fields: [canalId], references: [id], onDelete: Restrict)
+  status       Status        @relation(fields: [statusId, statusTipo], references: [id, tipo], onDelete: Restrict, onUpdate: Cascade)
+  departamento Departamento? @relation(fields: [departamentoId], references: [id], onDelete: Restrict)
+  ativo        Ativo?        @relation(fields: [ativoId], references: [id], onDelete: Restrict)
+  jornada      Jornada       @relation(fields: [jornadaId], references: [id], onDelete: Restrict)
+
+  estagios      ChamadoEstagio[]
+  eventos       ChamadoEvento[]
+  assentamentos Assentamento[]
+  mencoes       Mencao[]
+  seguidores    ChamadoSeguidor[]
+  leituras      ChamadoLeitura[]
+  tags          ChamadoTag[]
+  anexos        Anexo[]
+  avaliacao     AvaliacaoChamado?
+  notificacoes  Notificacao[]
+
+  @@index([solicitanteId, id(sort: Desc)], map: "ix_chamados_solicitante")
+  @@index([abertoPorId], map: "ix_chamados_aberto_por")
+  @@index([areaId, statusTipo, id(sort: Desc)], map: "ix_chamados_area_tipo")
+  @@index([operadorId, statusTipo, id(sort: Desc)], map: "ix_chamados_operador_tipo")
+  @@index([statusId, id(sort: Desc)], map: "ix_chamados_status")
+  @@index([areaId, id(sort: Desc)], map: "ix_chamados_area_em_aberto", where: raw("concluido_em IS NULL"))
+  @@index([operadorId, id(sort: Desc)], map: "ix_chamados_operador_em_aberto", where: raw("concluido_em IS NULL"))
+  @@index([areaId, abertoEm], map: "ix_chamados_fila", where: raw("concluido_em IS NULL AND operador_id IS NULL"))
+  @@index([prazoSolucaoEm], map: "ix_chamados_prazo_solucao", where: raw("concluido_em IS NULL AND prazo_solucao_em IS NOT NULL"))
+  @@index([alertaSolucaoEm], map: "ix_chamados_alerta_solucao", where: raw("concluido_em IS NULL AND alerta_solucao_em IS NOT NULL"))
+  @@index([prazoRespostaEm], map: "ix_chamados_prazo_resposta", where: raw("primeira_resposta_em IS NULL AND prazo_resposta_em IS NOT NULL"))
+  @@index([agendadoPara], map: "ix_chamados_agendados", where: raw("agendado_para IS NOT NULL"))
+  @@index([validacaoLimiteEm], map: "ix_chamados_validacao", where: raw("validacao_limite_em IS NOT NULL"))
+  @@index([jornadaId], map: "ix_chamados_jornada_em_aberto", where: raw("concluido_em IS NULL"))
+  @@index([abertoEm], map: "ix_chamados_aberto_em")
+  @@index([encerradoEm], map: "ix_chamados_encerrado_em", where: raw("encerrado_em IS NOT NULL"))
+  @@index([problemaId], map: "ix_chamados_problema")
+  @@index([ativoId, id(sort: Desc)], map: "ix_chamados_ativo", where: raw("ativo_id IS NOT NULL"))
+  @@index([buscaNorm(ops: raw("gin_trgm_ops"))], type: Gin, map: "ix_chamados_busca_norm_trgm")
+  @@map("chamados")
+}
+
+/// Intervalos FECHADOS de status (o atual está em chamados.status_desde). Base do SLA com pausa
+model ChamadoEstagio {
+  id         Int        @id @default(autoincrement())
+  chamadoId  Int        @map("chamado_id")
+  statusId   Int        @map("status_id")
+  statusTipo TipoStatus @map("status_tipo")
+  /// snapshot de status.pausa_sla no intervalo
+  pausaSla   Boolean    @map("pausa_sla")
+  inicioEm   DateTime   @map("inicio_em") @db.Timestamptz(3)
+  fimEm      DateTime   @map("fim_em") @db.Timestamptz(3)
+  /// responsável durante o intervalo (base do D08 na Fase 2)
+  operadorId Int?       @map("operador_id")
+  /// quem fez a transição; null = sistema
+  autorId    Int?       @map("autor_id")
+
+  chamado  Chamado  @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  status   Status   @relation(fields: [statusId], references: [id], onDelete: Restrict)
+  operador Usuario? @relation("EstagioOperador", fields: [operadorId], references: [id], onDelete: Restrict)
+  autor    Usuario? @relation("EstagioAutor", fields: [autorId], references: [id], onDelete: Restrict)
+
+  @@index([chamadoId, inicioEm], map: "ix_estagios_chamado")
+  @@index([statusId], map: "ix_estagios_status")
+  @@map("chamado_estagios")
+}
+
+/// Histórico campo a campo (C22) + fonte do feed + outbox do fanout
+model ChamadoEvento {
+  id             Int        @id @default(autoincrement())
+  chamadoId      Int        @map("chamado_id")
+  tipo           TipoEvento
+  /// null = sistema/job
+  atorId         Int?       @map("ator_id")
+  /// comentário ou mensagem de sistema ligada ao evento
+  assentamentoId Int?       @map("assentamento_id")
+  interno        Boolean    @default(false)
+  /// { campo?, de?, para?, mencionados?, motivo?, avaliacaoAnterior? } — sem texto livre de usuário
+  dados          Json       @default("{}")
+  criadoEm       DateTime   @default(now()) @map("criado_em") @db.Timestamptz(3)
+  processadoEm   DateTime?  @map("processado_em") @db.Timestamptz(3)
+
+  chamado      Chamado       @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  ator         Usuario?      @relation(fields: [atorId], references: [id], onDelete: Restrict)
+  assentamento Assentamento? @relation(fields: [assentamentoId], references: [id], onDelete: SetNull)
+  notificacoes Notificacao[]
+
+  @@index([chamadoId, id], map: "ix_eventos_chamado")
+  @@index([id], map: "ix_eventos_pendentes", where: raw("processado_em IS NULL"))
+  @@map("chamado_eventos")
+}
+
+/// Mensagem da timeline (chat). Imutável no MVP
+model Assentamento {
+  id        Int              @id @default(autoincrement())
+  chamadoId Int              @map("chamado_id")
+  /// null só em SISTEMA gerado por job
+  autorId   Int?             @map("autor_id")
+  tipo      TipoAssentamento @default(COMENTARIO)
+  interno   Boolean          @default(false)
+  /// Markdown ≤ 10.000 com tokens @[Nome](usuario:ID); em SISTEMA, texto pt-BR pronto
+  texto     String           @db.Text
+  /// SISTEMA: tipo do evento e dados para renderizar de/para
+  evento    TipoEvento?
+  dados     Json?
+  /// idempotência do envio otimista
+  clienteId String?          @map("cliente_id") @db.Uuid
+  criadoEm  DateTime         @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  chamado      Chamado         @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  autor        Usuario?        @relation(fields: [autorId], references: [id], onDelete: Restrict)
+  mencoes      Mencao[]
+  anexos       Anexo[]
+  eventos      ChamadoEvento[]
+  notificacoes Notificacao[]
+
+  @@unique([autorId, clienteId])
+  @@index([chamadoId, id], map: "ix_assentamentos_chamado")
+  @@index([autorId, criadoEm], map: "ix_assentamentos_autor")
+  @@map("assentamentos")
+}
+
+model Mencao {
+  assentamentoId Int      @map("assentamento_id")
+  usuarioId      Int      @map("usuario_id")
+  chamadoId      Int      @map("chamado_id")
+  criadoEm       DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  assentamento Assentamento @relation(fields: [assentamentoId], references: [id], onDelete: Cascade)
+  usuario      Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  chamado      Chamado      @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+
+  @@id([assentamentoId, usuarioId])
+  @@index([usuarioId], map: "ix_mencoes_usuario")
+  @@index([chamadoId], map: "ix_mencoes_chamado")
+  @@map("mencoes")
+}
+
+model ChamadoSeguidor {
+  chamadoId    Int          @map("chamado_id")
+  usuarioId    Int          @map("usuario_id")
+  motivo       MotivoSeguir
+  silenciadoEm DateTime?    @map("silenciado_em") @db.Timestamptz(3)
+  criadoEm     DateTime     @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  chamado Chamado @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([chamadoId, usuarioId])
+  @@index([usuarioId], map: "ix_seguidores_usuario")
+  @@map("chamado_seguidores")
+}
+
+/// Confirmação de leitura: ponteiro monotônico (upsert com WHERE anterior < novo)
+model ChamadoLeitura {
+  chamadoId                Int      @map("chamado_id")
+  usuarioId                Int      @map("usuario_id")
+  ultimoAssentamentoLidoId Int      @map("ultimo_assentamento_lido_id")
+  lidoEm                   DateTime @default(now()) @map("lido_em") @db.Timestamptz(3)
+
+  chamado Chamado @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([chamadoId, usuarioId])
+  @@index([usuarioId], map: "ix_leituras_usuario")
+  @@map("chamado_leituras")
+}
+
+model ChamadoTag {
+  chamadoId Int      @map("chamado_id")
+  tagId     Int      @map("tag_id")
+  criadoEm  DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  chamado Chamado @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Restrict)
+
+  @@id([chamadoId, tagId])
+  @@index([tagId, chamadoId], map: "ix_chamado_tags_tag")
+  @@map("chamado_tags")
+}
+
+/// Metadados do arquivo; conteúdo em UPLOAD_DIR/<storage_chave>. id = uuid da chave
+model Anexo {
+  id             String   @id @db.Uuid
+  chamadoId      Int      @map("chamado_id")
+  assentamentoId Int?     @map("assentamento_id")
+  enviadoPorId   Int      @map("enviado_por_id")
+  /// só exibição e Content-Disposition (sanitizado, ≤ 200)
+  nomeOriginal   String   @map("nome_original") @db.VarChar(200)
+  /// tipo DETECTADO (nunca o declarado pelo cliente)
+  mime           String   @db.VarChar(127)
+  tamanho        Int
+  sha256         String   @db.Char(64)
+  /// AAAA/MM/<uuid>
+  storageChave   String   @unique @map("storage_chave") @db.VarChar(64)
+  interno        Boolean  @default(false)
+  criadoEm       DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  chamado      Chamado       @relation(fields: [chamadoId], references: [id], onDelete: Restrict)
+  assentamento Assentamento? @relation(fields: [assentamentoId], references: [id], onDelete: SetNull)
+  enviadoPor   Usuario       @relation(fields: [enviadoPorId], references: [id], onDelete: Restrict)
+
+  @@index([chamadoId], map: "ix_anexos_chamado")
+  @@index([assentamentoId], map: "ix_anexos_assentamento")
+  @@map("anexos")
+}
+
+/// Avaliação vigente (1:1). Reabrir apaga (fica no evento REABERTO)
+model AvaliacaoChamado {
+  chamadoId   Int           @id @map("chamado_id")
+  avaliadorId Int?          @map("avaliador_id")
+  nota        NotaAvaliacao
+  comentario  String?       @db.VarChar(1000)
+  automatica  Boolean       @default(false)
+  criadoEm    DateTime      @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  chamado   Chamado  @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  avaliador Usuario? @relation(fields: [avaliadorId], references: [id], onDelete: Restrict)
+
+  @@index([criadoEm], map: "ix_avaliacoes_criado_em")
+  @@map("avaliacoes")
+}
+
+/// Feed de Atividade. SEM texto de usuário: o trecho é montado na leitura
+model Notificacao {
+  id             Int             @id @default(autoincrement())
+  usuarioId      Int             @map("usuario_id")
+  chamadoId      Int             @map("chamado_id")
+  tipo           TipoNotificacao
+  /// agrupamento; renomeado para "<chave>#<id>" ao marcar lida
+  grupoChave     String          @map("grupo_chave") @db.VarChar(160)
+  eventoId       Int?            @map("evento_id")
+  /// foco = primeiro assentamento do grupo
+  assentamentoId Int?            @map("assentamento_id")
+  /// mais recentes primeiro, máx. 10
+  atorIds        Int[]           @default([]) @map("ator_ids")
+  contagem       Int             @default(1)
+  interno        Boolean         @default(false)
+  /// { statusNome?, marco? } — só rótulos de sistema
+  dados          Json            @default("{}")
+  criadoEm       DateTime        @default(now()) @map("criado_em") @db.Timestamptz(3)
+  /// atualizado por SQL no upsert (não usar @updatedAt)
+  atualizadoEm   DateTime        @default(now()) @map("atualizado_em") @db.Timestamptz(3)
+  lidaEm         DateTime?       @map("lida_em") @db.Timestamptz(3)
+
+  usuario      Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  chamado      Chamado        @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  evento       ChamadoEvento? @relation(fields: [eventoId], references: [id], onDelete: SetNull)
+  assentamento Assentamento?  @relation(fields: [assentamentoId], references: [id], onDelete: SetNull)
+
+  @@unique([usuarioId, grupoChave])
+  @@index([usuarioId, atualizadoEm(sort: Desc), id(sort: Desc)], map: "ix_notificacoes_feed")
+  @@index([usuarioId, chamadoId], map: "ix_notificacoes_nao_lidas", where: raw("lida_em IS NULL"))
+  @@index([chamadoId], map: "ix_notificacoes_chamado")
+  @@index([lidaEm], map: "ix_notificacoes_lida_em", where: raw("lida_em IS NOT NULL"))
+  @@map("notificacoes")
+}
+
+// ═════════════════════════ INVENTÁRIO ═════════════════════════
+
+model TipoAtivo {
+  id    Int     @id @default(autoincrement())
+  nome  String  @unique @db.VarChar(80)
+  ativo Boolean @default(true)
+
+  ativos Ativo[]
+
+  @@map("tipos_ativo")
+}
+
+/// Ativo (antigo "equipamentos"). IDs da v1 preservados. Vínculo com chamado é por id, nunca etiqueta
+model Ativo {
+  id               Int           @id @default(autoincrement())
+  /// alfanumérica, sem espaços (CHECK)
+  etiqueta         String        @unique @db.VarChar(60)
+  tipoId           Int           @map("tipo_id")
+  modelo           String?       @db.VarChar(120)
+  serie            String?       @db.VarChar(100)
+  departamentoId   Int?          @map("departamento_id")
+  responsavelId    Int?          @map("responsavel_id")
+  /// legado: responsável sem cadastro
+  responsavelTexto String?       @map("responsavel_texto") @db.VarChar(120)
+  situacao         SituacaoAtivo @default(EM_USO)
+  observacao       String?       @db.Text
+  criadoEm         DateTime      @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm     DateTime      @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+  /// trigger: lower(f_unaccent(etiqueta serie modelo))
+  buscaNorm        String?       @map("busca_norm") @db.Text
+
+  tipo         TipoAtivo     @relation(fields: [tipoId], references: [id], onDelete: Restrict)
+  departamento Departamento? @relation(fields: [departamentoId], references: [id], onDelete: Restrict)
+  responsavel  Usuario?      @relation(fields: [responsavelId], references: [id], onDelete: Restrict)
+  chamados     Chamado[]
+
+  @@index([tipoId], map: "ix_ativos_tipo")
+  @@index([situacao], map: "ix_ativos_situacao")
+  @@index([departamentoId], map: "ix_ativos_departamento")
+  @@index([responsavelId], map: "ix_ativos_responsavel")
+  @@index([buscaNorm(ops: raw("gin_trgm_ops"))], type: Gin, map: "ix_ativos_busca_norm_trgm")
+  @@map("ativos")
+}
+
+// ═════════════════════════ CONHECIMENTO ═════════════════════════
+
+model CategoriaArtigo {
+  id    Int     @id @default(autoincrement())
+  nome  String  @unique @db.VarChar(100)
+  ordem Int     @default(0)
+  ativo Boolean @default(true)
+
+  artigos Artigo[]
+
+  @@map("categorias_artigo")
+}
+
+/// Artigo da base (antiga FAQ + roteiros). IDs da v1 preservados
+model Artigo {
+  id            Int                @id @default(autoincrement())
+  titulo        String             @db.VarChar(200)
+  resumo        String?            @db.VarChar(500)
+  /// Markdown
+  conteudo      String             @db.Text
+  categoriaId   Int?               @map("categoria_id")
+  situacao      SituacaoArtigo     @default(RASCUNHO)
+  visibilidade  VisibilidadeArtigo @default(PUBLICO)
+  autorId       Int?               @map("autor_id")
+  visualizacoes Int                @default(0)
+  publicadoEm   DateTime?          @map("publicado_em") @db.Timestamptz(3)
+  criadoEm      DateTime           @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm  DateTime           @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+  /// trigger: titulo(A) resumo(B) conteudo(C), 'portuguese' + f_unaccent
+  busca         Unsupported("tsvector")?
+  /// trigger: lower(f_unaccent(titulo resumo))
+  buscaNorm     String?            @map("busca_norm") @db.Text
+
+  categoria CategoriaArtigo? @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  autor     Usuario?         @relation(fields: [autorId], references: [id], onDelete: Restrict)
+  problemas ArtigoProblema[]
+  votos     ArtigoVoto[]
+
+  @@index([situacao, visibilidade], map: "ix_artigos_situacao")
+  @@index([categoriaId], map: "ix_artigos_categoria")
+  @@index([busca], type: Gin, map: "ix_artigos_busca")
+  @@index([buscaNorm(ops: raw("gin_trgm_ops"))], type: Gin, map: "ix_artigos_busca_norm_trgm")
+  @@map("artigos")
+}
+
+model ArtigoProblema {
+  artigoId   Int @map("artigo_id")
+  problemaId Int @map("problema_id")
+
+  artigo   Artigo   @relation(fields: [artigoId], references: [id], onDelete: Cascade)
+  problema Problema @relation(fields: [problemaId], references: [id], onDelete: Cascade)
+
+  @@id([artigoId, problemaId])
+  @@index([problemaId], map: "ix_artigo_problemas_problema")
+  @@map("artigo_problemas")
+}
+
+model ArtigoVoto {
+  artigoId  Int      @map("artigo_id")
+  usuarioId Int      @map("usuario_id")
+  util      Boolean
+  criadoEm  DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  artigo  Artigo  @relation(fields: [artigoId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([artigoId, usuarioId])
+  @@map("artigo_votos")
+}
+
+// ═════════════════════════ CONFIGURAÇÃO ═════════════════════════
+
+/// Chave/valor; valor JSON validado pelo registro Zod de packages/shared/src/config.ts
+model Config {
+  chave        String   @id @db.VarChar(80)
+  valor        Json
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  @@map("config")
+}
