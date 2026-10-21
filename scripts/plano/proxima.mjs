@@ -126,10 +126,12 @@ function ciDaBase(cwd, topo) {
 }
 
 /**
- * Estado completo. `semGh` (só --status offline) pula PRs e CI; o runner nunca usa.
+ * Estado completo. `semGh` (--status offline, ou VINIMON_SEM_GH=1 nos executores da nuvem, que não têm
+ * `gh` autenticado) pula PRs e CI; o runner nunca usa.
  * Falha fechada: tarefa no log da base sem PR mergeado de `tarefa/<id>` não conta como concluída.
  */
 export function lerEstado({ cwd = process.cwd(), semGh = false, semFetch = false } = {}) {
+  semGh ||= process.env.VINIMON_SEM_GH === '1'
   if (!semFetch) buscar(cwd)
   const topoBase = git(['rev-parse', `${REMOTO}/${BASE}`], { cwd }).out
   const { tarefas, erros } = montarGrafo({ ref: `${REMOTO}/${BASE}`, cwd })
