@@ -1,0 +1,12 @@
+{
+  "extends": ["config:recommended"],
+  "minimumReleaseAge": "3 days",
+  "lockFileMaintenance": { "enabled": true, "schedule": ["before 6am on the first day of the month"] },
+  "vulnerabilityAlerts": { "enabled": true },
+  "packageRules": [
+    { "matchUpdateTypes": ["minor", "patch"], "groupName": "{{parentDir}} minor/patch" },
+    { "matchPackageNames": ["prisma", "@prisma/client", "@prisma/adapter-pg"], "allowedVersions": "<8" },
+    { "matchPackageNames": ["typescript"], "allowedVersions": "<6.1" },
+    { "matchPackageNames": ["@tanstack/react-table"], "allowedVersions": "<9" }
+  ]
+}
