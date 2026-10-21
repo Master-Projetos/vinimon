@@ -1,0 +1,47 @@
+# Check obrigatório "protocolo" da execução multi-conta (docs/plano/execucao/README.md).
+# pull_request_target: o workflow e o script vêm SEMPRE da base, então um PR não consegue alterar a
+# própria checagem. Nada do PR é executado: o script só roda git (diff, ls-files) sobre o checkout dele.
+name: protocolo
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review, labeled, unlabeled]
+permissions:
+  contents: read
+concurrency:
+  group: protocolo-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  protocolo:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout da base (script e cartões confiáveis)
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: controle
+          persist-credentials: false
+      - name: Checkout do PR (só dados; nada daqui é executado)
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Base no checkout do PR
+        working-directory: pr
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: git update-ref "refs/remotes/origin/$BASE_REF" "$BASE_SHA" 2>/dev/null || git fetch --no-tags origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Conferir protocolo
+        env:
+          TITULO: ${{ github.event.pull_request.title }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          ROTULOS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          MESMO_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        run: node controle/scripts/plano/proxima.mjs --conferir-pr --repo pr --controle controle

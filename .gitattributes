@@ -1,0 +1,10 @@
+# Fim de linha LF no repositório (Windows com core.autocrlf=true não reescreve arquivos inteiros).
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.ico binary
+*.db binary
+*.db-wal binary
+*.db-shm binary
+*.sqlite binary
