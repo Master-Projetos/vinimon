@@ -18,6 +18,7 @@
 - **Pronto quando:**
   - [ ] testes: ida e volta das menções; `<script>` continua texto; `javascript:` não vira link; "Impressão" vira `impressao`; `#123` vira 123;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -36,6 +37,7 @@
   - [ ] T59 (sem acesso → `ignoradas`; USUARIO em interno → ignorado; 21 menções → 400);
   - [ ] operador de outra área nunca aparece em mencionáveis;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -58,7 +60,8 @@
   - [ ] o comentário do solicitante tira de PENDENTE;
   - [ ] socket do solicitante OPERADOR não recebe `chamado:atualizado` nem `fila:atualizada` após comentário interno, e `ultimaAtividadeEm` não muda;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-6.4 — Leituras ("Visto por")
@@ -74,6 +77,7 @@
   - [ ] o solicitante apontando para um interno dá 422;
   - [ ] o valor limitado é calculado certo;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -96,7 +100,8 @@
   - [ ] T45;
   - [ ] o temporário é apagado depois de 413;
   - [ ] `pnpm verificar`.
-- **Modelo:** Haiku
+- **Trilha:** A
+- **Modelo:** Sonnet
 - **Tamanho:** M
 
 ### T-6.6 — Anexos
@@ -125,6 +130,7 @@
   - [ ] USUARIO com `interno=true` → 403 e nada no disco; `assentamentoId` de outro chamado → 422;
   - [ ] `ls apps/api/storage/teste/tmp` vazio no fim dos testes;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -143,6 +149,7 @@
   - [ ] um teste por linha da tabela da §3.8;
   - [ ] `textoNotificacao` para cada tipo e contagem;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -180,7 +187,8 @@
   - [ ] dois STATUS_ALTERADO seguidos: a notificação mostra o último status;
   - [ ] uma chamada concorrente de `processarEvento` gera uma notificação só;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-6.9 — Rotas de notificações e preferências
@@ -201,6 +209,7 @@
   - [ ] T60 (encaminhar remove o item do feed de quem perdeu acesso);
   - [ ] T61 (`notificacoes` sem coluna de texto: `information_schema.columns`);
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -218,5 +227,6 @@
   - [ ] T62 completo (incluindo `%` e "50%");
   - [ ] busca com e sem acento dá o mesmo resultado;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M

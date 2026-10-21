@@ -5,9 +5,10 @@
 **Convenções** (valem para todas as tarefas):
 - **Pré-condição:** `docs/plano/fundamentos/` (Parte A, §1–§7), `docs/plano/tarefas/` (Parte B: este arquivo, `fase-NN.md` e `corte-verificacao-riscos.md` com §9–§11), `CLAUDE.md` e os relatórios dos especialistas, copiados literalmente, em `docs/plano/relatorios/{ocomon,seguranca,stack,dados,design,tempo-real}.md`, já estão gravados. Em conflito, vale a Parte A, depois a Parte B, depois o relatório. "§x" remete à Parte A (mapa §→arquivo em `docs/plano/README.md`); "S#" aos requisitos da §5.1; "T##" (sem hífen) é sempre um teste da §5.2.
 - **Recursos Teams** se chamam TM1–TM8 (TM1 chat, TM2 presença, TM3 digitando, TM4 leitura, TM5 menções, TM6 feed, TM7 desktop, TM8 Ctrl+K); `T##` é sempre um teste da §5.2.
+- **Trilha e Modelo:** cada cartão diz quem executa (`Trilha:` A = API, W = Web, C = Opus; `A (apoio W)` pode ser pego pela W) e com qual modelo. A execução multi-conta está em `docs/plano/execucao/README.md`.
 - **Fechamento de toda tarefa:**
   - `pnpm verificar` verde;
-  - um commit `T-x.y: <resumo>`;
+  - um commit local `T-x.y: <resumo>` na branch `tarefa/T-x.y` (o runner faz o push e abre o PR para a `v2`; o merge é do coordenador);
   - se algo do plano for impossível, termine com `BLOQUEADO: <motivo>` e não improvise.
 - **Comandos:**
   - teste pontual: `pnpm -F @vinimon/api exec vitest run <caminho>` (ou `-F @vinimon/web`, `-F @vinimon/shared`);

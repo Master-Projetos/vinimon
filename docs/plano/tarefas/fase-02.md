@@ -15,6 +15,7 @@
   - [ ] T08: recusa 11 e 129 caracteres, `vinimon2026!!`, senha contendo o login e `"Senha123456!"`;
   - [ ] aceita `Cavalo-Bateria-Grampo-2026`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -36,6 +37,7 @@
   - [ ] a senha impressa autentica com `verificarSenha`;
   - [ ] `pnpm db:seed` no banco de dev imprime a senha;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -59,6 +61,7 @@
   - [ ] um código gerado com `generate({secret})` é aceito; reusado com `ultimoPasso` devolvido, é recusado;
   - [ ] 10 códigos únicos que casam com a regex;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** P
 
@@ -86,7 +89,8 @@
   - [ ] T07 num arquivo próprio `apps/api/src/modules/auth/tempo-constante.test.ts`, com `vi.mock('@node-rs/argon2', { spy: true })` no topo e `import { verify } from "@node-rs/argon2"`. O teste confere `expect(vi.mocked(verify)).toHaveBeenCalledTimes(1)` para login inexistente e para senha errada (não usar `vi.spyOn`: o namespace ESM do pacote CJS não é configurável);
   - [ ] USUARIO entra direto em `ATIVA`;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-2.5 — Bloqueio persistido, limites de taxa e expiração
@@ -104,6 +108,7 @@
 - **Pronto quando:**
   - [ ] `pnpm -F @vinimon/api exec vitest run test/bloqueio.test.ts test/sessao.test.ts`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** P
 
@@ -125,6 +130,7 @@
   - [ ] o código de recuperação funciona uma vez;
   - [ ] o cookie muda depois do 2FA;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -146,6 +152,7 @@
   - [ ] T27: regenerar invalida os antigos;
   - [ ] OPERADOR tentando desativar recebe 403;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -168,6 +175,7 @@
   - [ ] senha atual errada dá 400 `VALIDACAO` no campo `senhaAtual`;
   - [ ] `pnpm verificar`.
 - **Nota (Fase 2):** a partir da T-17.2, toda chamada a `revogarSessoesDoUsuario` desta tarefa passa a ser acompanhada de `revogarTokensDoUsuario` na mesma transação.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -183,6 +191,7 @@
   - [ ] T22;
   - [ ] a sessão de outro usuário dá 404;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -202,6 +211,7 @@
   - [ ] o teste via `spawnSync` mostra que `seed-dev` com `NODE_ENV=production` sai com 1 (T09);
   - [ ] `cli usuario:redefinir-senha admin` imprime uma senha que autentica e deixa o estado em `TROCA_SENHA`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -226,5 +236,6 @@
   - [ ] T40 verde;
   - [ ] CSP em `NODE_ENV=test` com o mesmo **conjunto** de diretivas de S73 (compare por `Set`);
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M

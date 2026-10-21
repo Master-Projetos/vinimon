@@ -11,6 +11,7 @@
   2. `GET /projetos/:id` com a árvore de subchamados visíveis (recursivo até 5 níveis via `findMany` iterativo).
 - **Pronto quando:**
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -21,6 +22,7 @@
 - **Passos:** relatórios `nuvem-tags` (contagem por período), `top-problemas`, `custos` e `recursos`. Card da nuvem no painel, só para a equipe.
 - **Pronto quando:**
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -34,6 +36,7 @@
 - **Pronto quando:**
   - [ ] o CSV com uma linha inválida não grava nada;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -48,6 +51,7 @@
 - **Pronto quando:**
   - [ ] a chave nunca sai sem a permissão;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -61,6 +65,7 @@
 - **Pronto quando:**
   - [ ] o segundo empréstimo em aberto dá 409;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -74,6 +79,7 @@
 - **Pronto quando:**
   - [ ] `softwares.test.tsx` e `emprestimos.test.tsx` com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -90,5 +96,6 @@
 - **Pronto quando:**
   - [ ] teste com dois `buildApp` no mesmo banco: o evento emitido numa instância chega ao socket da outra; a revogação derruba nas duas;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M

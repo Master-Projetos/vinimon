@@ -13,6 +13,7 @@
 - **Pronto quando:**
   - [ ] categoria de grupo errado no problema dá 422;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -31,6 +32,7 @@
   - [ ] testes de `schemaDosCampos` por tipo;
   - [ ] seleção sem opções dá 400;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -48,6 +50,7 @@
   - [ ] obrigatório ausente dá 400 no campo `campos.<chave>`;
   - [ ] a alteração gera evento;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -65,6 +68,7 @@
 - **Pronto quando:**
   - [ ] a conclusão sem o campo obrigatório dá 422;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -79,6 +83,7 @@
 - **Pronto quando:**
   - [ ] as três combinações na fixture;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -93,6 +98,7 @@
 - **Pronto quando:**
   - [ ] `categorias.test.tsx` e `formularios.test.tsx` com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -107,6 +113,7 @@
 - **Pronto quando:**
   - [ ] o campo criado aparece no novo chamado do tipo vinculado;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -118,5 +125,6 @@
 - **Pronto quando:**
   - [ ] recarregar mantém os filtros;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P

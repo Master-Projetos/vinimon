@@ -18,6 +18,7 @@
   - [ ] teste: envio idempotente (a mesma chave não duplica) e falha que volta a PENDENTE;
   - [ ] Mailpit (`localhost:8025`) recebe em dev;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -36,6 +37,7 @@
   - [ ] `<script>` numa variável sai escapado no HTML;
   - [ ] o envio de teste chega ao `jsonTransport`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -52,6 +54,7 @@
   - [ ] o e-mail de comentário interno não contém o texto;
   - [ ] lida antes do envio não envia;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -67,7 +70,8 @@
   - [ ] login inexistente e existente recebem a mesma resposta;
   - [ ] token usado ou expirado dá 400;
   - [ ] `pnpm verificar`.
-- **Modelo:** Haiku
+- **Trilha:** A
+- **Modelo:** Sonnet
 - **Tamanho:** M
 
 ### T-12.5 — Telas de e-mail e recuperação
@@ -81,5 +85,6 @@
 - **Pronto quando:**
   - [ ] E2E acrescentado em `login.spec.ts`: o e-mail aparece no Mailpit (API `GET localhost:8025/api/v1/messages`) e a redefinição funciona;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M

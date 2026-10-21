@@ -16,6 +16,7 @@
 - **Pronto quando:**
   - [ ] sobreposição dá 409;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -29,6 +30,7 @@
 - **Pronto quando:**
   - [ ] fixture com valores conhecidos;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -46,6 +48,7 @@
   - [ ] o não recorrente aparece uma vez;
   - [ ] o recorrente reaparece no dia seguinte (relógio);
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -66,6 +69,7 @@
   - [ ] `-impressora` exclui;
   - [ ] OPERADOR solicitante não encontra o próprio chamado por termo que só existe em nota interna;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -81,6 +85,7 @@
 - **Pronto quando:**
   - [ ] o XLSX abre (o teste lê de volta com exceljs) e a célula `=1+1` vem como texto;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -92,6 +97,7 @@
 - **Pronto quando:**
   - [ ] fixture;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -103,6 +109,7 @@
 - **Pronto quando:**
   - [ ] sobreposição mostra erro;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -114,6 +121,7 @@
 - **Pronto quando:**
   - [ ] o aviso não volta depois de visto;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -129,6 +137,7 @@
   - [ ] o filtro aparece em outra sessão do mesmo usuário;
   - [ ] `chamados/index.test.tsx` (salvar filtro faz `POST /filtros-salvos` com os filtros da URL) com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -143,6 +152,7 @@
 - **Pronto quando:**
   - [ ] `solucoes.test.tsx` e `solucoes-padrao.test.tsx` com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -153,5 +163,6 @@
 - **Passos:** novos tipos no painel, com a matriz de→para e a seleção de campo e de grupo.
 - **Pronto quando:**
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P

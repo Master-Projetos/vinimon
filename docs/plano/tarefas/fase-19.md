@@ -18,7 +18,8 @@
   - [ ] ex-participante que perdeu o acesso responde por e-mail e nada é criado;
   - [ ] `hmacProposito('email-resposta', x) !== hmacProposito('avaliacao', x)`;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-19.2 — OIDC (SSO)
@@ -34,7 +35,8 @@
 - **Pronto quando:**
   - [ ] teste com provedor simulado (`vi.mock`): `state` errado dá 400;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-19.3 — Auto-cadastro com aprovação
@@ -49,6 +51,7 @@
 - **Pronto quando:**
   - [ ] domínio fora da lista é ignorado em silêncio;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -64,7 +67,8 @@
   - [ ] token alterado ou expirado dá 400;
   - [ ] o honeypot preenchido descarta;
   - [ ] `pnpm verificar`.
-- **Modelo:** Haiku
+- **Trilha:** A
+- **Modelo:** Sonnet
 - **Tamanho:** M
 
 ### T-19.5 — Listas de distribuição
@@ -76,6 +80,7 @@
   2. `ModeloEmail.listaIds Int[]` como destinatários extras, só para eventos sem conteúdo interno.
 - **Pronto quando:**
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -88,5 +93,6 @@
   - [ ] T66 (CSP) sem violação nas páginas públicas;
   - [ ] `cadastro.test.tsx` e `cadastros-pendentes.test.tsx` com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M

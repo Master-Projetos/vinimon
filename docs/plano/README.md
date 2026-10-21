@@ -5,7 +5,7 @@ Reescrita do Vinimon (clone do OCOMON) em TypeScript, com:
 - **React 19 + TanStack Router/Query + Tailwind 4 + shadcn/ui** no front;
 - tempo real com **Socket.IO** e filas com **pg-boss**.
 
-Junta as funções do OCOMON original a uma experiência inspirada no Microsoft Teams. O plano foi escrito para ser executado por **agentes Claude Haiku (e Sonnet nas tarefas críticas), uma tarefa por vez**.
+Junta as funções do OCOMON original a uma experiência inspirada no Microsoft Teams. O plano foi escrito para ser executado por **agentes Claude Haiku, Sonnet e Opus em várias contas, uma tarefa por vez, sem colisão (ver [`execucao/`](execucao/README.md))**.
 
 > Gerado em 21/10/2026 por um workflow de 10 agentes: 6 especialistas, 2 sínteses e 2 revisores adversariais. Versões de bibliotecas conferidas com `npm view` e nos tarballs na mesma data. As 65 correções dos revisores estão aplicadas; o registro fica em [`revisao-do-plano.md`](revisao-do-plano.md).
 
@@ -79,22 +79,15 @@ Alternativas avaliadas:
 | better-auth | Impõe o próprio schema |
 | BullMQ | Exige Redis |
 
-## Como executar com Haiku
+## Como executar (várias contas, Opus/Sonnet/Haiku)
 
-0. **Modelo por tarefa.** Cada cartão traz a linha **Modelo:**.
-   - **Haiku** (170 tarefas): tarefas mecânicas, como cadastros que copiam `areas`, telas, componentes, scaffold, ferramentas e docs.
-   - **Sonnet** (43 tarefas): lógica sutil ou sensível à segurança, como sessões, 2FA e CSRF, SLA, escopo e ações de chamado, menções e fanout, Socket.IO e presença, importador, E2E de tempo real, LDAP, API pública, IMAP e OIDC, além das revisões finais.
-   - Os portões de fase também usam o Sonnet. Se o Haiku travar duas vezes em `BLOQUEADO` na mesma tarefa, rode-a com o Sonnet.
-1. **Uma tarefa por sessão ou agente.** No Claude Code, use `/model haiku` (ou `/model sonnet`, conforme o cartão) e o prompt:
-   ```
-   Execute a tarefa T-<x.y> exatamente como descrita em docs/plano/tarefas/fase-<NN>.md.
-   Siga o CLAUDE.md e docs/plano/tarefas/00-convencoes.md. Leia só as seções §/S#/T## citadas no cartão.
-   Termine com `pnpm verificar` verde e um commit "T-<x.y>: <resumo>", ou com "BLOQUEADO: <motivo>".
-   ```
-2. **Ordem:** siga as fases em sequência e, dentro de cada fase, o campo "Depende de". Tarefas marcadas "Paralelo com" podem rodar ao mesmo tempo, cada uma num git worktree separado (`git worktree add ../vinimon-T-x.y`).
-3. **Portão por fase:** ao fim de cada fase, uma revisão humana ou do Sonnet antes de seguir. Use `/code-review` ou `/security-review` nas Fases 2, 5, 6, 7 e 11.
-4. **`BLOQUEADO`:** corrija a ambiguidade **no plano** (cartão ou Parte A), com um commit `plano: …`, e rode a tarefa de novo. Nunca aceite um "conserto" improvisado no código.
-5. **Retomada:** cada tarefa termina num commit. Para saber onde parou, rode `git log --oneline | grep '^.\{8\} T-'`.
+Comece por [`execucao/prompts/iniciar-agentes.md`](execucao/prompts/iniciar-agentes.md). O protocolo está em [`execucao/README.md`](execucao/README.md).
+
+| Modelo | Tarefas | Papel |
+|---|---|---|
+| Opus | 16 | Coordenador (revisão, merge, portões, desbloqueio) e as tarefas mais críticas |
+| Sonnet | 36 | Lógica sutil ou de segurança |
+| Haiku | 161 | Tarefas mecânicas |
 
 ## Verificação e aceite
 

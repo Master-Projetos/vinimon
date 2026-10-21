@@ -17,6 +17,7 @@
 - **Pronto quando:**
   - [ ] `grep -c "/_app/admin/usuarios" apps/web/src/routeTree.gen.ts` ≥ 1 (idem para `/_app/chamados/$chamadoId`);
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -35,6 +36,7 @@
   - [ ] teste de componente com `chamar` simulado nos estados;
   - [ ] `login.test.tsx` com `renderRota` + `apiFalsa`: (a) renderiza o formulário; (b) submit faz `POST /auth/login` com `{ login, senha }` e, em ATIVA, navega para o `redirect`; `PENDENTE_MFA` mostra a etapa de 2FA; (c) 400 com `detalhes` aparece no campo; (d) 429 desabilita o botão com contagem;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -51,6 +53,7 @@
 - **Pronto quando:**
   - [ ] `trocar-senha.test.tsx` e `configurar-2fa.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização; (b) submit chama o contrato esperado com o body esperado (troca → `/configurar-2fa`; confirmar 2FA → códigos → "Concluir" → `/`); (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -67,6 +70,7 @@
   - [ ] em 375 px aparece a barra inferior;
   - [ ] USUARIO não vê Inventário, Relatórios nem Admin;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -81,6 +85,7 @@
 - **Pronto quando:**
   - [ ] `index.test.tsx` com `renderRota`: ADMIN/OPERADOR em `/` vai para `/atividade`; USUARIO vai para `/chamados`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -98,6 +103,7 @@
   - [ ] `/admin` com USUARIO vai para `/sem-permissao` (teste);
   - [ ] `render-rota.test.tsx` (T-9.16) passa a usar `/admin/areas`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -109,6 +115,7 @@
 - **Pronto quando:**
   - [ ] `unidades.test.tsx` e `departamentos.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização com os dados; (b) criar/editar chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -123,6 +130,7 @@
   - [ ] criar prioridade `#ffff00` mostra contraste ≥ 4,5;
   - [ ] `prioridades.test.tsx` e `status.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização com os dados; (b) submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -136,6 +144,7 @@
 - **Pronto quando:**
   - [ ] `problemas.test.tsx` e `canais.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização com os dados; (b) criar/editar chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -147,6 +156,7 @@
 - **Pronto quando:**
   - [ ] `tags.test.tsx`, `tipos-ativo.test.tsx` e `categorias-artigo.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização com os dados; (b) criar/editar chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -161,6 +171,7 @@
   - [ ] `jornadas.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização com os dados; (b) criar a jornada Comercial faz `POST /jornadas` com as janelas em minutos; (c) 400 com `detalhes` de sobreposição aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `feriados.test.tsx` com os mesmos casos (a)–(d);
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -175,6 +186,7 @@
 - **Pronto quando:**
   - [ ] `usuarios.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização com os dados; (b) criar/editar e "Redefinir senha" chamam o contrato esperado com o body esperado, e a senha temporária devolvida aparece uma vez (fechar o diálogo a remove do DOM); (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -189,6 +201,7 @@
   - [ ] `configuracoes.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização com os dados; (b) salvar "Anexos habilitados = não" faz o PATCH só com as chaves da seção e invalida `['meta']`; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `auditoria.test.tsx`: lista o `config.alterada` devolvido pela `apiFalsa` e os filtros entram na query;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -211,6 +224,7 @@
   - [ ] teste: 5 `fila:atualizada` em 1 s geram 1 invalidação de listas e no máximo 1 de contagens em 10 s;
   - [ ] teste: `sessao:encerrada` limpa o cache e as chaves `vinimon:u*`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -227,6 +241,7 @@
   - [ ] teste com `apiFalsa` e socket falso: escolher "Ocupado · 1 h" faz `PUT /me/presenca` com o body esperado; um `presenca:mudou` recebido atualiza o `sr-only` do `PresenceIndicator`; `connect` reassina com `presenca:assinar`;
   - [ ] teste: trocar o tema chama `PATCH /me` e grava `vinimon:tema`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -242,6 +257,7 @@
 - **Pronto quando:**
   - [ ] teste com `Notification` simulado: o `body` não contém o texto do comentário; com foco vira toast; OCUPADO suprime COMENTARIO;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -257,6 +273,7 @@
 - **Pronto quando:**
   - [ ] `atividade.test.tsx` com `renderRota` + `apiFalsa`: (a) renderiza os itens; (b) clicar faz o POST de leitura, zera o ponto de não lida e o contador do sino diminui; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -272,6 +289,7 @@
 - **Pronto quando:**
   - [ ] teste: Ctrl+K abre; "125" mostra "Abrir #125"; `g c` navega; atalho em input é ignorado;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -286,6 +304,7 @@
 - **Pronto quando:**
   - [ ] `route.test.tsx` com `renderRota` + `apiFalsa`: trocar a visão atualiza a URL e a contagem; USUARIO não vê fila aberta;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -302,6 +321,7 @@
 - **Pronto quando:**
   - [ ] `index.test.tsx` com `renderRota` + `apiFalsa`: (a) renderiza as linhas; filtrar por status, ordenar por # e mudar de página entram na URL e na query do `GET /chamados`; renderizar de novo com a mesma URL mantém tudo; (d) 403 mostra `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -320,6 +340,7 @@
   - [ ] `novo.test.tsx` com `renderRota` + `apiFalsa`: (a) renderiza o formulário com o `meta`; (b) submit faz `POST /chamados` com o body esperado e leva ao detalhe com o toast "Chamado #N aberto"; (c) 400 com `detalhes` aparece no campo; (d) 403 mostra `ErrorState`;
   - [ ] USUARIO não vê área nem canal (teste);
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -336,6 +357,7 @@
 - **Pronto quando:**
   - [ ] `novo.test.tsx` com `renderRota` + `apiFalsa`: digitar "impressora" mostra a sugestão; renderizar de novo restaura o rascunho de `vinimon:u<id>:rascunho:novo-chamado`; após criar, os anexos são enviados em sequência com o `chamadoId` devolvido; falha de upload mostra o toast;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -353,6 +375,7 @@
 - **Pronto quando:**
   - [ ] `detalhes.test.tsx` com `renderRota` + `apiFalsa`: (a) renderiza cabeçalho e trilho com o detalhe; (b) trocar a prioridade pelo trilho faz o PATCH com `versao` e atualiza o cabeçalho; "Seguir" chama o contrato e alterna para "Deixar de seguir"; (c) 409 por versão mostra o toast "Recarregue"; (d) 403/404 mostram `ErrorState` e `/chamados/abc` mostra `NotFoundState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -368,6 +391,7 @@
 - **Pronto quando:**
   - [ ] testes dos diálogos com `renderRota` + `apiFalsa`: assumir, encaminhar, agendar, concluir, reabrir e cancelar chamam cada um o contrato esperado com o body esperado (assumir com outro responsável reenvia com `confirmarTroca:true`); 400 com `detalhes` aparece no campo; 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -386,6 +410,7 @@
   - [ ] `index.test.tsx` com `renderRota` + `apiFalsa`: um link com `?foco=` centraliza e destaca; 403/404 mostram `ErrorState`;
   - [ ] teste com socket falso: `presenca:mudou` muda o `sr-only` do avatar do autor;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -408,6 +433,7 @@
   - [ ] teste com `apiFalsa` respondendo erro de rede (status 0) ao POST: a bolha mostra "Não enviada", e "Tentar novamente" reenvia com o mesmo `clienteId`;
   - [ ] teste: colar imagem + Enter faz POST assentamento e depois POST anexos com o `assentamentoId` devolvido;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -424,6 +450,7 @@
   - [ ] teste com timers falsos para digitação;
   - [ ] teste com socket falso: `digitando` recebido mostra "está digitando" em `aria-live`; `leitura` recebida mostra "Visto por"; `assentamento:novo` mescla a mensagem (o cenário com duas abas fica no spec Playwright da área);
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -437,6 +464,7 @@
 - **Pronto quando:**
   - [ ] o solicitante avalia só pelo teclado (teste);
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -453,6 +481,7 @@
   - [ ] `anexos.test.tsx` com `renderRota` + `apiFalsa`: (a) renderiza os cards; (b) enviar chama `enviarArquivo` com `interno` esperado; o link de download aponta para `/api/v1/anexos/:id`; imagem abre prévia e PDF só mostra "Baixar"; (c) 400 com `detalhes` aparece; (d) 403/404 mostram `ErrorState`;
   - [ ] `grep -rn '<iframe' apps/web/src` vazio;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -467,6 +496,7 @@
 - **Pronto quando:**
   - [ ] a prévia de impressão sai sem app bar e sem comentário interno;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -482,6 +512,7 @@
 - **Pronto quando:**
   - [ ] o toggle mostra a `<table>`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -495,6 +526,7 @@
 - **Pronto quando:**
   - [ ] a impressão sai sem o shell;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -509,6 +541,7 @@
 - **Pronto quando:**
   - [ ] uma busca sem resultado mostra o EmptyState com "Abrir chamado";
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -522,6 +555,7 @@
 - **Pronto quando:**
   - [ ] `novo.test.tsx` e `editar.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização com os dados; (b) salvar chama o contrato esperado com o body esperado (visibilidade INTERNO incluída); (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState` (USUARIO em `/conhecimento/novo`);
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -536,6 +570,7 @@
 - **Pronto quando:**
   - [ ] `index.test.tsx` com `renderRota` + `apiFalsa`: (a) renderiza os ativos; (b) criar um ativo e editar o departamento chamam `POST /ativos` e `PATCH /ativos/:id` com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403 (USUARIO) mostra `ErrorState`/`/sem-permissao`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -550,6 +585,7 @@
 - **Pronto quando:**
   - [ ] o QR decodifica para a URL esperada (teste com o `value` da prop);
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -567,6 +603,7 @@
 - **Pronto quando:**
   - [ ] `notificacoes.test.tsx` com `renderRota` + `apiFalsa`: salvar envia as preferências esperadas e renderizar de novo com a resposta do GET mostra os mesmos valores; desligar o in-app desliga o desktop;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -581,5 +618,6 @@
 - **Pronto quando:**
   - [ ] `sessoes.test.tsx` e `seguranca.test.tsx` com `renderRota` + `apiFalsa`: (a) lista as sessões com o badge "Esta sessão"; (b) "Encerrar" chama o contrato de encerrar sessão (T-2.9) com o id da linha e "Encerrar as outras" chama o contrato esperado; trocar senha envia o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P

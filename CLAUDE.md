@@ -1,6 +1,6 @@
 # CLAUDE.md — Vinimon v2 (instruções para agentes)
 
-Você implementa UMA tarefa por vez do plano em `docs/plano/`. Não reabra decisões. Se algo do plano for
+Você implementa UMA tarefa por vez do plano em `docs/plano/`, com o modelo indicado no cartão (Haiku, Sonnet ou Opus). Não reabra decisões. Se algo do plano for
 impossível (erro de versão, API que não existe), PARE e termine sua resposta com `BLOQUEADO: <motivo e evidência>`,
 sem improvisar outra solução.
 
@@ -42,11 +42,14 @@ sem improvisar outra solução.
 4. Mutação com mais de um passo: `prisma.$transaction(async (tx) => …)`; efeitos (socket, fila) só DEPOIS do commit.
    Cadastros e configurações sempre chamam `auditar()`.
 5. Prisma 7: nunca rode `prisma migrate reset`, `db push --force-reset` nem defina `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`.
-   Se `migrate dev` pedir reset, PARE (BLOQUEADO). O banco de teste se recria só com `pnpm --filter @vinimon/api db:teste:recriar`.
-6. TypeScript: proibido `any`, `!` (non-null assertion), `enum` do TS, `@ts-ignore`. Use uniões de string de `@vinimon/shared`.
+   Se `migrate dev` acusar drift ou pedir reset, rode uma vez `pnpm --filter @vinimon/api db:dev:recriar` e `db:teste:recriar`; se persistir, PARE (BLOQUEADO). O banco de teste se recria só com `pnpm --filter @vinimon/api db:teste:recriar`.
+6. TypeScript: proibido `any`, `!` (non-null assertion), `enum` do TS, `@ts-ignore`, `@ts-expect-error`, `biome-ignore`, `as unknown as`,
+   `.skip(`/`.only(`/`it.todo` em testes e editar migração que já existe na base. Use uniões de string de `@vinimon/shared`.
 7. Idioma: interface, mensagens de erro, comentários e nomes de domínio em português do Brasil, com acentuação na interface;
    identificadores sem acento (`Chamado`, `Assentamento`, `criadoEm`); termos técnicos em inglês (`service`, `routes`, `schema`).
 8. Commits pequenos, um por tarefa: `T-x.y: <o que foi feito>` (ex.: `T-2.3: módulo de prioridades`). Não faça commit com teste vermelho.
+   Você só faz commit local: nunca `git push`, `gh`, rebase, merge, nem criar ou trocar de branch. O runner (`scripts/plano/rodar.mjs`)
+   publica e abre o PR (protocolo em `docs/plano/execucao/README.md`).
 9. Testes: Vitest contra Postgres real (`vinimon_test`); nunca mocke Prisma/escopo. Cada módulo cobre 401, 403, 400 com detalhes,
    caminho feliz, 404/409. Bug corrigido = teste que falhava antes.
 

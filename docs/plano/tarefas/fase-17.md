@@ -15,6 +15,7 @@
   - [ ] o banco só guarda o hash;
   - [ ] USUARIO recebe 403;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -34,7 +35,8 @@
   - [ ] T63 completo (expirado, revogado, escopo errado, `/auth/*`, `/tokens`, dono desativado);
   - [ ] após `POST /usuarios/:id/redefinir-senha`, `/resetar-2fa` ou `/anonimizar`, o token do alvo dá 401;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-17.3 — Tela: tokens de API
@@ -47,6 +49,7 @@
 - **Pronto quando:**
   - [ ] `tokens.test.tsx` (inclui: o token criado aparece uma única vez no diálogo) com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -61,6 +64,7 @@
   4. Testes no padrão de cadastro.
 - **Pronto quando:**
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -76,6 +80,7 @@
 - **Pronto quando:**
   - [ ] mover o pai move dois filhos e gera três movimentos;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -92,6 +97,7 @@
   - [ ] o aviso é emitido uma vez;
   - [ ] o aviso de garantia aparece no feed de quem tem `inventario.ver` e não aparece para USUARIO;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -103,6 +109,7 @@
 - **Pronto quando:**
   - [ ] `fabricantes.test.tsx` e `modelos-ativo.test.tsx` com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -118,5 +125,6 @@
   - [ ] USUARIO pedindo o avatar de outro USUARIO recebe 404;
   - [ ] o segundo pedido de exportação na mesma hora dá 429;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M

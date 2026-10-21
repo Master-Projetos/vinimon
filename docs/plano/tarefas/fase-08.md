@@ -20,6 +20,7 @@
   - [ ] nenhuma query carrega todos os chamados (`take` ou `groupBy` em toda consulta);
   - [ ] com `prisma.$on('query')`, nenhuma query do painel é `SELECT` de `chamados` sem `LIMIT`, `COUNT` ou `GROUP BY`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -35,6 +36,7 @@
   - [ ] período de 400 dias dá 400;
   - [ ] T34 (relatórios): OPERADOR da área A, fixture com chamados em A e B: os 8 tipos de `GET /relatorios/:tipo` somam só A; `areaId=<B>` ou `operadorId=<operador de B>` devolve totais 0;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -51,6 +53,7 @@
   - [ ] o CSV neutraliza fórmulas;
   - [ ] o mesmo T34 da T-8.2 vale para `GET /relatorios/:tipo/csv`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -69,6 +72,7 @@
   - [ ] USUARIO recebe 404 em artigo INTERNO;
   - [ ] a sugestão encontra "impressora" em "Impressora não imprime";
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -86,5 +90,6 @@
   - [ ] busca com 2 caracteres dá 400;
   - [ ] USUARIO em `GET /ativos` dá 403;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M

@@ -17,6 +17,7 @@
 - **Pronto quando:**
   - [ ] teste: data inválida, FK órfã, `nivel=4` e colisão de login geram erros; e-mail duplicado gera aviso;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -33,6 +34,7 @@
   - [ ] snapshots campo a campo da fixture;
   - [ ] o usuário com `admin123` sai com hash null e aparece no relatório (T10);
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -64,7 +66,8 @@
   - [ ] rodar `executar` do `sla-alertas` logo após a importação gera 0 eventos;
   - [ ] `pnpm -F @vinimon/api db:teste:recriar && DATABASE_URL=postgresql://vinimon:vinimon@localhost:5432/vinimon_test pnpm -F @vinimon/api importar:v1 --sqlite ../../data/VINIMON.db --dry-run` termina sem erros;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-11.4 — Playwright: configuração, preparo e login
@@ -101,6 +104,7 @@
 - **Pronto quando:**
   - [ ] `pnpm test:e2e -- login` verde localmente e no CI;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -118,6 +122,7 @@
 - **Pronto quando:**
   - [ ] spec verde;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -132,6 +137,7 @@
 - **Pronto quando:**
   - [ ] spec verde 3 vezes seguidas (`--repeat-each=3`);
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -147,6 +153,7 @@
 - **Pronto quando:**
   - [ ] specs verdes;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -171,6 +178,7 @@
   - [ ] com env válido e Postgres, `/api/v1/saude` responde;
   - [ ] `caddy validate --config deploy/Caddyfile`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -186,6 +194,7 @@
   - [ ] rodando contra o compose de dev com `RESTIC_REPOSITORY=/tmp/restic-teste`, os dois scripts saem com 0;
   - [ ] `shellcheck scripts/*.sh` limpo;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -199,6 +208,7 @@
 - **Pronto quando:**
   - [ ] `grep -Ei 'admin123|operador123|usuario123' README.md docs/operacao.md` vazio;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -219,7 +229,8 @@
   - [ ] nenhuma linha "pendente" de severidade alta;
   - [ ] o teste de rastreabilidade passa;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-11.12 — Revisão de performance
@@ -236,5 +247,6 @@
   - [ ] o relatório com os planos e números está commitado;
   - [ ] os desvios viram tarefas;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M

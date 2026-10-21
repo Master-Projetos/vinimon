@@ -12,6 +12,7 @@
   3. Filtro `clienteIds` na lista. Não altera o escopo.
 - **Pronto quando:**
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -30,6 +31,7 @@
 - **Pronto quando:**
   - [ ] testes do fluxo;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -42,6 +44,7 @@
   2. `PUT /chamados/:id/recursos` (`podeAtender`) e relatório de consumo.
 - **Pronto quando:**
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -53,5 +56,6 @@
 - **Pronto quando:**
   - [ ] `clientes.test.tsx`, `centros-custo.test.tsx` e `recursos.test.tsx` com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M

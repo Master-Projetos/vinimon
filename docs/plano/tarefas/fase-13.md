@@ -24,6 +24,7 @@
 - **Pronto quando:**
   - [ ] `vi.mock('ldapts')`: login `*)(uid=*` dá 400 (Zod); o filtro escapa; senha vazia não chama `bind`; 2 resultados dão 401;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -42,7 +43,8 @@
   - [ ] T33 continua verde com `true`;
   - [ ] `escopo-equivalencia.test.ts` verde com o ator novo;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-13.3 — Gerente de área
@@ -59,7 +61,8 @@
   - [ ] o gerente vê os chamados dos usuários da área gerida e não vê comentários internos se for USUARIO;
   - [ ] `escopo-equivalencia.test.ts` verde com o ator novo;
   - [ ] `pnpm verificar`.
-- **Modelo:** Haiku
+- **Trilha:** A
+- **Modelo:** Sonnet
 - **Tamanho:** M
 
 ### T-13.4 — Áreas destino por área solicitante
@@ -75,6 +78,7 @@
   - [ ] área sem destinos configurados permite todas;
   - [ ] destino fora da lista dá 422;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -89,6 +93,7 @@
 - **Pronto quando:**
   - [ ] testes das três regras;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -103,6 +108,7 @@
 - **Pronto quando:**
   - [ ] `configuracoes.test.tsx` e `areas.test.tsx` com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -117,5 +123,6 @@
 - **Pronto quando:**
   - [ ] `areas-geridas.test.tsx` com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P

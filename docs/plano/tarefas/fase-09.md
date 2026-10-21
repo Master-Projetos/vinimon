@@ -16,6 +16,7 @@
   - [ ] `grep -c 'theme-init' apps/web/index.html` dá 1;
   - [ ] `grep -c 'tsr generate && ' apps/web/package.json` dá 1;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -37,6 +38,7 @@
   - [ ] `file apps/web/public/icon-192.png` mostra "PNG image data, 192 x 192";
   - [ ] o CI verde roda `pnpm build`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -52,6 +54,7 @@
   - [ ] `git grep -n dangerouslySetInnerHTML -- apps/web/src ':!apps/web/src/components/ui/**'` vazio;
   - [ ] `git diff --stat apps/web/src/styles/globals.css` vazio;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -70,6 +73,7 @@
   - [ ] `grep -rn "ring-ring/50\|next-themes\|dark:bg-destructive/60" apps/web/src` vazio;
   - [ ] o teste mostra que `definirTema('ESCURO')` põe `dark` no `<html>`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -85,6 +89,7 @@
   - [ ] testes com `fetch` simulado: 200 (parse e `Date`), 204, 400 com `detalhes`, 401, rede (status 0), `CSRF_INVALIDO` renova e repete **uma** vez;
   - [ ] teste: `limparDadosDoUsuario()` remove `vinimon:u7:recentes` e mantém `vinimon:tema`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -100,6 +105,7 @@
   - [ ] os testes de cores da §6.1 passam;
   - [ ] datas: hoje, ontem, virada de ano, "3 h 20 min";
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -121,6 +127,7 @@
   - [ ] `pnpm dev` com `/` sem sessão vai para `/login`;
   - [ ] `routeTree.gen.ts` commitado, com `/trocar-senha` e `/configurar-2fa`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -137,6 +144,7 @@
   - [ ] uma rota inexistente mostra `NotFoundState`;
   - [ ] o teste de `ErrorState` mostra o `requestId`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -152,6 +160,7 @@
   - [ ] o teste mostra `contraste(fg, bg) ≥ 4,5` para `#ffff00`;
   - [ ] o `SlaBadge` ESTOURADO tem texto "Vencido";
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -168,6 +177,7 @@
   - [ ] o texto `sr-only` da presença existe;
   - [ ] `Pode` esconde o conteúdo para USUARIO;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -182,6 +192,7 @@
 - **Pronto quando:**
   - [ ] o teste mostra que o erro do servidor gera `aria-invalid` e `aria-describedby` apontando para o erro;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -196,6 +207,7 @@
 - **Pronto quando:**
   - [ ] teste de teclado (abrir, ↓, Enter) no combobox;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -214,6 +226,7 @@
 - **Pronto quando:**
   - [ ] teste: `<script>` não vira elemento; `[x](javascript:alert(1))` não gera `href` com `javascript:`; o token vira chip;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -228,6 +241,7 @@
 - **Pronto quando:**
   - [ ] teste de seleção, `aria-sort` e ocultar coluna;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -241,6 +255,7 @@
   3. `useDocumentTitle` monta "(n) Título · Vinimon".
 - **Pronto quando:**
   - [ ] `pnpm verificar`, com um teste simples de `useDebounce` usando timers falsos.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -255,5 +270,6 @@
 - **Pronto quando:**
   - [ ] o teste renderiza `/admin/areas` com 2 itens e confere o POST enviado (até a T-10.5 existir, usar uma rota de teste montada no próprio `render-rota.test.tsx`; a T-10.5 troca para `/admin/areas`);
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** P

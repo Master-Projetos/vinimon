@@ -14,6 +14,7 @@
 - **Pronto quando:**
   - [ ] `pnpm -F @vinimon/shared test` com ≥ 6 testes verdes;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -33,6 +34,7 @@
 - **Pronto quando:**
   - [ ] `pnpm -F @vinimon/shared test`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -53,6 +55,7 @@
 - **Pronto quando:**
   - [ ] testes: `=1+1` vira `'=1+1`, `a"b` vira `"a""b"`, `zAssunto` recusa 2 e 151 caracteres, `zCor` recusa `#fff`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -71,6 +74,7 @@
   - [ ] `prisma validate` OK;
   - [ ] `pnpm -F @vinimon/api db:generate` cria `src/generated/prisma`, que é ignorado pelo git;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -94,7 +98,8 @@
   - [ ] `docker compose exec -T postgres psql -U vinimon -d vinimon -c '\dx'` lista `pg_trgm` e `unaccent`;
   - [ ] `UPDATE auditoria SET acao='x'` falha com 42501 mesmo com a tabela vazia (trigger `FOR EACH STATEMENT` da §4.3);
   - [ ] `pnpm verificar`.
-- **Modelo:** Haiku
+- **Trilha:** A
+- **Modelo:** Sonnet
 - **Tamanho:** M
 
 ### T-1.6 — Libs base: erros, paginação, like, config, tempo real, senha
@@ -112,6 +117,7 @@
 - **Pronto quando:**
   - [ ] `pnpm -F @vinimon/api exec vitest run src/lib/like.test.ts src/lib/senha.test.ts` verde (ainda não existe `vitest.config.ts`, e esses testes não importam env nem prisma);
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -124,7 +130,8 @@
   2. Em `autenticacao.ts`, cookie malformado não pode lançar erro: `carregarSessao` já recusa token fora de `^[A-Za-z0-9_-]{43}$` (T23).
 - **Pronto quando:**
   - [ ] `pnpm verificar` (os testes desta camada entram na T-1.9 e nas T-2.x).
-- **Modelo:** Haiku
+- **Trilha:** A
+- **Modelo:** Sonnet
 - **Tamanho:** M
 
 ### T-1.8 — `app.ts`, `server.ts`, saúde, docs e SPA
@@ -142,6 +149,7 @@
   - [ ] `curl -s localhost:3000/api/v1/xyz` devolve 404 `ROTA_INEXISTENTE`;
   - [ ] `http://localhost:3000/api/docs` abre;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -156,10 +164,12 @@
      - `criarUsuario({perfil:'ADMIN'})` + `headersDe()`: `GET /api/v1/saude` dá 200.
   3. `env.test.ts`: roda `spawnSync(process.execPath, ['--import','tsx','-e',"await import('./src/env.ts')"], { env: {...} })` para cada caso de T02 e espera `status === 1`. O `stderr` deve conter o nome da chave e **não** pode conter o valor enviado. Caso de T48: `UPLOAD_DIR=../web/dist/x` falha.
   4. Acrescentar a `apps/api/package.json`: `"db:teste:recriar": "docker compose exec -T postgres psql -U vinimon -d postgres -c 'DROP DATABASE IF EXISTS vinimon_test WITH (FORCE)' -c 'CREATE DATABASE vinimon_test OWNER vinimon' && DATABASE_URL=postgresql://vinimon:vinimon@localhost:5432/vinimon_test prisma migrate deploy"`.
+     Acrescentar também `"db:dev:recriar"` exatamente como na §3.12 (o runner e a regra 5 do `CLAUDE.md` usam).
 - **Pronto quando:**
   - [ ] `pnpm -F @vinimon/api test` verde (infra + env, ≥ 9 casos);
   - [ ] o banco `vinimon` (dev) continua intacto;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -173,6 +183,7 @@
 - **Pronto quando:**
   - [ ] `pnpm -F @vinimon/api exec vitest run src/modules/areas`: 8 testes verdes;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -192,5 +203,6 @@
   - [ ] depois do push, `gh run list --workflow ci.yml --branch "$(git branch --show-current)" --limit 1 --json conclusion -q ".[0].conclusion"` imprime `success`. Sem remoto ou permissão: terminar com `BLOQUEADO: CI não verificável localmente`;
   - [ ] `act` não é necessário;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P

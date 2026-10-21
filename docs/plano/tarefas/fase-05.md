@@ -16,7 +16,8 @@
 - **Pronto quando:**
   - [ ] testes unitários com 7 atores (os mesmos de T33) para `podeVerChamado`/`podeVerInterno`/`podeAtender`, e uma linha por ação × tipo de status;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-5.2 — Contratos de chamado (shared)
@@ -41,6 +42,7 @@
 - **Pronto quando:**
   - [ ] testes: `CriarChamado` com `statusId` dá erro (T36); `visao` inválida dá erro; `de` inválida dá erro;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -64,6 +66,7 @@
 - **Pronto quando:**
   - [ ] teste com um publicador espião: os métodos são chamados com os argumentos certos e um erro do publicador não propaga;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** P
 
@@ -98,6 +101,7 @@
   - [ ] o chamado tem `prazoSolucaoEm` = abertura + meta (24x7);
   - [ ] USUARIO não escolhe área;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -126,7 +130,8 @@
   - [ ] USUARIO com `tagIds` → 403;
   - [ ] cada visão devolve o conjunto esperado (fixture com 6 chamados);
   - [ ] `pnpm verificar`.
-- **Modelo:** Haiku
+- **Trilha:** A
+- **Modelo:** Sonnet
 - **Tamanho:** M
 
 ### T-5.6 — Detalhe, histórico e reincidência
@@ -143,6 +148,7 @@
   - [ ] fora do escopo dá 404 (igual a inexistente);
   - [ ] o solicitante OPERADOR não vê evento interno;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -172,6 +178,7 @@
   - [ ] uma tabela de testes por ação (permitido, proibido, tipo errado, versão velha → 409);
   - [ ] o encaminhamento chama `revalidarChamado` (espião);
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -193,6 +200,7 @@
   - [ ] USUARIO não vê tags no detalhe;
   - [ ] após alterar tags, `GET /chamados/:id/assentamentos` do solicitante não muda;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -218,6 +226,7 @@
   - [ ] não solicitante aprovando dá 403;
   - [ ] após rejeitar, o SLA volta a correr (`prazoSolucaoEm` recalculado);
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -234,6 +243,7 @@
   - [ ] reabrir cancelado dá 422;
   - [ ] USUARIO cancelando com operador atribuído dá 403;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** P
 
@@ -248,7 +258,8 @@
   - [ ] ≥ 100 casos verdes;
   - [ ] `escopo-equivalencia.test.ts` verde para os 7 atores;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-5.12 — Exportar CSV
@@ -267,5 +278,6 @@
   - [ ] OPERADOR da área A com `areaIds=<B>` recebe só BOM + cabeçalho;
   - [ ] a contagem do CSV é igual ao `total` da lista;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P

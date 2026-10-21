@@ -16,6 +16,7 @@
 - **Pronto quando:**
   - [ ] teste: payload com chave extra dá erro;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -37,7 +38,8 @@
   - [ ] o 11º socket do mesmo usuário é recusado;
   - [ ] `app.close()` termina em menos de 2 s;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-7.3 — Handlers de chamado, digitação e emissões
@@ -57,6 +59,7 @@
   - [ ] T53, T54 (inclusive com solicitante OPERADOR);
   - [ ] T57 (payload de 20 KB derruba; a 2ª `digitando` em 2 s é descartada);
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -73,7 +76,8 @@
   - [ ] T55 (logout, troca de senha, desativação, revogação; expiração com `SOCKET_REVALIDAR_MS=200`);
   - [ ] T56;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-7.5 — Presença
@@ -92,6 +96,7 @@
   - [ ] T58;
   - [ ] o manual vencido volta ao automático (relógio injetado);
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -112,6 +117,7 @@
   - [ ] com a GUC ligada, `DELETE FROM auditoria WHERE criado_em > now() - interval '1 day'` lança 42501, e a purga de registros com mais de 365 dias funciona (trigger `tg_auditoria_delete` da §4.3);
   - [ ] `pnpm -F @vinimon/api dev` cria o schema `pgboss` (`docker compose exec -T postgres psql -U vinimon -d vinimon -c '\dn'`);
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -127,6 +133,7 @@
   - [ ] idempotente: rodar 2 vezes não duplica eventos;
   - [ ] o agendado volta para EM_ATENDIMENTO com operador e para INICIAL sem;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -142,6 +149,7 @@
   - [ ] rodar o alerta 2 vezes gera 1 evento;
   - [ ] um fanout que falhou é reprocessado pela varredura;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -156,5 +164,6 @@
   - [ ] o órfão recente fica e o antigo sai;
   - [ ] o arquivo de um anexo existente fica;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P

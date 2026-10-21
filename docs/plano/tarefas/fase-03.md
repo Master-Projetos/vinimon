@@ -13,6 +13,7 @@
 - **Pronto quando:**
   - [ ] o teste chama cada fábrica duas vezes sem colisão de nomes;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -27,6 +28,7 @@
 - **Pronto quando:**
   - [ ] testes do padrão + 409 em uso;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -41,6 +43,7 @@
   - [ ] o mesmo nome em outra unidade é aceito; na mesma unidade dá 409;
   - [ ] `unidadeId` inexistente dá 422 `REFERENCIA_INVALIDA`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -59,6 +62,7 @@
   - [ ] sempre existe exatamente uma padrão (teste);
   - [ ] cor `#fff` dá 400;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -77,6 +81,7 @@
   - [ ] testes das três regras;
   - [ ] papel INICIAL com tipo PENDENTE dá 400;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -97,6 +102,7 @@
   - [ ] área que não atende dá 422;
   - [ ] o update troca as áreas;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -110,6 +116,7 @@
 - **Pronto quando:**
   - [ ] teste da regra;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -124,6 +131,7 @@
 - **Pronto quando:**
   - [ ] teste de duplicata com maiúsculas;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -135,6 +143,7 @@
 - **Pronto quando:**
   - [ ] testes do padrão;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -146,6 +155,7 @@
 - **Pronto quando:**
   - [ ] testes do padrão;
   - [ ] `pnpm verificar`.
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -173,7 +183,8 @@
   - [ ] OPERADOR na busca não vê `login`;
   - [ ] `pnpm verificar`.
 - **Nota (Fase 2):** a partir da T-17.2, toda chamada a `revogarSessoesDoUsuario` desta tarefa passa a ser acompanhada de `revogarTokensDoUsuario` na mesma transação.
-- **Modelo:** Haiku
+- **Trilha:** A
+- **Modelo:** Sonnet
 - **Tamanho:** M
 
 ### T-3.12 — Usuários: ações administrativas e anonimização
@@ -196,7 +207,8 @@
   - [ ] após anonimizar, nenhuma coluna de `chamados` nem `assentamentos` contém o nome ou o e-mail antigos;
   - [ ] `pnpm verificar`.
 - **Nota (Fase 2):** a partir da T-17.2, toda chamada a `revogarSessoesDoUsuario` desta tarefa passa a ser acompanhada de `revogarTokensDoUsuario` na mesma transação.
-- **Modelo:** Haiku
+- **Trilha:** A
+- **Modelo:** Sonnet
 - **Tamanho:** M
 
 ### T-3.13 — Configurações
@@ -215,6 +227,7 @@
   - [ ] valor fora da faixa dá 400;
   - [ ] o GET reflete o PATCH;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -229,6 +242,7 @@
   - [ ] T50: `UPDATE`/`DELETE` via `$executeRaw` lançam erro; o cadastro grava `atorId`, `ip` e `requestId`;
   - [ ] período de 400 dias dá 400;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -247,5 +261,6 @@
   - [ ] T37 (`{perfil:'ADMIN'}` dá 400);
   - [ ] USUARIO recebe `meta` sem `tags`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M

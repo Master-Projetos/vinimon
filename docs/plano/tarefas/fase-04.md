@@ -14,6 +14,7 @@
   - [ ] `pnpm -F @vinimon/api test:sla-tz` verde nos dois fusos;
   - [ ] o caso 18 roda em menos de 50 ms;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -26,6 +27,7 @@
   - [ ] `test:sla-tz` verde;
   - [ ] `pnpm -F @vinimon/shared test`;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** P
 
@@ -48,7 +50,8 @@
   - [ ] caso 27 (ABERTO → PENDENTE → EM_ATENDIMENTO → CONCLUIDO → rejeitado → CONCLUIDO): estágios e prazos iguais ao `recalcularSla` direto;
   - [ ] `versao` errada dá `CONFLITO`;
   - [ ] `pnpm verificar`.
-- **Modelo:** Sonnet
+- **Trilha:** C
+- **Modelo:** Opus
 - **Tamanho:** M
 
 ### T-4.4 — Jornadas
@@ -64,6 +67,7 @@
   - [ ] sobreposição dá 400;
   - [ ] edição enfileira (`filasEmMemoria.enviados`);
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -79,5 +83,6 @@
   - [ ] `2026-12-25` recorrente volta como `2000-12-25` com `recorrente:true`;
   - [ ] o enfileiramento acontece;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P

@@ -18,6 +18,7 @@
   - [ ] `ls docs/plano/relatorios | wc -l` dá 6;
   - [ ] `cd legado/v1 && VINIMON_DB=../../data/VINIMON.db node server.js` sobe na porta 3000 (Ctrl+C).
   - `pnpm verificar` ainda não existe nesta tarefa.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -34,6 +35,7 @@
   - [ ] `pnpm install` sem erro;
   - [ ] `pnpm lint` verde;
   - [ ] `pnpm typecheck` verde (sem pacotes).
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -48,5 +50,6 @@
   - [ ] `docker compose up -d` deixa o `postgres` em estado healthy;
   - [ ] `docker compose exec -T postgres psql -U vinimon -lqt | cut -d'|' -f1 | grep -E 'vinimon(_test|_e2e)?'` lista os 3 bancos;
   - [ ] a porta só aparece em `127.0.0.1` (`docker compose port postgres 5432`).
+- **Trilha:** A (apoio W)
 - **Modelo:** Haiku
 - **Tamanho:** P

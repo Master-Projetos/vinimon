@@ -17,6 +17,7 @@
   - [ ] auxiliar de outra área vê o chamado e perde o acesso ao ser removido (socket revogado);
   - [ ] `escopo-equivalencia.test.ts` verde com o ator novo;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -31,6 +32,7 @@
   - [ ] período de 70 dias dá 400;
   - [ ] fora do escopo não aparece;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -52,6 +54,7 @@
   - [ ] relógio injetado: encerra no dia 8 e não no dia 6;
   - [ ] rodar 2 vezes não duplica;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -69,6 +72,7 @@
   - [ ] o ciclo A→B→A dá 422;
   - [ ] o bloqueio de conclusão funciona;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Sonnet
 - **Tamanho:** M
 
@@ -84,6 +88,7 @@
   - [ ] outro usuário recebe 404 no lembrete alheio;
   - [ ] o disparo é idempotente;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** P
 
@@ -102,6 +107,7 @@
   - [ ] após a revogação, 404;
   - [ ] `escopo-equivalencia.test.ts` verde com o ator novo;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -121,6 +127,7 @@
   - [ ] não autor dá 403;
   - [ ] o solicitante não recebe o evento de um interno removido;
   - [ ] `pnpm verificar`.
+- **Trilha:** A
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -134,6 +141,7 @@
 - **Pronto quando:**
   - [ ] `chamado-detalhes.test.tsx` (rota `/chamados/$chamadoId`) com `renderRota` + `apiFalsa` (T-9.16): (a) renderiza com os dados; (b) o submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -148,6 +156,7 @@
 - **Pronto quando:**
   - [ ] o agendamento aparece no dia correto no fuso;
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M
 
@@ -162,5 +171,6 @@
 - **Pronto quando:**
   - [ ] o botão some depois de 15 min (timers falsos);
   - [ ] `pnpm verificar`.
+- **Trilha:** W
 - **Modelo:** Haiku
 - **Tamanho:** M

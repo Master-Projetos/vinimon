@@ -499,7 +499,7 @@ Os tsconfigs de cada pacote:
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-  "files": { "includes": ["**", "!**/generated", "!**/routeTree.gen.ts", "!**/dist", "!**/coverage", "!apps/web/src/components/ui", "!legado"] },
+  "files": { "includes": ["**", "!**/generated", "!**/routeTree.gen.ts", "!**/dist", "!**/coverage", "!apps/web/src/components/ui", "!legado", "!scripts/plano"] },
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
   "javascript": { "formatter": { "quoteStyle": "single", "semicolons": "asNeeded", "trailingCommas": "all" } },
   "css": { "parser": { "tailwindDirectives": true } },
@@ -617,6 +617,7 @@ export default defineConfig({
     "seed:dev": "tsx prisma/seed-dev.ts",
     "cli": "tsx scripts/cli.ts",
     "importar:v1": "tsx scripts/importar-v1/index.ts",
+    "db:dev:recriar": "docker compose exec -T postgres psql -U vinimon -d postgres -c 'DROP DATABASE IF EXISTS vinimon WITH (FORCE)' -c 'CREATE DATABASE vinimon OWNER vinimon' && DATABASE_URL=postgresql://vinimon:vinimon@localhost:5432/vinimon prisma migrate deploy",
     "db:teste:recriar": "docker compose exec -T postgres psql -U vinimon -d postgres -c 'DROP DATABASE IF EXISTS vinimon_test WITH (FORCE)' -c 'CREATE DATABASE vinimon_test OWNER vinimon' && DATABASE_URL=postgresql://vinimon:vinimon@localhost:5432/vinimon_test prisma migrate deploy"
   },
   "dependencies": {
@@ -649,7 +650,7 @@ Os demais manifestos:
 ```yaml
 # .github/workflows/ci.yml
 name: CI
-on: { pull_request: {}, push: { branches: [main] } }
+on: { pull_request: {}, push: { branches: [main, v2] } }
 concurrency: { group: 'ci-${{ github.ref }}', cancel-in-progress: true }
 permissions: { contents: read }
 jobs:
