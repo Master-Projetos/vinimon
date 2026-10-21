@@ -81,7 +81,7 @@
 ### T-1.5 — Migração `init` com o SQL manual
 - **Depende de:** T-1.4 · **Paralelo com:** —
 - **Requisitos:** S60, S86; §4.1, §4.3
-- **Arquivos:** `apps/api/prisma/migrations/<ts>_init/migration.sql`, `apps/api/src/lib/prisma.ts`, `apps/api/src/lib/enums-check.ts`
+- **Arquivos:** `apps/api/prisma/migrations/<ts>_init/migration.sql`, `apps/api/prisma/migrations/migration_lock.toml` (gerado pelo Prisma), `apps/api/src/lib/prisma.ts`, `apps/api/src/lib/enums-check.ts`
 - **Passos:**
   1. Seguir o procedimento da §4.3: `--create-only`, colar o bloco A no topo e o bloco B no fim, depois `migrate dev`.
   2. **Nunca** `migrate reset`. Se o Prisma pedir reset, responda `BLOQUEADO`.

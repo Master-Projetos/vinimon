@@ -382,6 +382,8 @@ export function conferir(t, { repo = process.cwd(), base = `${REMOTO}/${BASE}`, 
   const novas = new Set()
   for (const l of status.split('\n').filter(Boolean)) {
     const [st, f] = l.split('\t')
+    // o Prisma cria o migration_lock.toml no primeiro migrate dev (T-1.5); não é uma pasta de migração
+    if (st === 'A' && f === 'apps/api/prisma/migrations/migration_lock.toml') continue
     if (st !== 'A') v.push(`${f}: migração existente alterada ou removida (proibido)`)
     else {
       const d = f.split('/')[4]
