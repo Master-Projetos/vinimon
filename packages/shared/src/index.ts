@@ -1,2 +1,5 @@
+export * from './config'
+export * from './enums'
 export * from './http'
+export * from './permissoes'
 export * from './zod'
