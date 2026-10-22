@@ -47,7 +47,7 @@
 ### T-9.3 — shadcn/ui
 - **Depende de:** T-9.2 · **Paralelo com:** —
 - **Requisitos:** §6.4
-- **Arquivos:** `apps/web/components.json`, `apps/web/src/lib/utils.ts`, `apps/web/src/components/ui/*` (gerados)
+- **Arquivos:** `apps/web/components.json`, `apps/web/src/lib/utils.ts`, `apps/web/src/components/ui/*` (gerados), `apps/web/package.json`
 - **Passos:**
   1. Itens 1–3 da §6.4. Se o CLI sobrescrever `globals.css`, restaure com `git checkout apps/web/src/styles/globals.css`.
   2. Componente que faltar no registro: anote no commit e siga em frente (a T-9.4 cria o equivalente).
