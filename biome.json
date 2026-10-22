@@ -1,0 +1,95 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": [
+      "**",
+      "!**/generated",
+      "!**/routeTree.gen.ts",
+      "!**/dist",
+      "!**/coverage",
+      "!apps/web/src/components/ui",
+      "!legado",
+      "!scripts/plano"
+    ]
+  },
+  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
+  "javascript": { "formatter": { "quoteStyle": "single", "semicolons": "asNeeded", "trailingCommas": "all" } },
+  "css": { "parser": { "tailwindDirectives": true } },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "style": {
+        "useImportType": "error",
+        "noEnum": "error",
+        "noParameterProperties": "error",
+        "noNonNullAssertion": "error",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "@prisma/client": "Importe de src/generated/prisma/client.",
+              "next-themes": "Use @/components/theme/theme-provider."
+            }
+          }
+        }
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noConsole": { "level": "error", "options": { "allow": ["error", "warn"] } }
+      },
+      "correctness": { "noUnusedImports": "error", "noUnusedVariables": "error", "useExhaustiveDependencies": "error" },
+      "security": { "noDangerouslySetInnerHtml": "error" },
+      "nursery": { "noFloatingPromises": "warn" }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/api/src/modules/**/routes.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "../../lib/prisma": "routes.ts não acessa o banco: use o service.",
+                  "@prisma/client": "Importe de src/generated/prisma/client."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "fetch": "Use chamar() de @/lib/api.",
+                  "localStorage": "Use @/lib/storage.",
+                  "sessionStorage": "Proibido (S80)."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/src/lib/api.ts", "apps/web/src/lib/storage.ts"],
+      "linter": { "rules": { "style": { "noRestrictedGlobals": "off" } } }
+    },
+    {
+      "includes": ["apps/api/prisma/**", "apps/api/scripts/**", "**/*.config.ts", "apps/web/e2e/**"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    }
+  ],
+  "assist": { "actions": { "source": { "organizeImports": "on" } } }
+}
