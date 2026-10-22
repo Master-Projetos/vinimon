@@ -1,0 +1,5 @@
+# Histórico da branch tarefa/T-11.8: os primeiros valores de exemplo de deploy/api.env.example eram base64 de alta
+# entropia e a regra generic-api-key os apontou. Já foram trocados por placeholders (commit seguinte); o histórico
+# da branch não pode ser reescrito, então só esses dois achados são ignorados. Não eram segredos (S4 os recusa).
+d8b39985fd1f1f88c3e81c248aa07376f4415c9a:deploy/api.env.example:generic-api-key:18
+d8b39985fd1f1f88c3e81c248aa07376f4415c9a:deploy/api.env.example:generic-api-key:20

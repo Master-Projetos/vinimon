@@ -123,3 +123,56 @@ export async function criarAtivo(dados: { tipoId?: number; departamentoId?: numb
     select: { id: true, etiqueta: true },
   })
 }
+
+/**
+ * Insere um chamado direto pelo Prisma (sem passar pelas regras da API). O status vem do papel, com `statusTipo`
+ * coerente e as colunas que os CHECKs do banco exigem para ele (solução, datas, agendamento, cancelamento).
+ * Canal "Sistema Web", jornada 24x7 (ou `jornadaId`), prioridade padrão e `versao` 0.
+ */
+export async function criarChamado(dados: {
+  solicitanteId: number
+  areaId: number
+  papel?: PapelStatus
+  operadorId?: number | null
+  problemaId?: number | null
+  abertoEm?: Date
+  jornadaId?: number
+  slaRespostaMin?: number | null
+  slaSolucaoMin?: number | null
+}) {
+  const base = await semearBase() // idempotente; sem cache, porque `limparBanco` reinicia os ids entre os testes
+  const papel = dados.papel ?? 'INICIAL'
+  const status = await prisma.status.findUniqueOrThrow({
+    where: { id: base.statusPorPapel[papel] },
+    select: { id: true, tipo: true, pausaSla: true },
+  })
+  const abertoEm = dados.abertoEm ?? new Date()
+  const umDia = 24 * 60 * 60 * 1000
+  const concluido = status.tipo === 'CONCLUIDO' || status.tipo === 'ENCERRADO'
+  return prisma.chamado.create({
+    data: {
+      assunto: `Chamado de teste ${proximo()}`,
+      descricao: 'Descrição do chamado de teste.',
+      solicitanteId: dados.solicitanteId,
+      abertoPorId: dados.solicitanteId,
+      operadorId: dados.operadorId ?? null,
+      areaId: dados.areaId,
+      problemaId: dados.problemaId ?? null,
+      prioridadeId: base.prioridadePadraoId,
+      canalId: base.canalWebId,
+      statusId: status.id,
+      statusTipo: status.tipo,
+      statusDesde: abertoEm,
+      slaPausado: status.pausaSla,
+      abertoEm,
+      jornadaId: dados.jornadaId ?? base.jornada24x7Id,
+      slaRespostaMin: dados.slaRespostaMin ?? null,
+      slaSolucaoMin: dados.slaSolucaoMin ?? null,
+      ...(status.tipo === 'AGENDADO' ? { agendadoPara: new Date(abertoEm.getTime() + umDia) } : {}),
+      ...(concluido
+        ? { concluidoEm: abertoEm, solucao: papel === 'CANCELADO' ? null : 'Solução do chamado de teste.' }
+        : {}),
+      ...(status.tipo === 'ENCERRADO' ? { encerradoEm: abertoEm, cancelado: papel === 'CANCELADO' } : {}),
+    },
+  })
+}

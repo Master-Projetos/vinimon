@@ -1,0 +1,22 @@
+# Fora do contexto da imagem: dependências locais, Git, segredos, legado, documentação e saídas locais.
+**/node_modules
+.git
+.env
+.env.*
+!.env.example
+legado
+docs
+**/dist
+**/coverage
+**/playwright-report
+**/test-results
+**/.vitest
+apps/web/e2e/.auth
+apps/api/src/generated
+storage
+data
+*.db
+*.db-wal
+*.db-shm
+*.sqlite*
+deploy
