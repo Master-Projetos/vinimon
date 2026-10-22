@@ -1,8 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "lib": ["es2024"],
-    "types": []
-  },
-  "include": ["src"]
+  "compilerOptions": { "lib": ["es2024"], "types": [] },
+  "include": ["src", "*.config.ts"]
 }

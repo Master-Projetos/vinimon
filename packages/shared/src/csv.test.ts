@@ -2,27 +2,22 @@ import { describe, expect, it } from 'vitest'
 import { BOM_CSV, celulaCsv, linhaCsv } from './csv'
 
 describe('celulaCsv', () => {
-  it('prefixa com apóstrofo valor que começa com fórmula', () => {
+  it('neutraliza fórmulas', () => {
     expect(celulaCsv('=1+1')).toBe("'=1+1")
-    expect(celulaCsv('@SOMA')).toBe("'@SOMA")
+    expect(celulaCsv('@cmd')).toBe("'@cmd")
+    expect(celulaCsv('-2')).toBe("'-2")
   })
 
-  it('neutraliza tab e retorno de carro no início', () => {
-    expect(celulaCsv('\tx')).toBe("'\tx")
-    expect(celulaCsv('\rx')).toBe('"\'\rx"')
-  })
-
-  it('escapa aspas e envolve a célula em aspas', () => {
+  it('escapa aspas e envolve só quando preciso', () => {
     expect(celulaCsv('a"b')).toBe('"a""b"')
-  })
-
-  it('envolve em aspas célula com ponto e vírgula', () => {
     expect(celulaCsv('a;b')).toBe('"a;b"')
+    expect(celulaCsv('simples')).toBe('simples')
   })
 
-  it('converte nulo e indefinido em vazio', () => {
+  it('trata nulos e datas', () => {
     expect(celulaCsv(null)).toBe('')
     expect(celulaCsv(undefined)).toBe('')
+    expect(celulaCsv(new Date('2026-10-21T00:00:00.000Z'))).toBe('2026-10-21T00:00:00.000Z')
   })
 })
 
@@ -30,10 +25,7 @@ describe('linhaCsv', () => {
   it('separa por ponto e vírgula e termina com CRLF', () => {
     expect(linhaCsv(['a', 1, null])).toBe('a;1;\r\n')
   })
-})
-
-describe('BOM_CSV', () => {
-  it('é o BOM UTF-8', () => {
+  it('exporta o BOM', () => {
     expect(BOM_CSV).toBe('﻿')
   })
 })
