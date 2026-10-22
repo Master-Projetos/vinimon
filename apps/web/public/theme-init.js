@@ -1,9 +1,12 @@
-window.__zod_globalConfig = { jitless: true };
-(function () { try {
-  var t = localStorage.getItem('vinimon:tema') || 'sistema';
-  var d = localStorage.getItem('vinimon:densidade');
-  var escuro = t === 'escuro' || (t === 'sistema' && matchMedia('(prefers-color-scheme: dark)').matches);
-  var r = document.documentElement;
-  r.classList.toggle('dark', escuro); r.style.colorScheme = escuro ? 'dark' : 'light';
-  if (d === 'compacta' || d === 'confortavel') r.dataset.densidade = d;
-} catch (e) {} })();
+window.__zod_globalConfig = { jitless: true }
+;(() => {
+  try {
+    const tema = localStorage.getItem('vinimon:tema') || 'sistema'
+    const densidade = localStorage.getItem('vinimon:densidade')
+    const escuro = tema === 'escuro' || (tema === 'sistema' && matchMedia('(prefers-color-scheme: dark)').matches)
+    const raiz = document.documentElement
+    raiz.classList.toggle('dark', escuro)
+    raiz.style.colorScheme = escuro ? 'dark' : 'light'
+    if (densidade === 'compacta' || densidade === 'confortavel') raiz.dataset.densidade = densidade
+  } catch {}
+})()
