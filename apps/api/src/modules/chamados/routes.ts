@@ -1,14 +1,40 @@
+import { create as contentDisposition } from 'content-disposition'
+import type { FastifyReply } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { z } from 'zod'
 import { contextoDe } from '../../lib/contexto'
 import { naoAutenticado } from '../../lib/erros'
 import * as acoes from './acoes'
 import * as consultas from './consultas'
+import * as exportacao from './exportar'
 import { chamadosApi as c } from './schemas'
 import * as service from './service'
 
 const tags = ['Chamados']
 
 export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
+  // `/chamados/exportar` é rota estática: ganha de `/chamados/:id` no roteador, sem colisão.
+  app.route({
+    method: 'GET',
+    url: '/chamados/exportar',
+    schema: {
+      tags,
+      summary: 'Exporta a lista de chamados em CSV (mesmos filtros e escopo da lista, até 5.000 linhas)',
+      querystring: c.listar.query,
+      response: { 200: z.string() }, // só documentação: a resposta é um stream de CSV
+    },
+    config: { acesso: 'relatorio.ver' },
+    handler: async (req, reply) => {
+      const { nomeArquivo, fluxo } = await exportacao.exportarChamados(contextoDe(req), req.query)
+      // O corpo é um stream: `response` acima é só documentação, então o `send` usa o tipo genérico do reply.
+      const envio: FastifyReply = reply
+      return envio
+        .type('text/csv; charset=utf-8')
+        .header('content-disposition', contentDisposition(nomeArquivo))
+        .send(fluxo)
+    },
+  })
+
   app.route({
     method: c.listar.metodo,
     url: c.listar.caminho,
