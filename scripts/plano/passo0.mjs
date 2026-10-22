@@ -105,9 +105,9 @@ if (!existe(LIVRO)) {
 // 4. proteção clássica da base e da main (merge por qualquer conta com Write, sempre por PR e com os checks obrigatórios)
 const checks = ['protocolo', ...(o['exigir-verificar'] ? ['verificar'] : [])]
 for (const b of [BASE, 'main']) {
-  passo(`proteger ${b}: PR obrigatório (0 aprovações), checks [${checks.join(', ')}] com branch atualizada, sem force push nem deleção, merge por quem tem Write`, () =>
+  passo(`proteger ${b}: PR obrigatório (0 aprovações), checks [${checks.join(', ')}] sem exigir branch atualizada, sem force push nem deleção, merge por quem tem Write`, () =>
     api('PUT', `repos/${R}/branches/${b}/protection`, {
-      required_status_checks: { strict: true, contexts: checks },
+      required_status_checks: { strict: false, contexts: checks },
       enforce_admins: false,
       required_pull_request_reviews: { required_approving_review_count: 0, dismiss_stale_reviews: false, require_code_owner_reviews: false },
       restrictions: null,
