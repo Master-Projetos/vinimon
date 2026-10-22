@@ -3,6 +3,8 @@ import { PgBoss } from 'pg-boss'
 import { env } from '../env'
 import { definirFila } from '../lib/filas'
 import { purgarAuditoria } from './auditoria-purga'
+import { autoAprovar } from './chamados-auto-aprovacao'
+import { retornarAgendados } from './chamados-retorno-agendados'
 import { limparSessoes } from './sessoes-limpeza'
 
 export interface Job {
@@ -14,6 +16,20 @@ export interface Job {
 }
 
 export const JOBS: Job[] = [
+  {
+    fila: 'chamados-retorno-agendados',
+    cron: '* * * * *',
+    executar: async (_dados, agora) => {
+      await retornarAgendados(agora)
+    },
+  },
+  {
+    fila: 'chamados-auto-aprovacao',
+    cron: '*/5 * * * *',
+    executar: async (_dados, agora) => {
+      await autoAprovar(agora)
+    },
+  },
   {
     fila: 'sessoes-limpeza',
     cron: '17 * * * *',

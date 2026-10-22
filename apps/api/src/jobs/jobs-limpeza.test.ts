@@ -13,8 +13,8 @@ describe('jobs de limpeza', () => {
     await limparBanco()
   })
 
-  it('registra os dois jobs com cron', () => {
-    expect(JOBS.map((j) => j.fila)).toEqual(['sessoes-limpeza', 'auditoria-purga'])
+  it('registra os jobs de limpeza, com cron', () => {
+    expect(JOBS.map((j) => j.fila)).toEqual(expect.arrayContaining(['sessoes-limpeza', 'auditoria-purga']))
     expect(JOBS.every((j) => j.cron !== undefined)).toBe(true)
   })
 
