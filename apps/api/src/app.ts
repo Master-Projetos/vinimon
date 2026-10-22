@@ -42,6 +42,7 @@ import { docsPlugin } from './plugins/docs'
 import { errosPlugin } from './plugins/erros'
 import { segurancaPlugin } from './plugins/seguranca'
 import { spaPlugin } from './plugins/spa'
+import { tempoRealPlugin } from './realtime/plugin'
 
 configurarZod()
 
@@ -203,6 +204,8 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
     },
     { prefix: '/api/v1' },
   )
+
+  await app.register(tempoRealPlugin)
 
   if (env.WEB_DIST_DIR) await app.register(spaPlugin, { raiz: env.WEB_DIST_DIR })
   else app.setNotFoundHandler(responderRotaInexistente)
