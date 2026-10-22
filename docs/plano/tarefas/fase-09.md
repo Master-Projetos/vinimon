@@ -250,7 +250,7 @@
 ### T-9.15 — Hooks utilitários
 - **Depende de:** T-9.7 · **Paralelo com:** T-9.8–T-9.14
 - **Requisitos:** §6.6 (hooks)
-- **Arquivos:** `apps/web/src/hooks/{use-debounce.ts,use-media-query.ts,use-mobile.ts,use-prefers-reduced-motion.ts,use-document-title.ts,use-copiar.ts,use-alteracoes-nao-salvas.ts,use-foco-ao-navegar.ts}`
+- **Arquivos:** `apps/web/src/hooks/{use-debounce.ts,use-media-query.ts,use-mobile.ts,use-prefers-reduced-motion.ts,use-document-title.ts,use-copiar.ts,use-alteracoes-nao-salvas.ts,use-foco-ao-navegar.ts,use-debounce.test.ts}`
 - **Passos:**
   1. `useFocoAoNavegar`: `router.subscribe('onResolved')`; quando o `pathname` muda, foca o `h1[tabindex="-1"]`.
   2. `useAlteracoesNaoSalvas`: `useBlocker` do TanStack Router.

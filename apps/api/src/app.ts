@@ -19,6 +19,7 @@ import { rotasArtigos } from './modules/artigos/routes'
 import { rotasAtivos } from './modules/ativos/routes'
 import { rotasAuditoria } from './modules/auditoria/routes'
 import { rotasAuth } from './modules/auth/routes'
+import { rotasBusca } from './modules/busca/routes'
 import { rotasCanais } from './modules/canais/routes'
 import { rotasCategoriasArtigo } from './modules/categorias-artigo/routes'
 import { rotasChamados } from './modules/chamados/routes'
@@ -29,8 +30,10 @@ import { rotasJornadas } from './modules/jornadas/routes'
 import { rotasMe } from './modules/me/routes'
 import { rotasMencoes } from './modules/mencoes/routes'
 import { rotasMeta } from './modules/meta/routes'
+import { rotasPainel } from './modules/painel/routes'
 import { rotasPrioridades } from './modules/prioridades/routes'
 import { rotasProblemas } from './modules/problemas/routes'
+import { rotasRelatorios } from './modules/relatorios/routes'
 import { rotasSaude } from './modules/saude/routes'
 import { rotasSeguranca } from './modules/seguranca/routes'
 import { rotasStatus } from './modules/status/routes'
@@ -182,6 +185,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasAtivos)
       await api.register(rotasAuditoria)
       await api.register(rotasAuth)
+      await api.register(rotasBusca)
       await api.register(rotasCanais)
       await api.register(rotasChamados)
       await api.register(rotasCategoriasArtigo)
@@ -192,11 +196,13 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasMe)
       await api.register(rotasMencoes)
       await api.register(rotasMeta)
+      await api.register(rotasPainel)
       await api.register(rotasPrioridades)
       await api.register(rotasProblemas)
       await api.register(rotasTiposAtivo)
       await api.register(rotasUnidades)
       await api.register(rotasUsuarios)
+      await api.register(rotasRelatorios)
       await api.register(rotasSaude)
       await api.register(rotasSeguranca)
       await api.register(rotasStatus)
