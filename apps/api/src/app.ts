@@ -17,6 +17,7 @@ import { responderRotaInexistente } from './lib/erros'
 import { rotasAreas } from './modules/areas/routes'
 import { rotasAuth } from './modules/auth/routes'
 import { rotasCanais } from './modules/canais/routes'
+import { rotasCategoriasArtigo } from './modules/categorias-artigo/routes'
 import { rotasProblemas } from './modules/problemas/routes'
 import { rotasSaude } from './modules/saude/routes'
 import { rotasSeguranca } from './modules/seguranca/routes'
@@ -162,6 +163,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasAreas)
       await api.register(rotasAuth)
       await api.register(rotasCanais)
+      await api.register(rotasCategoriasArtigo)
       await api.register(rotasProblemas)
       await api.register(rotasSaude)
       await api.register(rotasSeguranca)
