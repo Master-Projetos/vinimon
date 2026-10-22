@@ -39,3 +39,4 @@ Cada cartão traz `Modelo:` e `Trilha:`. A trilha A é a API, a W é a Web e a C
 4. Tarefas novas só depois do merge das dependências na `v2`. O merge é sempre squash com o título `T-x.y: …`, ligado pelo runner do próprio executor (auto-merge) e liberado pelos checks obrigatórios.
 5. Um executor por máquina. Os bancos de dev e de teste são da máquina; o runner recria o de teste a cada tarefa.
 6. Correções de plano e portões entram por PR `plano/*`. Nada é commitado direto na `v2`.
+7. CI vermelho no PR é do dono da tarefa: o runner traz o log e chama o executor de novo (modo correcao, no mínimo Sonnet), até 3 rodadas; depois vira bloqueio. Base vermelha é de todos: quem vê primeiro abre PR `plano/*`.
