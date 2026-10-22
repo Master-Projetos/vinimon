@@ -252,4 +252,66 @@ export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
     config: { acesso: 'chamado.comentar' },
     handler: (req) => acoes.rejeitar(req.params.id, req.body, contextoDe(req), req.log),
   })
+
+  app.route({
+    method: c.reabrir.metodo,
+    url: c.reabrir.caminho,
+    schema: {
+      tags,
+      summary: 'Reabre o chamado',
+      params: c.reabrir.params,
+      body: c.reabrir.body,
+      response: { 200: c.reabrir.resposta },
+    },
+    config: { acesso: 'chamado.comentar' },
+    handler: (req) => acoes.reabrir(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.cancelar.metodo,
+    url: c.cancelar.caminho,
+    schema: {
+      tags,
+      summary: 'Cancela o chamado',
+      params: c.cancelar.params,
+      body: c.cancelar.body,
+      response: { 200: c.cancelar.resposta },
+    },
+    config: { acesso: 'chamado.comentar' },
+    handler: (req) => acoes.cancelar(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.seguir.metodo,
+    url: c.seguir.caminho,
+    schema: {
+      tags,
+      summary: 'Passa a seguir o chamado',
+      params: c.seguir.params,
+      response: { 204: c.seguir.resposta },
+    },
+    config: { acesso: 'autenticado' },
+    handler: async (req, reply) => {
+      if (!req.usuario) throw naoAutenticado()
+      await acoes.seguir(req.params.id, req.usuario)
+      return reply.code(204).send()
+    },
+  })
+
+  app.route({
+    method: c.deixarDeSeguir.metodo,
+    url: c.deixarDeSeguir.caminho,
+    schema: {
+      tags,
+      summary: 'Deixa de seguir o chamado',
+      params: c.deixarDeSeguir.params,
+      response: { 204: c.deixarDeSeguir.resposta },
+    },
+    config: { acesso: 'autenticado' },
+    handler: async (req, reply) => {
+      if (!req.usuario) throw naoAutenticado()
+      await acoes.deixarDeSeguir(req.params.id, req.usuario)
+      return reply.code(204).send()
+    },
+  })
 }

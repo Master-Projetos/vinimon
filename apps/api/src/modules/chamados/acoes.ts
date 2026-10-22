@@ -2,11 +2,13 @@ import {
   type AgendarChamado,
   type AprovarChamado,
   type AssumirChamado,
+  type CancelarChamado,
   type ChamadoDetalhe,
   type ClassificacaoChamado,
   type ConcluirChamado,
   type EncaminharChamado,
   type PrioridadeChamadoBody,
+  type ReabrirChamado,
   type RejeitarChamado,
   type StatusChamadoBody,
   type TagsChamado,
@@ -76,7 +78,8 @@ async function exigirAcao(
     | 'agendar'
     | 'concluir'
     | 'aprovar'
-    | 'rejeitar',
+    | 'rejeitar'
+    | 'cancelar',
   agora: Date,
 ): Promise<ChamadoCarregado> {
   const c = await carregarParaAcao(tx, id)
@@ -117,7 +120,7 @@ async function atualizarComVersao(
 
 async function statusDoPapel(
   tx: Tx,
-  papel: 'INICIAL' | 'EM_ATENDIMENTO' | 'ENCAMINHADO' | 'CONCLUIDO' | 'ENCERRADO',
+  papel: 'INICIAL' | 'EM_ATENDIMENTO' | 'ENCAMINHADO' | 'CONCLUIDO' | 'ENCERRADO' | 'CANCELADO',
 ): Promise<number> {
   const s = await tx.status.findFirst({ where: { papel, ativo: true }, select: { id: true } })
   if (!s) throw regraNegocio(`Não há status configurado para o papel ${papel}.`)
@@ -959,4 +962,149 @@ export async function rejeitar(
     }
   })
   return concluirAcao(u, r, agora, log)
+}
+
+// ───────── reabrir, cancelar e seguir ─────────
+
+/**
+ * `reabrir`: solicitante, último operador ou ADMIN, em ENCERRADO não cancelado, se `chamado.permitirReabertura` e
+ * dentro de `chamado.prazoReaberturaDias` (0 = sem limite); fora das regras é 422. A avaliação anterior vai para
+ * `dados` do evento REABERTO e é apagada. Papel EM_ATENDIMENTO se o operador está ativo, senão INICIAL.
+ */
+export async function reabrir(
+  id: number,
+  dados: ReabrirChamado,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const cfg = await obterConfig()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado> => {
+    const c = await carregarParaAcao(tx, id)
+    if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
+    const podeReabrir = c.solicitanteId === u.id || c.operadorId === u.id || temPermissao(u.perfil, 'chamado.verTodos')
+    if (!podeReabrir) throw semPermissao('Esta ação não está disponível para o chamado neste momento.')
+    if (c.statusTipo !== 'ENCERRADO' || c.cancelado) throw regraNegocio('Só é possível reabrir um chamado encerrado.')
+    if (!cfg['chamado.permitirReabertura']) throw regraNegocio('A reabertura de chamados está desativada.')
+    const prazoDias = cfg['chamado.prazoReaberturaDias']
+    if (prazoDias > 0 && (c.encerradoEm === null || c.encerradoEm.getTime() + prazoDias * UM_DIA_MS < agora.getTime()))
+      throw regraNegocio(`O prazo de ${prazoDias} dia(s) para reabrir este chamado terminou.`)
+    if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+
+    const operadorAtivo =
+      c.operadorId !== null &&
+      (await tx.usuario.count({ where: { id: c.operadorId, ativo: true, perfil: { in: ['OPERADOR', 'ADMIN'] } } })) > 0
+    const anterior = await tx.avaliacaoChamado.findUnique({
+      where: { chamadoId: id },
+      select: { nota: true, comentario: true, automatica: true, avaliadorId: true, criadoEm: true },
+    })
+    if (anterior) await tx.avaliacaoChamado.delete({ where: { chamadoId: id } })
+    const comentario = await comentarioOpcional(tx, id, u, dados.justificativa)
+    await aplicarTransicaoStatus(tx, {
+      chamadoId: id,
+      versao: dados.versao,
+      novoStatusId: await statusDoPapel(tx, operadorAtivo ? 'EM_ATENDIMENTO' : 'INICIAL'),
+      atorId: u.id,
+      agora,
+      extras: { validacaoLimiteEm: null, operadorId: operadorAtivo ? c.operadorId : null },
+    })
+    await recalcularChamado(tx, id, agora)
+
+    const dadosEvento = { avaliacaoAnterior: anterior, operadorAtivo }
+    const sistema = await registrarSistema(tx, id, 'REABERTO', 'Chamado reaberto', dadosEvento)
+    const evento = await registrarEvento(tx, {
+      chamadoId: id,
+      tipo: 'REABERTO',
+      atorId: u.id,
+      assentamentoId: sistema,
+      dados: dadosEvento,
+    })
+    return {
+      chamadoId: id,
+      efeitos: {
+        eventoIds: [evento],
+        assentamentoIds: [...comentario, sistema],
+        campos: ['status', 'operador', 'avaliacao'],
+        acessoMudou: false,
+        fila: 'status',
+      },
+    }
+  })
+  return concluirAcao(u, r, agora, log)
+}
+
+/**
+ * `cancelar`: solicitante (tipo ABERTO e sem operador) ou quem atende (não CONCLUIDO/ENCERRADO). Papel CANCELADO,
+ * `cancelado = true`, `concluidoEm = encerradoEm = agora`. O motivo vira comentário público. Sem avaliação.
+ */
+export async function cancelar(
+  id: number,
+  dados: CancelarChamado,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado> => {
+    const c = await exigirAcao(tx, u, id, 'cancelar', agora)
+    if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+
+    const comentario = await comentarioOpcional(tx, id, u, dados.motivo)
+    await aplicarTransicaoStatus(tx, {
+      chamadoId: id,
+      versao: dados.versao,
+      novoStatusId: await statusDoPapel(tx, 'CANCELADO'),
+      atorId: u.id,
+      agora,
+      extras: { cancelado: true, validacaoLimiteEm: null },
+    })
+    await recalcularChamado(tx, id, agora)
+
+    const sistema = await registrarSistema(tx, id, 'CANCELADO', 'Chamado cancelado')
+    const evento = await registrarEvento(tx, {
+      chamadoId: id,
+      tipo: 'CANCELADO',
+      atorId: u.id,
+      assentamentoId: sistema,
+    })
+    return {
+      chamadoId: id,
+      efeitos: {
+        eventoIds: [evento],
+        assentamentoIds: [...comentario, sistema],
+        campos: ['status'],
+        acessoMudou: false,
+        fila: 'status',
+      },
+    }
+  })
+  return concluirAcao(u, r, agora, log)
+}
+
+async function exigirVisivel(id: number, u: UsuarioSessao): Promise<void> {
+  const c = await prisma.chamado.findUnique({
+    where: { id },
+    select: { areaId: true, operadorId: true, solicitanteId: true },
+  })
+  if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
+}
+
+/** `PUT /seguir`: upsert com motivo MANUAL e `silenciadoEm = null`. Fora do escopo é 404. */
+export async function seguir(id: number, u: UsuarioSessao): Promise<void> {
+  await exigirVisivel(id, u)
+  await prisma.chamadoSeguidor.upsert({
+    where: { chamadoId_usuarioId: { chamadoId: id, usuarioId: u.id } },
+    create: { chamadoId: id, usuarioId: u.id, motivo: 'MANUAL' },
+    update: { silenciadoEm: null },
+  })
+}
+
+/** `DELETE /seguir`: grava `silenciadoEm` (MENCAO, ATRIBUIDO e AVALIACAO_PENDENTE ignoram o silenciamento). */
+export async function deixarDeSeguir(id: number, u: UsuarioSessao): Promise<void> {
+  await exigirVisivel(id, u)
+  await prisma.chamadoSeguidor.updateMany({
+    where: { chamadoId: id, usuarioId: u.id, silenciadoEm: null },
+    data: { silenciadoEm: new Date() },
+  })
 }
