@@ -100,6 +100,17 @@ export const UsuarioBuscaSchema = z.object({
 })
 export type UsuarioBusca = z.output<typeof UsuarioBuscaSchema>
 
+export const SenhaTemporariaSchema = z.object({ senhaTemporaria: z.string() })
+export type SenhaTemporaria = z.output<typeof SenhaTemporariaSchema>
+
+export const Resetar2faSchema = z.strictObject({
+  senhaAdmin: z.string().min(1, { error: 'Informe a sua senha.' }).max(256, { error: 'Senha longa demais.' }),
+})
+export type Resetar2fa = z.output<typeof Resetar2faSchema>
+
+export const AcaoUsuarioRespostaSchema = z.object({ ok: z.literal(true) })
+export type AcaoUsuarioResposta = z.output<typeof AcaoUsuarioRespostaSchema>
+
 export const usuariosApi = {
   listar: contrato({
     metodo: 'GET',
@@ -132,5 +143,40 @@ export const usuariosApi = {
     params: IdParamsSchema,
     body: AtualizarUsuarioSchema,
     resposta: UsuarioSchema,
+  }),
+  redefinirSenha: contrato({
+    metodo: 'POST',
+    caminho: '/usuarios/:id/redefinir-senha',
+    params: IdParamsSchema,
+    body: z.strictObject({}),
+    resposta: SenhaTemporariaSchema,
+  }),
+  resetar2fa: contrato({
+    metodo: 'POST',
+    caminho: '/usuarios/:id/resetar-2fa',
+    params: IdParamsSchema,
+    body: Resetar2faSchema,
+    resposta: AcaoUsuarioRespostaSchema,
+  }),
+  encerrarSessoes: contrato({
+    metodo: 'POST',
+    caminho: '/usuarios/:id/encerrar-sessoes',
+    params: IdParamsSchema,
+    body: z.strictObject({}),
+    resposta: AcaoUsuarioRespostaSchema,
+  }),
+  desbloquearLogin: contrato({
+    metodo: 'POST',
+    caminho: '/usuarios/:id/desbloquear-login',
+    params: IdParamsSchema,
+    body: z.strictObject({}),
+    resposta: AcaoUsuarioRespostaSchema,
+  }),
+  anonimizar: contrato({
+    metodo: 'POST',
+    caminho: '/usuarios/:id/anonimizar',
+    params: IdParamsSchema,
+    body: z.strictObject({}),
+    resposta: AcaoUsuarioRespostaSchema,
   }),
 }
