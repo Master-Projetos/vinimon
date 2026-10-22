@@ -1,11 +1,13 @@
 // apps/api/test/ajudantes.ts
-import { CSRF_HEADER, type Perfil } from '@vinimon/shared'
+import { CSRF_HEADER, type EstadoSessao, type Perfil } from '@vinimon/shared'
 import { env } from '../src/env'
 import { Prisma } from '../src/generated/prisma/client'
 import { invalidarConfig } from '../src/lib/config'
+import { cifrar } from '../src/lib/cripto'
 import { prisma } from '../src/lib/prisma'
 import { hashSenha } from '../src/lib/senha'
 import { criarSessao, csrfDaSessao, NOME_COOKIE } from '../src/lib/sessao'
+import { gerarCodigosRecuperacao, gerarSegredo, hashCodigo } from '../src/lib/totp'
 
 export const ORIGEM = env.APP_ORIGIN
 export const SENHA_TESTE = 'Cavalo-Bateria-Grampo-2026'
@@ -50,8 +52,34 @@ export async function criarUsuario(d: { perfil: Perfil; areaId?: number | null; 
   })
 }
 
-/** Cabeçalhos de um usuário com sessão ATIVA (direto no banco, sem passar pelo login/rate limit). */
-export async function headersDe(usuarioId: number) {
-  const { sessaoId, token } = await criarSessao({ usuarioId, estado: 'ATIVA', ip: '127.0.0.1', userAgent: 'vitest' })
+/** Cabeçalhos de um usuário com sessão no estado pedido (direto no banco, sem passar pelo login/rate limit). */
+export async function headersDe(usuarioId: number, estado: EstadoSessao = 'ATIVA') {
+  const { sessaoId, token } = await criarSessao({ usuarioId, estado, ip: '127.0.0.1', userAgent: 'vitest' })
   return { cookie: `${NOME_COOKIE}=${token}`, origin: ORIGEM, [CSRF_HEADER]: csrfDaSessao(sessaoId) }
 }
+
+/** Cadastra o 2FA direto no banco. Devolve o segredo (para gerar códigos com otplib) e os códigos de recuperação. */
+export async function ativarMfa(usuarioId: number) {
+  const secret = gerarSegredo()
+  const codigos = gerarCodigosRecuperacao()
+  await prisma.usuario.update({
+    where: { id: usuarioId },
+    data: { totpSecretEnc: cifrar(secret), mfaAtivadoEm: new Date() },
+  })
+  await prisma.codigoRecuperacao.createMany({ data: codigos.map((c) => ({ usuarioId, codigoHash: hashCodigo(c) })) })
+  return { secret, codigos }
+}
+
+/** Extrai o token do cookie de uma resposta de login/2FA/troca de senha. */
+export function tokenDoCookie(res: { headers: Record<string, unknown> }): string {
+  const sc = res.headers['set-cookie']
+  const linha = String((Array.isArray(sc) ? sc[0] : sc) ?? '')
+  return /=([^;]+)/.exec(linha)?.[1] ?? ''
+}
+
+/** Cabeçalhos para continuar uma sessão a partir do cookie e do csrf devolvidos pelo login. */
+export const headersComToken = (token: string, csrf: string) => ({
+  cookie: `${NOME_COOKIE}=${token}`,
+  origin: ORIGEM,
+  [CSRF_HEADER]: csrf,
+})
