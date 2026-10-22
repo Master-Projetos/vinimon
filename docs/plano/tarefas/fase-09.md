@@ -153,7 +153,7 @@
 ### T-9.9 — Display, parte 1: badges, SLA e tempo
 - **Depende de:** T-9.6 · **Paralelo com:** T-9.8, T-9.10–T-9.15
 - **Requisitos:** §6.1 (aplicação de cor), §6.5
-- **Arquivos:** `apps/web/src/components/display/{color-badge.tsx,status-badge.tsx,prioridade-badge.tsx,sla-badge.tsx,relative-time.tsx,display.test.tsx}`, `apps/web/src/hooks/use-agora.ts`
+- **Arquivos:** `apps/web/src/components/display/{color-badge.tsx,status-badge.tsx,prioridade-badge.tsx,sla-badge.tsx,relative-time.tsx,display.test.tsx}`, `apps/web/src/hooks/use-agora.ts`, `apps/web/package.json`
 - **Passos:**
   1. `ColorBadge` define as variáveis `--b-*` com `obterCores`.
   2. `SlaBadge` usa `situacaoSla` de shared com ícone e texto (`Clock`, `Hourglass`, `TriangleAlert`, `CircleCheck`, pausado).
