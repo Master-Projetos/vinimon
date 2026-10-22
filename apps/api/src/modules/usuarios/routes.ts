@@ -1,5 +1,6 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { contextoDe } from '../../lib/contexto'
+import * as acoes from './acoes'
 import { usuariosApi as c } from './schemas'
 import * as service from './service'
 
@@ -55,5 +56,87 @@ export const rotasUsuarios: FastifyPluginAsyncZod = async (app) => {
     },
     config: { acesso: 'usuario.gerenciar' },
     handler: (req) => service.atualizarUsuario(req.params.id, req.body, contextoDe(req)),
+  })
+
+  app.route({
+    method: c.redefinirSenha.metodo,
+    url: c.redefinirSenha.caminho,
+    schema: {
+      tags,
+      summary: 'Redefine a senha (temporária, mostrada uma vez)',
+      params: c.redefinirSenha.params,
+      body: c.redefinirSenha.body,
+      response: { 200: c.redefinirSenha.resposta },
+    },
+    config: { acesso: 'usuario.gerenciar' },
+    handler: (req) => acoes.redefinirSenha(req.params.id, contextoDe(req)),
+  })
+
+  app.route({
+    method: c.resetar2fa.metodo,
+    url: c.resetar2fa.caminho,
+    schema: {
+      tags,
+      summary: 'Reseta o 2FA do usuário',
+      params: c.resetar2fa.params,
+      body: c.resetar2fa.body,
+      response: { 200: c.resetar2fa.resposta },
+    },
+    config: { acesso: 'usuario.gerenciar' },
+    handler: async (req) => {
+      await acoes.resetar2fa(req.params.id, req.body.senhaAdmin, contextoDe(req))
+      return { ok: true as const }
+    },
+  })
+
+  app.route({
+    method: c.encerrarSessoes.metodo,
+    url: c.encerrarSessoes.caminho,
+    schema: {
+      tags,
+      summary: 'Encerra todas as sessões do usuário',
+      params: c.encerrarSessoes.params,
+      body: c.encerrarSessoes.body,
+      response: { 200: c.encerrarSessoes.resposta },
+    },
+    config: { acesso: 'usuario.gerenciar' },
+    handler: async (req) => {
+      await acoes.encerrarSessoes(req.params.id, contextoDe(req))
+      return { ok: true as const }
+    },
+  })
+
+  app.route({
+    method: c.desbloquearLogin.metodo,
+    url: c.desbloquearLogin.caminho,
+    schema: {
+      tags,
+      summary: 'Desbloqueia o login do usuário',
+      params: c.desbloquearLogin.params,
+      body: c.desbloquearLogin.body,
+      response: { 200: c.desbloquearLogin.resposta },
+    },
+    config: { acesso: 'usuario.gerenciar' },
+    handler: async (req) => {
+      await acoes.desbloquearLogin(req.params.id, contextoDe(req))
+      return { ok: true as const }
+    },
+  })
+
+  app.route({
+    method: c.anonimizar.metodo,
+    url: c.anonimizar.caminho,
+    schema: {
+      tags,
+      summary: 'Anonimiza o usuário',
+      params: c.anonimizar.params,
+      body: c.anonimizar.body,
+      response: { 200: c.anonimizar.resposta },
+    },
+    config: { acesso: 'usuario.gerenciar' },
+    handler: async (req) => {
+      await acoes.anonimizarUsuario(req.params.id, contextoDe(req))
+      return { ok: true as const }
+    },
   })
 }
