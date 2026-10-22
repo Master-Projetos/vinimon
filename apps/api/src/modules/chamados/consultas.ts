@@ -170,11 +170,13 @@ function ordenacao(f: ChamadoFiltros): Prisma.ChamadoOrderByWithRelationInput[] 
 }
 
 /** `where = { AND: [escopoChamados(u), filtroVisao, ...filtros] }`: o escopo nunca é espalhado junto dos filtros (S45). */
+export function whereDaLista(u: UsuarioSessao, f: ChamadoFiltros, fuso: string, agora: Date): Prisma.ChamadoWhereInput {
+  return { AND: [escopoChamados(u), filtroVisao(u, f.visao), ...filtrosDa(u, f, fuso, agora)] }
+}
+
 export async function listar(u: UsuarioSessao, f: ChamadoFiltros, agora = new Date()) {
   const cfg = await obterConfig()
-  const where: Prisma.ChamadoWhereInput = {
-    AND: [escopoChamados(u), filtroVisao(u, f.visao), ...filtrosDa(u, f, cfg['sistema.fusoHorario'], agora)],
-  }
+  const where = whereDaLista(u, f, cfg['sistema.fusoHorario'], agora)
   const [linhas, total] = await prisma.$transaction([
     prisma.chamado.findMany({ where, select: selectResumo, orderBy: ordenacao(f), ...paginar(f) }),
     prisma.chamado.count({ where }),
