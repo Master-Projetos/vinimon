@@ -186,7 +186,7 @@
 ### T-9.11 — Formulários, parte 1
 - **Depende de:** T-9.4 · **Paralelo com:** T-9.8–T-9.10, T-9.12–T-9.15
 - **Requisitos:** §7 (`lib/form.ts`, `campo-form.tsx`)
-- **Arquivos:** `apps/web/src/lib/form.ts`, `apps/web/src/components/form/{campo-form.tsx,password-input.tsx,password-strength.tsx,autosize-textarea.tsx,form.test.tsx}`
+- **Arquivos:** `apps/web/src/lib/form.ts`, `apps/web/src/components/form/{campo-form.tsx,password-input.tsx,password-strength.tsx,autosize-textarea.tsx,form.test.tsx}`, `apps/web/package.json`
 - **Passos:**
   1. `lib/form.ts` e `campo-form.tsx` literais.
   2. `PasswordStrength` carrega sob demanda com `const { ZxcvbnFactory } = await import('@zxcvbn-ts/core')` (e os dicionários `@zxcvbn-ts/language-common` e `@zxcvbn-ts/language-pt-br`), com a mesma construção preguiçosa da T-2.1 (`fabrica ??= new ZxcvbnFactory({ dictionary: { ...common.dictionary, ...ptBr.dictionary }, graphs: common.adjacencyGraphs, translations: ptBr.translations })` e `await fabrica.checkAsync(senha, userInputs)`), e mostra barra e texto. Se a §2.2 fixar a 3.0.4, usar a API `zxcvbnOptions`/`zxcvbnAsync` dessa versão e registrar a versão no commit.
