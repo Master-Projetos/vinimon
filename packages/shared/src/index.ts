@@ -7,6 +7,7 @@ export * from './limites'
 export * from './mencoes'
 export * from './modulos/areas'
 export * from './modulos/auth'
+export * from './modulos/canais'
 
 export * from './modulos/problemas'
 
