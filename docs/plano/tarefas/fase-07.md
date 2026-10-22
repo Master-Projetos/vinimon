@@ -124,7 +124,7 @@
 ### T-7.7 — Jobs: retorno de agendados e auto-aprovação
 - **Depende de:** T-7.6, T-5.9 · **Paralelo com:** T-7.8, T-7.9
 - **Requisitos:** C09, C15; §3.10
-- **Arquivos:** `apps/api/src/jobs/{chamados-retorno-agendados.ts,chamados-auto-aprovacao.ts,jobs-chamados.test.ts,index.ts}`
+- **Arquivos:** `apps/api/src/jobs/{chamados-retorno-agendados.ts,chamados-auto-aprovacao.ts,jobs-chamados.test.ts,jobs-limpeza.test.ts,index.ts}`
 - **Passos:**
   1. Cada chamado candidato (lote de 200) passa por uma transação com `aplicarTransicaoStatus` usando a `versao` lida. Conflito: ignora e segue.
   2. Ator SISTEMA (`CONTEXTO_SISTEMA`). Eventos RETORNO_AGENDAMENTO e AUTO_APROVADO. Avaliação `automatica:true` com `chamado.avaliacaoAutomatica`. Comentário de sistema da §3.5.
