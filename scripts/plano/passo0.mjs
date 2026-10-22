@@ -49,7 +49,6 @@ const repo = ghJson(['repo', 'view', '--json', 'nameWithOwner,isInOrganization,v
 const coord = gh(['api', 'user', '-q', '.login']).out
 const R = repo.nameWithOwner
 console.log(`Repositório ${R} (${repo.visibility}, organização: ${repo.isInOrganization}) · coordenador: ${coord} · ${APLICAR ? 'APLICANDO' : 'dry-run (use --aplicar)'}`)
-if (!repo.isInOrganization) console.log('  aviso: fora de organização, "restringir push ao coordenador" não está disponível; só o PR obrigatório protege a base.')
 
 if (o.conferir) {
   for (const b of [BASE, 'main']) {
@@ -103,15 +102,15 @@ if (!existe(LIVRO)) {
   })
 } else console.log(`· ${LIVRO} já existe`)
 
-// 4. proteção clássica da base e da main (push restrito ao coordenador = só ele faz merge)
+// 4. proteção clássica da base e da main (merge por qualquer conta com Write, sempre por PR e com os checks obrigatórios)
 const checks = ['protocolo', ...(o['exigir-verificar'] ? ['verificar'] : [])]
 for (const b of [BASE, 'main']) {
-  passo(`proteger ${b}: PR obrigatório (0 aprovações), checks [${checks.join(', ')}] com branch atualizada, sem force push nem deleção, push só de ${coord}`, () =>
+  passo(`proteger ${b}: PR obrigatório (0 aprovações), checks [${checks.join(', ')}] com branch atualizada, sem force push nem deleção, merge por quem tem Write`, () =>
     api('PUT', `repos/${R}/branches/${b}/protection`, {
       required_status_checks: { strict: true, contexts: checks },
       enforce_admins: false,
       required_pull_request_reviews: { required_approving_review_count: 0, dismiss_stale_reviews: false, require_code_owner_reviews: false },
-      restrictions: repo.isInOrganization ? { users: [coord], teams: [], apps: [] } : null,
+      restrictions: null,
       allow_force_pushes: false,
       allow_deletions: false,
       required_conversation_resolution: false,
@@ -135,6 +134,6 @@ for (const [nome, padrao, regras] of [
 console.log(`
 ${APLICAR ? 'Feito.' : 'Nada foi alterado.'} Próximos passos do coordenador:
 - Conferir: node scripts/plano/passo0.mjs --conferir
-- Dar papel Write (não Admin) às contas executoras; elas não conseguem fazer merge na ${BASE}.
+- Dar papel Write (não Admin) às contas executoras; cada uma faz o merge dos próprios PRs (auto-merge squash) quando o CI fica verde.
 - Depois do merge da T-1.11 (CI existe): node scripts/plano/passo0.mjs --aplicar --exigir-verificar
 - Gitleaks: a action exige o secret GITLEAKS_LICENSE em repositório de organização (ver T-1.11).`)
