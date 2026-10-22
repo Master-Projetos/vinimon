@@ -23,6 +23,7 @@ import { rotasCategoriasArtigo } from './modules/categorias-artigo/routes'
 import { rotasChamados } from './modules/chamados/routes'
 import { rotasConfig } from './modules/config/routes'
 import { rotasDepartamentos } from './modules/departamentos/routes'
+import { rotasJornadas } from './modules/jornadas/routes'
 import { rotasMe } from './modules/me/routes'
 import { rotasMeta } from './modules/meta/routes'
 import { rotasPrioridades } from './modules/prioridades/routes'
@@ -181,6 +182,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasCategoriasArtigo)
       await api.register(rotasConfig)
       await api.register(rotasDepartamentos)
+      await api.register(rotasJornadas)
       await api.register(rotasMe)
       await api.register(rotasMeta)
       await api.register(rotasPrioridades)
