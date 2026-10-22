@@ -25,7 +25,7 @@
 ### T-9.2 — Tokens, fontes, testes do front, ícones e CI
 - **Depende de:** T-9.1, T-1.11 · **Paralelo com:** —
 - **Requisitos:** §6.1 (`globals.css` literal), S77
-- **Arquivos:** `apps/web/src/styles/globals.css`, `apps/web/src/main.tsx`, `apps/web/vitest.config.ts`, `apps/web/src/test/setup.ts`, `apps/web/public/{favicon.svg,icon-192.png}`, `.github/workflows/ci.yml`
+- **Arquivos:** `apps/web/src/styles/globals.css`, `apps/web/src/main.tsx`, `apps/web/vitest.config.ts`, `apps/web/src/test/setup.ts`, `apps/web/public/{favicon.svg,icon-192.png}`, `apps/web/package.json`, `.github/workflows/ci.yml`
 - **Passos:**
   1. Copiar `globals.css` literal. `main.tsx` importa `@fontsource-variable/inter`, `@fontsource-variable/jetbrains-mono` e o CSS.
   2. Vitest: jsdom, `setupFiles` com `@testing-library/jest-dom/vitest`, alias `@`.
