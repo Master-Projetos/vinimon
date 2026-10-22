@@ -15,12 +15,15 @@ import {
 import { env } from './env'
 import { responderRotaInexistente } from './lib/erros'
 import { rotasAreas } from './modules/areas/routes'
+import { rotasArtigos } from './modules/artigos/routes'
 import { rotasAuditoria } from './modules/auditoria/routes'
 import { rotasAuth } from './modules/auth/routes'
 import { rotasCanais } from './modules/canais/routes'
 import { rotasCategoriasArtigo } from './modules/categorias-artigo/routes'
 import { rotasConfig } from './modules/config/routes'
 import { rotasDepartamentos } from './modules/departamentos/routes'
+import { rotasMe } from './modules/me/routes'
+import { rotasMeta } from './modules/meta/routes'
 import { rotasPrioridades } from './modules/prioridades/routes'
 import { rotasProblemas } from './modules/problemas/routes'
 import { rotasSaude } from './modules/saude/routes'
@@ -169,12 +172,15 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(autenticacaoPlugin)
       await api.register(segurancaPlugin)
       await api.register(rotasAreas)
+      await api.register(rotasArtigos)
       await api.register(rotasAuditoria)
       await api.register(rotasAuth)
       await api.register(rotasCanais)
       await api.register(rotasCategoriasArtigo)
       await api.register(rotasConfig)
       await api.register(rotasDepartamentos)
+      await api.register(rotasMe)
+      await api.register(rotasMeta)
       await api.register(rotasPrioridades)
       await api.register(rotasProblemas)
       await api.register(rotasTiposAtivo)

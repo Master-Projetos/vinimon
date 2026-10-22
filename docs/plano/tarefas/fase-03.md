@@ -249,7 +249,7 @@
 ### T-3.15 — Meta e Me
 - **Depende de:** T-3.2–T-3.10, T-3.13 · **Paralelo com:** —
 - **Requisitos:** S54, S55; T37; §3.6 (Me, Meta)
-- **Arquivos:** `packages/shared/src/{modulos/meta.ts,modulos/me.ts,index.ts}`, `apps/api/src/modules/{meta,me}/{service.ts,routes.ts}`, `apps/api/test/meta-me.test.ts`
+- **Arquivos:** `packages/shared/src/{modulos/meta.ts,modulos/me.ts,index.ts}`, `apps/api/src/modules/{meta,me}/{service.ts,routes.ts}`, `apps/api/src/app.ts`, `apps/api/test/meta-me.test.ts`
 - **Passos:**
   1. `GET /meta` (`autenticado`), só itens ativos e projeções enxutas:
      - áreas `{id,nome,atende}`, prioridades `{id,nome,cor,ordem,padrao}`, status `{id,nome,tipo,papel,cor,ignorado}`;
