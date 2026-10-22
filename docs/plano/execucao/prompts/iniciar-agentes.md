@@ -88,4 +88,4 @@ Leia a última mensagem e avise o coordenador.
 - **Travas no livro-razão:** quem reivindica uma tarefa grava a trava na branch `controle/travas` com push sem force. Se dois tentarem ao mesmo tempo, só um push entra; o outro relê o estado e escolhe outra tarefa.
 - **Arquivos e schema:** uma tarefa só é oferecida se nenhum arquivo dela estiver com outra tarefa aberta. O schema do banco também é travado, para uma tarefa por vez.
 - **Git e GitHub só pelo runner:** o modelo não faz push nem PR e não troca de branch.
-- **Merge só pelo coordenador:** a `v2` é protegida, e o check `protocolo` reprova PR fora do cartão.
+- **Merge pelo próprio executor:** o runner liga o auto-merge (squash) do PR da tarefa. A `v2` é protegida: só entra por PR, e o check `protocolo` (e o `verificar`, depois da T-1.11) reprova PR fora do cartão.
