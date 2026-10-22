@@ -169,7 +169,7 @@
 ### T-9.10 — Display, parte 2: avatar, presença e blocos
 - **Depende de:** T-9.6 · **Paralelo com:** T-9.8, T-9.9, T-9.11–T-9.15
 - **Requisitos:** §6.2 (acessibilidade), §6.5
-- **Arquivos:** `apps/web/src/components/display/{user-avatar.tsx,avatar-group.tsx,presence-indicator.tsx,key-value-grid.tsx,stat-card.tsx,kbd-shortcut.tsx,pode.tsx,display2.test.tsx}`
+- **Arquivos:** `apps/web/src/components/display/{user-avatar.tsx,avatar-group.tsx,presence-indicator.tsx,key-value-grid.tsx,stat-card.tsx,kbd-shortcut.tsx,pode.tsx,display2.test.tsx}`, `apps/web/package.json`
 - **Passos:**
   1. Avatar com iniciais e a cor por `id % 8` (§6.1).
   2. `PresenceIndicator` com glifo e `sr-only` ("Disponível").
