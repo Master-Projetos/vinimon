@@ -273,7 +273,8 @@
 ### T-5.12 — Exportar CSV
 - **Depende de:** T-5.5 · **Paralelo com:** T-5.11
 - **Requisitos:** S82, S87; G01
-- **Arquivos:** `apps/api/src/modules/chamados/{exportar.ts,routes.ts,exportar.test.ts}`
+- **Arquivos:** `apps/api/src/modules/chamados/{consultas.ts,exportar.ts,routes.ts,exportar.test.ts}`
+- **Decisão do coordenador:** `apps/api/src/modules/chamados/consultas.ts` entra nesta tarefa. Exporte de lá `filtrosDeConsulta(u, f, fuso, agora)` (= `AND: [escopoChamados(u), filtroVisao, ...filtrosDa]`, o mesmo `where` de `listar`) e `selectExportacao` (com canal, primeira resposta e encerramento). `listar` passa a usar o mesmo construtor; o escopo continua só vindo de `autorizacao/chamados.ts` (S45). Sem mudar o comportamento de `listar`.
 - **Passos:**
   1. `GET /chamados/exportar?<ChamadoFiltros>` (`relatorio.ver`). Mesmos filtros e escopo de `listar`, com `take` de até 5000, lido em lotes de 500 por cursor de id.
   2. `import contentDisposition from 'content-disposition'` (`content-disposition@3.0.0` nas dependencies da API se não estiver na §2.2). `reply.type('text/csv; charset=utf-8').header('content-disposition', contentDisposition('chamados-AAAA-MM-DD.csv'))` e `return reply.send(Readable.from(gerador()))`, com BOM e `linhaCsv`.
