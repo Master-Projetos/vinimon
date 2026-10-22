@@ -1,10 +1,9 @@
-import { randomBytes } from 'node:crypto'
 import { pathToFileURL } from 'node:url'
 import { CONFIG_PADRAO } from '@vinimon/shared'
 import type { Prisma } from '../src/generated/prisma/client'
 import { avaliarSenha } from '../src/lib/forca-senha'
 import { prisma, type Tx } from '../src/lib/prisma'
-import { hashSenha } from '../src/lib/senha'
+import { hashSenha, senhaAleatoria } from '../src/lib/senha'
 
 const CANAIS_SISTEMA = ['Sistema Web', 'Telefone', 'E-mail', 'Automático: via e-mail', 'API']
 const FERIADOS_NACIONAIS: [string, string][] = [
@@ -108,11 +107,6 @@ export async function seedBase(tx: Tx, { catalogos }: { catalogos: boolean }): P
     await tx.prioridade.createMany({ data: PRIORIDADES_PADRAO.map((p) => ({ ...p })) })
 }
 
-const gerarSenha = (): string => {
-  const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
-  return Array.from(randomBytes(20), (b) => alfabeto[b % alfabeto.length]).join('')
-}
-
 /** Passos 8–9: área TI e admin. Devolve a senha gerada (só quando `SEED_ADMIN_PASSWORD` não foi informada) ou null. */
 export async function seedInicial(tx: Tx): Promise<string | null> {
   let area = await tx.area.findFirst({ select: { id: true } })
@@ -127,7 +121,7 @@ export async function seedInicial(tx: Tx): Promise<string | null> {
 
   const organizacao = String(CONFIG_PADRAO['sistema.organizacao'])
   const informada = process.env.SEED_ADMIN_PASSWORD
-  const senha = informada ?? gerarSenha()
+  const senha = informada ?? senhaAleatoria(20)
   if (informada) {
     const av = await avaliarSenha(senha, { login: 'admin', nome: 'Administrador', email: null, organizacao })
     if (!av.ok) throw new Error(`SEED_ADMIN_PASSWORD é fraca: ${av.dica ?? 'escolha outra senha'}`)
