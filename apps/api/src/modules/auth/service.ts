@@ -44,7 +44,7 @@ export async function entrar(dados: EntrarBody, ctx: Contexto & { ip: string }) 
     where: { login },
     select: { id: true, ativo: true, perfil: true, senhaHash: true, deveTrocarSenha: true, mfaAtivadoEm: true },
   })
-  const candidato = u && u.ativo ? u : null
+  const candidato = u?.ativo ? u : null
   const { ok, precisaRehash } = await verificarSenha(dados.senha, candidato?.senhaHash ?? null)
 
   if (!ok || candidato === null) {
