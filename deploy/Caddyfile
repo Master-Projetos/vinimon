@@ -1,0 +1,9 @@
+# /etc/caddy/Caddyfile
+chamados.suaempresa.com.br {
+	encode zstd gzip
+	request_body {
+		max_size 60MB
+	}
+	reverse_proxy 127.0.0.1:3000
+}
+# Intranet sem DNS público: "tls internal" ou "tls /cert.pem /key.pem".
