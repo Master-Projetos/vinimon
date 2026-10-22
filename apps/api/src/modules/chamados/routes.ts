@@ -142,4 +142,46 @@ export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
     config: { acesso: 'chamado.atender' },
     handler: (req) => acoes.trocarPrioridade(req.params.id, req.body, contextoDe(req), req.log),
   })
+
+  app.route({
+    method: c.classificacao.metodo,
+    url: c.classificacao.caminho,
+    schema: {
+      tags,
+      summary: 'Altera problema, departamento, ativo ou canal',
+      params: c.classificacao.params,
+      body: c.classificacao.body,
+      response: { 200: c.classificacao.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.classificar(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.tags.metodo,
+    url: c.tags.caminho,
+    schema: {
+      tags,
+      summary: 'Substitui as tags do chamado',
+      params: c.tags.params,
+      body: c.tags.body,
+      response: { 200: c.tags.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.atualizarTags(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.agendar.metodo,
+    url: c.agendar.caminho,
+    schema: {
+      tags,
+      summary: 'Agenda o chamado',
+      params: c.agendar.params,
+      body: c.agendar.body,
+      response: { 200: c.agendar.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.agendar(req.params.id, req.body, contextoDe(req), req.log),
+  })
 }
