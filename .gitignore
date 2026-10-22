@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+apps/web/e2e/.auth/
+.vitest/
+apps/api/src/generated/
+storage/
+data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite*
+.env
+.env.*
+!.env.example
