@@ -2,6 +2,8 @@ name: CI
 on: { pull_request: {}, push: { branches: [main, v2] } }
 concurrency: { group: 'ci-${{ github.ref }}', cancel-in-progress: true }
 permissions: { contents: read }
+env:
+  GITLEAKS_VERSION: 8.30.0
 jobs:
   verificar:
     runs-on: ubuntu-24.04
@@ -16,10 +18,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+      - name: Gitleaks (S3)
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --no-banner --exit-code 1
       - name: Higiene do repositório (T03)
         # `if …; then exit 1; fi` em vez de `! cmd`: com `bash -e`, um `!` fora da última linha não derruba o passo.
         run: |
