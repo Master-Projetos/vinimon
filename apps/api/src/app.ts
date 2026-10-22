@@ -22,6 +22,8 @@ import { rotasCanais } from './modules/canais/routes'
 import { rotasCategoriasArtigo } from './modules/categorias-artigo/routes'
 import { rotasConfig } from './modules/config/routes'
 import { rotasDepartamentos } from './modules/departamentos/routes'
+import { rotasMe } from './modules/me/routes'
+import { rotasMeta } from './modules/meta/routes'
 import { rotasPrioridades } from './modules/prioridades/routes'
 import { rotasProblemas } from './modules/problemas/routes'
 import { rotasSaude } from './modules/saude/routes'
@@ -177,6 +179,8 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasCategoriasArtigo)
       await api.register(rotasConfig)
       await api.register(rotasDepartamentos)
+      await api.register(rotasMe)
+      await api.register(rotasMeta)
       await api.register(rotasPrioridades)
       await api.register(rotasProblemas)
       await api.register(rotasTiposAtivo)
