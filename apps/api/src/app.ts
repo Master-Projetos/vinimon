@@ -20,6 +20,7 @@ import { rotasAuditoria } from './modules/auditoria/routes'
 import { rotasAuth } from './modules/auth/routes'
 import { rotasCanais } from './modules/canais/routes'
 import { rotasCategoriasArtigo } from './modules/categorias-artigo/routes'
+import { rotasChamados } from './modules/chamados/routes'
 import { rotasConfig } from './modules/config/routes'
 import { rotasDepartamentos } from './modules/departamentos/routes'
 import { rotasMe } from './modules/me/routes'
@@ -176,6 +177,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasAuditoria)
       await api.register(rotasAuth)
       await api.register(rotasCanais)
+      await api.register(rotasChamados)
       await api.register(rotasCategoriasArtigo)
       await api.register(rotasConfig)
       await api.register(rotasDepartamentos)
