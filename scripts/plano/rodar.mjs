@@ -468,6 +468,9 @@ function publicar(t, wt, res, esc) {
   }
   const v = ghc(['pr', 'view', branch, '--json', 'state,baseRefName,headRefName,title,url'], { json: true })
   if (v.state !== 'OPEN' || v.baseRefName !== P.BASE || !v.title.startsWith(`${t.id}: `)) throw new Error(`PR não confere com o esperado: ${JSON.stringify(v)}`)
+  // O próprio executor faz o merge: auto-merge por squash, que só entra quando os checks obrigatórios (protocolo, verificar) passam.
+  const m = ghc(['pr', 'merge', branch, '--squash', '--auto'], { permitirFalha: true })
+  if (m === null) log(`aviso: não consegui ligar o auto-merge de ${branch}; faça o merge pelo GitHub quando o CI ficar verde`)
   return v.url
 }
 

@@ -16,8 +16,11 @@ import { env } from './env'
 import { responderRotaInexistente } from './lib/erros'
 import { rotasAreas } from './modules/areas/routes'
 import { rotasAuth } from './modules/auth/routes'
+import { rotasCanais } from './modules/canais/routes'
+import { rotasProblemas } from './modules/problemas/routes'
 import { rotasSaude } from './modules/saude/routes'
 import { rotasSeguranca } from './modules/seguranca/routes'
+import { rotasTags } from './modules/tags/routes'
 import { autenticacaoPlugin } from './plugins/autenticacao'
 import { docsPlugin } from './plugins/docs'
 import { errosPlugin } from './plugins/erros'
@@ -158,8 +161,11 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(segurancaPlugin)
       await api.register(rotasAreas)
       await api.register(rotasAuth)
+      await api.register(rotasCanais)
+      await api.register(rotasProblemas)
       await api.register(rotasSaude)
       await api.register(rotasSeguranca)
+      await api.register(rotasTags)
       if (opcoes.rotasDeTeste) await api.register(opcoes.rotasDeTeste)
       // cada módulo novo: 1 import + 1 linha aqui (ordem alfabética)
     },

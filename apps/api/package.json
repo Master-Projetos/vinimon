@@ -8,6 +8,7 @@
     "start": "node --enable-source-maps dist/server.mjs",
     "typecheck": "prisma generate && tsc --noEmit",
     "test": "prisma generate && vitest run --passWithNoTests",
+    "test:sla-tz": "TZ=UTC vitest run src/modules/sla && TZ=Asia/Tokyo vitest run src/modules/sla",
     "db:generate": "prisma generate",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",

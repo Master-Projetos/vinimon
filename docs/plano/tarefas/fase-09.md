@@ -5,16 +5,18 @@
 ### T-9.1 — Scaffold de `apps/web`
 - **Depende de:** T-1.10 · **Paralelo com:** Fases 2–8
 - **Requisitos:** S37, S77, S81; §3.12 (Vite), §6.6
-- **Arquivos:** `apps/web/{package.json,vite.config.ts,tsconfig.json,tsconfig.app.json,tsconfig.node.json,index.html}`, `apps/web/public/theme-init.js`, `apps/web/src/main.tsx`
+- **Arquivos:** `apps/web/{package.json,vite.config.ts,tsconfig.json,tsconfig.app.json,tsconfig.node.json,index.html}`, `apps/web/public/theme-init.js`, `apps/web/src/main.tsx`, `apps/web/src/routes/__root.tsx`, `apps/web/src/routeTree.gen.ts`
 - **Passos:**
   1. Versões exatas da §2.2. Acrescentar às devDependencies `@tanstack/router-cli@1.167.45`, que usa o mesmo `@tanstack/router-generator@1.167.45` do `@tanstack/router-plugin@1.168.47` (se a §2.2 fixar outra versão do plugin, usar o CLI com o mesmo router-generator). O script `typecheck` do web começa com `tsr generate && ` (o `routeTree.gen.ts` é regenerado antes do `tsc`).
   2. `index.html` conforme `docs/plano/relatorios/design.md` §1.11 (index.html e theme-init.js) (`lang="pt-BR"`, sem script inline, `<script src="/theme-init.js">` antes do módulo).
   3. `theme-init.js`: o de `docs/plano/relatorios/design.md` §1.11 (tema e densidade) mais, na primeira linha, `window.__zod_globalConfig = { jitless: true };` (S77).
   4. `main.tsx` mínimo: `createRoot(...).render(<p>Vinimon</p>)`.
+  5. `src/routes/__root.tsx` mínimo, só para o `tsr generate` ter o que gerar: `export const Route = createRootRoute({ component: () => <p>Vinimon</p> })` (de `@tanstack/react-router`). Rodar `pnpm -F @vinimon/web exec tsr generate` e commitar `src/routeTree.gen.ts`. O `main.tsx` continua sem router; a T-9.7 liga o router e sobrescreve os dois arquivos.
 - **Pronto quando:**
   - [ ] `pnpm -F @vinimon/web build` gera `dist/`;
   - [ ] `grep -c 'theme-init' apps/web/index.html` dá 1;
   - [ ] `grep -c 'tsr generate && ' apps/web/package.json` dá 1;
+  - [ ] `pnpm -F @vinimon/web exec tsr generate` roda sem erro;
   - [ ] `pnpm verificar`.
 - **Trilha:** W
 - **Modelo:** Haiku
