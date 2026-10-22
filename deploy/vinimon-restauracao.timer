@@ -1,0 +1,9 @@
+# /etc/systemd/system/vinimon-restauracao.timer
+# Dispara vinimon-restauracao.service (a mesma estrutura do backup, com ExecStart=/opt/vinimon/scripts/teste-restauracao.sh).
+[Unit]
+Description=Teste mensal de restauração do Vinimon
+[Timer]
+OnCalendar=*-*-01 05:41:00
+Persistent=true
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,13 @@
+# /etc/systemd/system/vinimon-backup.service
+[Unit]
+Description=Backup do Vinimon (pg_dump + restic)
+After=postgresql.service
+[Service]
+Type=oneshot
+User=vinimon
+EnvironmentFile=/etc/vinimon/api.env
+EnvironmentFile=/etc/vinimon/backup.env
+ExecStart=/opt/vinimon/scripts/backup.sh
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/vinimon

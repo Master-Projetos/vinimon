@@ -1,0 +1,8 @@
+# /etc/systemd/system/vinimon-backup.timer
+[Unit]
+Description=Backup diário do Vinimon às 02:17
+[Timer]
+OnCalendar=*-*-* 02:17:00
+Persistent=true
+[Install]
+WantedBy=timers.target
