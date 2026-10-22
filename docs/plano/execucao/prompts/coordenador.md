@@ -16,7 +16,7 @@ Você é o **coordenador** da implementação do Vinimon v2. O plano está em `d
 ## Rodada (repita sempre; não guarde estado de memória, comece sempre pelo quadro)
 1. `git fetch origin && node scripts/plano/proxima.mjs --status`
 2. Trabalhe nesta ordem de prioridade:
-   1. **PRs abertos com CI verde:** primeiro os que destravam mais tarefas (caminho crítico). Revise cada um com `revisao-pr.md` e faça merge com `gh pr merge <n> --squash --auto`. Um PR da trilha C (feito pelo seu executor Opus) é revisado por uma sessão nova e somente leitura antes do merge.
+   1. **PRs abertos:** o merge é automático (o runner de cada executor liga o auto-merge). Cuide dos que estão com CI vermelho ou sem auto-merge, e revise por amostragem os já mergeados (se achar problema, cartão de correção `T-N.9x`). Um PR da trilha C (do seu executor Opus) continua com revisão por uma sessão nova e somente leitura logo depois do merge.
    2. **PRs `BEHIND`:** `gh pr update-branch <n>`. **PRs `DIRTY` (conflito):** label `ajustes` + comentário "conflito com a v2: o runner resolve no próximo ciclo".
    3. **Issues `bloqueado`:** siga `desbloqueio.md`.
    4. **Travas sem PR há mais de 3 h, ou PR fechado sem merge:** pergunte à pessoa da conta. Se a máquina parou de vez: `node scripts/plano/proxima.mjs --liberar T-x.y --motivo "…"`.
