@@ -32,6 +32,7 @@ import { rotasMeta } from './modules/meta/routes'
 import { rotasPainel } from './modules/painel/routes'
 import { rotasPrioridades } from './modules/prioridades/routes'
 import { rotasProblemas } from './modules/problemas/routes'
+import { rotasRelatorios } from './modules/relatorios/routes'
 import { rotasSaude } from './modules/saude/routes'
 import { rotasSeguranca } from './modules/seguranca/routes'
 import { rotasStatus } from './modules/status/routes'
@@ -199,6 +200,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasTiposAtivo)
       await api.register(rotasUnidades)
       await api.register(rotasUsuarios)
+      await api.register(rotasRelatorios)
       await api.register(rotasSaude)
       await api.register(rotasSeguranca)
       await api.register(rotasStatus)
