@@ -210,4 +210,46 @@ export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
     config: { acesso: 'chamado.atender' },
     handler: (req) => acoes.agendar(req.params.id, req.body, contextoDe(req), req.log),
   })
+
+  app.route({
+    method: c.concluir.metodo,
+    url: c.concluir.caminho,
+    schema: {
+      tags,
+      summary: 'Conclui o chamado',
+      params: c.concluir.params,
+      body: c.concluir.body,
+      response: { 200: c.concluir.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.concluir(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.aprovar.metodo,
+    url: c.aprovar.caminho,
+    schema: {
+      tags,
+      summary: 'Aprova a conclusão (solicitante)',
+      params: c.aprovar.params,
+      body: c.aprovar.body,
+      response: { 200: c.aprovar.resposta },
+    },
+    config: { acesso: 'chamado.comentar' },
+    handler: (req) => acoes.aprovar(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.rejeitar.metodo,
+    url: c.rejeitar.caminho,
+    schema: {
+      tags,
+      summary: 'Rejeita a conclusão (solicitante)',
+      params: c.rejeitar.params,
+      body: c.rejeitar.body,
+      response: { 200: c.rejeitar.resposta },
+    },
+    config: { acesso: 'chamado.comentar' },
+    handler: (req) => acoes.rejeitar(req.params.id, req.body, contextoDe(req), req.log),
+  })
 }

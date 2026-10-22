@@ -1,10 +1,13 @@
 import {
   type AgendarChamado,
+  type AprovarChamado,
   type AssumirChamado,
   type ChamadoDetalhe,
   type ClassificacaoChamado,
+  type ConcluirChamado,
   type EncaminharChamado,
   type PrioridadeChamadoBody,
+  type RejeitarChamado,
   type StatusChamadoBody,
   type TagsChamado,
   type TipoStatus,
@@ -19,7 +22,8 @@ import { conflito, ErroApp, naoEncontrado, regraNegocio, semPermissao } from '..
 import { prisma, type Tx } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
 import { tempoReal } from '../../lib/tempo-real'
-import { aplicarTransicaoStatus, recalcularChamado, snapshotSla } from '../sla/service'
+import { adicionarDiasUteis } from '../sla/calendario'
+import { aplicarTransicaoStatus, carregarCalendario, recalcularChamado, snapshotSla } from '../sla/service'
 import { garantirTags } from '../tags/service'
 import { aposCommitChamado, type EfeitosChamado, type LogErro, registrarEvento, registrarSistema } from './eventos'
 import { montarDetalhe } from './service'
@@ -40,6 +44,7 @@ const selectParaAcao = {
   primeiraRespostaEm: true,
   problemaId: true,
   prioridadeId: true,
+  jornadaId: true,
   status: { select: { nome: true, papel: true } },
   area: { select: { nome: true } },
   operador: { select: { nome: true } },
@@ -61,7 +66,17 @@ async function exigirAcao(
   tx: Tx,
   u: UsuarioSessao,
   id: number,
-  acao: 'assumir' | 'encaminhar' | 'status' | 'prioridade' | 'classificar' | 'tags' | 'agendar',
+  acao:
+    | 'assumir'
+    | 'encaminhar'
+    | 'status'
+    | 'prioridade'
+    | 'classificar'
+    | 'tags'
+    | 'agendar'
+    | 'concluir'
+    | 'aprovar'
+    | 'rejeitar',
   agora: Date,
 ): Promise<ChamadoCarregado> {
   const c = await carregarParaAcao(tx, id)
@@ -100,7 +115,10 @@ async function atualizarComVersao(
   if (count === 0) throw conflito(MSG_VERSAO)
 }
 
-async function statusDoPapel(tx: Tx, papel: 'INICIAL' | 'EM_ATENDIMENTO' | 'ENCAMINHADO'): Promise<number> {
+async function statusDoPapel(
+  tx: Tx,
+  papel: 'INICIAL' | 'EM_ATENDIMENTO' | 'ENCAMINHADO' | 'CONCLUIDO' | 'ENCERRADO',
+): Promise<number> {
   const s = await tx.status.findFirst({ where: { papel, ativo: true }, select: { id: true } })
   if (!s) throw regraNegocio(`Não há status configurado para o papel ${papel}.`)
   return s.id
@@ -749,6 +767,192 @@ export async function agendar(
         eventoIds: [evento],
         assentamentoIds: [sistema],
         campos: ['agendamento', 'status', 'operador'],
+        acessoMudou: false,
+        fila: 'status',
+      },
+    }
+  })
+  return concluirAcao(u, r, agora, log)
+}
+
+// ───────── concluir, aprovar e rejeitar ─────────
+
+const UM_DIA_MS = 24 * 60 * 60 * 1000
+
+/**
+ * `concluir`: `operadorId ??= eu`. Vai direto para o papel ENCERRADO se `chamado.prazoValidacaoDias = 0`, se o ator é
+ * o solicitante ou se o operador é o solicitante. Senão vai para CONCLUIDO, com `validacaoLimiteEm` em dias úteis
+ * (`chamado.prazoValidacaoDiasUteis`) ou corridos. O aviso AVALIACAO_PENDENTE sai pelo fanout (T-6.8).
+ */
+export async function concluir(
+  id: number,
+  dados: ConcluirChamado,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const cfg = await obterConfig()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado> => {
+    const c = await exigirAcao(tx, u, id, 'concluir', agora)
+    if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+
+    const operadorId = c.operadorId ?? u.id
+    if (c.operadorId === null) await seguirComo(tx, id, u.id, 'ATRIBUIDO')
+    const direto = cfg['chamado.prazoValidacaoDias'] === 0 || c.solicitanteId === u.id || c.solicitanteId === operadorId
+    const novoStatusId = await statusDoPapel(tx, direto ? 'ENCERRADO' : 'CONCLUIDO')
+    let validacaoLimiteEm: Date | null = null
+    if (!direto) {
+      const dias = cfg['chamado.prazoValidacaoDias']
+      validacaoLimiteEm = cfg['chamado.prazoValidacaoDiasUteis']
+        ? adicionarDiasUteis(agora, dias, await carregarCalendario(tx, c.jornadaId))
+        : new Date(agora.getTime() + dias * UM_DIA_MS)
+    }
+
+    await marcarPrimeiraResposta(tx, c, u, agora)
+    await aplicarTransicaoStatus(tx, {
+      chamadoId: id,
+      versao: dados.versao,
+      novoStatusId,
+      atorId: u.id,
+      agora,
+      extras: {
+        operadorId,
+        solucao: dados.solucao,
+        descricaoTecnica: dados.descricaoTecnica ?? null,
+        validacaoLimiteEm,
+      },
+    })
+    await recalcularChamado(tx, id, agora)
+
+    const dadosEvento = { direto, operadorId }
+    const sistema = await registrarSistema(
+      tx,
+      id,
+      'CONCLUIDO',
+      direto ? 'Chamado concluído e encerrado' : 'Chamado concluído; aguardando validação do solicitante',
+      dadosEvento,
+    )
+    const evento = await registrarEvento(tx, {
+      chamadoId: id,
+      tipo: 'CONCLUIDO',
+      atorId: u.id,
+      assentamentoId: sistema,
+      dados: dadosEvento,
+    })
+    return {
+      chamadoId: id,
+      efeitos: {
+        eventoIds: [evento],
+        assentamentoIds: [sistema],
+        campos: ['status', 'operador'],
+        acessoMudou: false,
+        fila: 'status',
+      },
+    }
+  })
+  return concluirAcao(u, r, agora, log)
+}
+
+/** `aprovar`: só o solicitante, com o chamado CONCLUIDO. Papel ENCERRADO e `AvaliacaoChamado` (`automatica = false`). */
+export async function aprovar(
+  id: number,
+  dados: AprovarChamado,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado> => {
+    const c = await exigirAcao(tx, u, id, 'aprovar', agora)
+    if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+
+    await aplicarTransicaoStatus(tx, {
+      chamadoId: id,
+      versao: dados.versao,
+      novoStatusId: await statusDoPapel(tx, 'ENCERRADO'),
+      atorId: u.id,
+      agora,
+    })
+    await tx.avaliacaoChamado.create({
+      data: {
+        chamadoId: id,
+        avaliadorId: u.id,
+        nota: dados.nota,
+        comentario: dados.comentario ?? null,
+        automatica: false,
+      },
+    })
+    await recalcularChamado(tx, id, agora)
+
+    const dadosEvento = { nota: dados.nota }
+    const sistema = await registrarSistema(tx, id, 'APROVADO', 'Atendimento aprovado pelo solicitante', dadosEvento)
+    const evento = await registrarEvento(tx, {
+      chamadoId: id,
+      tipo: 'APROVADO',
+      atorId: u.id,
+      assentamentoId: sistema,
+      dados: dadosEvento,
+    })
+    return {
+      chamadoId: id,
+      efeitos: {
+        eventoIds: [evento],
+        assentamentoIds: [sistema],
+        campos: ['status', 'avaliacao'],
+        acessoMudou: false,
+        fila: 'status',
+      },
+    }
+  })
+  return concluirAcao(u, r, agora, log)
+}
+
+/**
+ * `rejeitar`: só o solicitante, com o chamado CONCLUIDO. O motivo vira comentário público. Papel EM_ATENDIMENTO,
+ * mantendo o operador; se ele estiver inativo, papel INICIAL sem operador. `concluidoEm = null`, `rejeicoes + 1`.
+ */
+export async function rejeitar(
+  id: number,
+  dados: RejeitarChamado,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado> => {
+    const c = await exigirAcao(tx, u, id, 'rejeitar', agora)
+    if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+
+    const operadorAtivo =
+      c.operadorId !== null &&
+      (await tx.usuario.count({ where: { id: c.operadorId, ativo: true, perfil: { in: ['OPERADOR', 'ADMIN'] } } })) > 0
+    const comentario = await comentarioOpcional(tx, id, u, dados.motivo)
+    await aplicarTransicaoStatus(tx, {
+      chamadoId: id,
+      versao: dados.versao,
+      novoStatusId: await statusDoPapel(tx, operadorAtivo ? 'EM_ATENDIMENTO' : 'INICIAL'),
+      atorId: u.id,
+      agora,
+      extras: { rejeicoes: { increment: 1 }, operadorId: operadorAtivo ? c.operadorId : null },
+    })
+    await recalcularChamado(tx, id, agora)
+
+    const dadosEvento = { operadorAtivo }
+    const sistema = await registrarSistema(tx, id, 'REJEITADO', 'Atendimento rejeitado pelo solicitante', dadosEvento)
+    const evento = await registrarEvento(tx, {
+      chamadoId: id,
+      tipo: 'REJEITADO',
+      atorId: u.id,
+      assentamentoId: sistema,
+      dados: dadosEvento,
+    })
+    return {
+      chamadoId: id,
+      efeitos: {
+        eventoIds: [evento],
+        assentamentoIds: [...comentario, sistema],
+        campos: ['status', 'operador'],
         acessoMudou: false,
         fila: 'status',
       },
