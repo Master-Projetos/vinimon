@@ -1,0 +1,13 @@
+# Allowlist do gitleaks: só os valores de EXEMPLO de desenvolvimento (CSRF_SECRET e ENCRYPTION_KEY).
+# Decodificados contêm "troque"; o env.ts os recusa com NODE_ENV=production (S4/T02).
+# Nunca coloque aqui um segredo real.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Segredos de exemplo para desenvolvimento e testes"
+regexTarget = "match"
+regexes = [
+  '''ZGV2LWFwZW5hcy10cm9xdWUtZW0tcHJvZHVjYW8tMDAwMQ==''',
+  '''ZGV2LWFwZW5hcy10cm9xdWUtZW0tcHJvZHVjYW8tMDE=''',
+]
