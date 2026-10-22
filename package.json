@@ -1,0 +1,27 @@
+{
+  "name": "vinimon",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.14.0",
+  "engines": {
+    "node": ">=24.11"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @vinimon/api --filter @vinimon/web run dev",
+    "build": "pnpm --filter @vinimon/web build && pnpm --filter @vinimon/api build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @vinimon/web test:e2e",
+    "db:up": "docker compose up -d",
+    "db:generate": "pnpm --filter @vinimon/api db:generate",
+    "db:deploy": "pnpm --filter @vinimon/api db:deploy",
+    "db:seed": "pnpm --filter @vinimon/api db:seed",
+    "verificar": "pnpm lint && pnpm typecheck && pnpm test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "typescript": "catalog:"
+  }
+}
