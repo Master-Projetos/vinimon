@@ -1,11 +1,26 @@
-import { type EntrarBody, PERMISSOES_POR_PERFIL, type UsuarioMe } from '@vinimon/shared'
+import {
+  type EntrarBody,
+  PERMISSOES_POR_PERFIL,
+  type SessaoResposta,
+  type TrocarSenhaBody,
+  type UsuarioMe,
+} from '@vinimon/shared'
 import { auditar } from '../../lib/auditoria'
+import { obterConfig } from '../../lib/config'
 import type { Contexto, ContextoUsuario } from '../../lib/contexto'
-import { loginInvalido, muitasTentativas } from '../../lib/erros'
+import { ErroApp, loginInvalido, muitasTentativas } from '../../lib/erros'
+import { validarNovaSenha } from '../../lib/forca-senha'
 import { prisma } from '../../lib/prisma'
 import { hashSenha, verificarSenha } from '../../lib/senha'
-import { criarSessao, revogarSessao } from '../../lib/sessao'
-import { estadoAposSenha } from './estados'
+import {
+  criarSessao,
+  csrfDaSessao,
+  desconectarSessoes,
+  promoverSessao,
+  revogarSessao,
+  revogarSessoesDoUsuario,
+} from '../../lib/sessao'
+import { estadoAposSenha, estadoAposTrocaSenha } from './estados'
 
 const JANELA_MS = 15 * 60_000
 const MAX_FALHAS_LOGIN = 5
@@ -107,4 +122,52 @@ export async function sair(ctx: ContextoUsuario): Promise<void> {
   await prisma.$transaction((tx) =>
     auditar(tx, ctx, { acao: 'logout', entidade: 'usuario', entidadeId: ctx.usuario.id }),
   )
+}
+
+/** POST /auth/trocar-senha: grava a nova senha, revoga as outras sessões e rotaciona o token desta (S15, S19). */
+export async function trocarSenha(
+  corpo: TrocarSenhaBody,
+  ctx: ContextoUsuario,
+): Promise<{ resposta: SessaoResposta; token: string; expiraEm: Date }> {
+  const u = await prisma.usuario.findUniqueOrThrow({
+    where: { id: ctx.usuario.id },
+    select: { id: true, login: true, nome: true, email: true, perfil: true, mfaAtivadoEm: true },
+  })
+  const [atual] = await prisma.$queryRaw<
+    { senha_hash: string | null }[]
+  >`SELECT senha_hash FROM usuarios WHERE id = ${u.id}`
+  const hashAtual = atual?.senha_hash ?? null
+  if (!(await verificarSenha(corpo.senhaAtual, hashAtual)).ok) {
+    throw new ErroApp(400, 'VALIDACAO', 'Senha atual incorreta.', [
+      { campo: 'senhaAtual', mensagem: 'Senha atual incorreta.' },
+    ])
+  }
+  const cfg = await obterConfig()
+  await validarNovaSenha(
+    corpo.novaSenha,
+    { login: u.login, nome: u.nome, email: u.email, organizacao: cfg['sistema.organizacao'] },
+    hashAtual,
+  )
+  const novoHash = await hashSenha(corpo.novaSenha) // fora da transação (custo de CPU)
+
+  const revogadas = await prisma.$transaction(async (tx) => {
+    await tx.usuario.update({
+      where: { id: u.id },
+      data: { senhaHash: novoHash, deveTrocarSenha: false, senhaAlteradaEm: new Date() },
+    })
+    await auditar(tx, ctx, { acao: 'senha.alterada', entidade: 'usuario', entidadeId: u.id })
+    return revogarSessoesDoUsuario(tx, u.id, 'troca_senha', ctx.usuario.sessaoId)
+  })
+  desconectarSessoes(revogadas, 'troca_senha')
+  const estado = estadoAposTrocaSenha({ perfil: u.perfil, deveTrocarSenha: false, mfaAtivadoEm: u.mfaAtivadoEm })
+  const nova = await promoverSessao(ctx.usuario.sessaoId, estado)
+  if (estado === 'ATIVA') await prisma.usuario.update({ where: { id: u.id }, data: { ultimoLoginEm: new Date() } })
+  return {
+    resposta: {
+      estado,
+      csrf: csrfDaSessao(ctx.usuario.sessaoId),
+      usuario: estado === 'ATIVA' ? await obterUsuarioMe(u.id) : null,
+    },
+    ...nova,
+  }
 }

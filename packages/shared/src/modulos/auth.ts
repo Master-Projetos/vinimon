@@ -38,8 +38,59 @@ export const SessaoRespostaSchema = z.object({
 })
 export type SessaoResposta = z.output<typeof SessaoRespostaSchema>
 
+const CodigoTotpSchema = z.string().regex(/^\d{6}$/, 'Informe o código de 6 dígitos.')
+
+export const Verificar2faBodySchema = z
+  .strictObject({ codigo: CodigoTotpSchema })
+  .or(z.strictObject({ codigoRecuperacao: z.string().trim().max(19) }))
+export type Verificar2faBody = z.output<typeof Verificar2faBodySchema>
+
+export const Iniciar2faRespostaSchema = z.object({ otpauthUri: z.string(), segredo: z.string() })
+export const Confirmar2faBodySchema = z.strictObject({ codigo: CodigoTotpSchema })
+export const Confirmar2faRespostaSchema = z.object({ codigos: z.array(z.string()), sessao: SessaoRespostaSchema })
+export const NovosCodigosBodySchema = z.strictObject({ senha: z.string().min(1).max(128) })
+export const NovosCodigosRespostaSchema = z.object({ codigos: z.array(z.string()) })
+export const Desativar2faBodySchema = z.strictObject({ senha: z.string().min(1).max(128), codigo: CodigoTotpSchema })
+export const TrocarSenhaBodySchema = z.strictObject({
+  senhaAtual: z.string().min(1).max(128),
+  novaSenha: z.string().min(1).max(128),
+})
+export type TrocarSenhaBody = z.output<typeof TrocarSenhaBodySchema>
+
 export const authApi = {
   entrar: contrato({ metodo: 'POST', caminho: '/auth/login', body: EntrarBodySchema, resposta: SessaoRespostaSchema }),
   sessao: contrato({ metodo: 'GET', caminho: '/auth/sessao', resposta: SessaoRespostaSchema }),
   sair: contrato({ metodo: 'POST', caminho: '/auth/logout', resposta: z.undefined(), status: 204 }),
+  verificar2fa: contrato({
+    metodo: 'POST',
+    caminho: '/auth/2fa/verificar',
+    body: Verificar2faBodySchema,
+    resposta: SessaoRespostaSchema,
+  }),
+  iniciar2fa: contrato({ metodo: 'POST', caminho: '/auth/2fa/iniciar', resposta: Iniciar2faRespostaSchema }),
+  confirmar2fa: contrato({
+    metodo: 'POST',
+    caminho: '/auth/2fa/confirmar',
+    body: Confirmar2faBodySchema,
+    resposta: Confirmar2faRespostaSchema,
+  }),
+  codigos2fa: contrato({
+    metodo: 'POST',
+    caminho: '/auth/2fa/codigos',
+    body: NovosCodigosBodySchema,
+    resposta: NovosCodigosRespostaSchema,
+  }),
+  desativar2fa: contrato({
+    metodo: 'POST',
+    caminho: '/auth/2fa/desativar',
+    body: Desativar2faBodySchema,
+    resposta: z.undefined(),
+    status: 204,
+  }),
+  trocarSenha: contrato({
+    metodo: 'POST',
+    caminho: '/auth/trocar-senha',
+    body: TrocarSenhaBodySchema,
+    resposta: SessaoRespostaSchema,
+  }),
 }
