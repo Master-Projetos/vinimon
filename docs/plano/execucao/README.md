@@ -14,7 +14,7 @@
 
 | Modelo | Tarefas | Papel |
 |---|---|---|
-| **Opus** | 16 | Coordenação, revisão, merge, portões, desbloqueio. Executa 2.4, 4.3, 5.1, 5.11, 6.3, 6.8, 7.2, 7.4, 11.3, 11.11, 11.12, 13.2, 17.2, 19.1, 19.2, 20.7 |
+| **Opus** | 16 | Coordenação, revisão por amostragem, portões, desbloqueio. Executa 2.4, 4.3, 5.1, 5.11, 6.3, 6.8, 7.2, 7.4, 11.3, 11.11, 11.12, 13.2, 17.2, 19.1, 19.2, 20.7 |
 | **Sonnet** | 36 | Lógica sutil ou de segurança: sessões, 2FA, SLA, ações de chamado, menções, socket, importador, LDAP etc. |
 | **Haiku** | 161 | Tarefas mecânicas: cadastros, telas, componentes, configuração |
 
@@ -36,6 +36,6 @@ Cada cartão traz `Modelo:` e `Trilha:`. A trilha A é a API, a W é a Web e a C
 2. Uma tarefa só é oferecida se nenhum arquivo dela estiver com outra tarefa aberta, de qualquer trilha. O schema do banco também é travado, para uma tarefa por vez.
    - Ficam fora dessa regra os arquivos de append-only (`app.ts`, `shared/src/index.ts`, `jobs/index.ts`) e os gerados (`pnpm-lock.yaml`, `routeTree.gen.ts`, `components/ui/**`).
 3. Cada agente tem no máximo 2 tarefas abertas. Uma tarefa bloqueada segura só o ID, não os arquivos.
-4. Tarefas novas só depois do merge das dependências na `v2`. O merge é sempre squash com o título `T-x.y: …`.
+4. Tarefas novas só depois do merge das dependências na `v2`. O merge é sempre squash com o título `T-x.y: …`, ligado pelo runner do próprio executor (auto-merge) e liberado pelos checks obrigatórios.
 5. Um executor por máquina. Os bancos de dev e de teste são da máquina; o runner recria o de teste a cada tarefa.
 6. Correções de plano e portões entram por PR `plano/*`. Nada é commitado direto na `v2`.
