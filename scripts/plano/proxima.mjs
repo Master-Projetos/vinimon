@@ -85,6 +85,7 @@ export function lerConcluidas(cwd, ref = `${REMOTO}/${BASE}`) {
     else if ((m = s.match(/^Reapply "T-(\d+\.\d+): /))) concluidas.add(`T-${m[1]}`)
     else if ((m = s.match(/^port[ãa]o: (P\d\d|MVP)\b/))) portoes.add(m[1])
   }
+  for (const id of lerReconciliadas(cwd, ref)) concluidas.add(id)
   return { concluidas, portoes }
 }
 
@@ -125,6 +126,18 @@ function ciDaBase(cwd, topo) {
   return { estado: 'rodando', topo }
 }
 
+/** Tarefas que entraram na base por reconciliação (sem commit `T-x.y:` nem PR tarefa/<id>); lista fixa em docs/plano/execucao/reconciliadas.json. */
+function lerReconciliadas(cwd, ref) {
+  const r = git(['show', `${ref}:docs/plano/execucao/reconciliadas.json`], { cwd, permitirFalha: true })
+  if (!r.ok) return new Set()
+  try {
+    const ids = JSON.parse(r.out)
+    return new Set(Array.isArray(ids) ? ids.filter((i) => /^T-\d+\.\d+$/.test(i)) : [])
+  } catch {
+    return new Set()
+  }
+}
+
 /**
  * Estado completo. `semGh` (--status offline, ou VINIMON_SEM_GH=1 nos executores da nuvem, que não têm
  * `gh` autenticado) pula PRs e CI; o runner nunca usa.
@@ -146,8 +159,9 @@ export function lerEstado({ cwd = process.cwd(), semGh = false, semFetch = false
       { cwd, json: true },
     )
     const mergeados = new Set(prs.filter((p) => p.state === 'MERGED' && p.headRefName.startsWith('tarefa/')).map((p) => p.headRefName.slice(7)))
+    const reconciliadas = lerReconciliadas(cwd, `${REMOTO}/${BASE}`)
     for (const id of [...concluidas]) {
-      if (!mergeados.has(id)) {
+      if (!mergeados.has(id) && !reconciliadas.has(id)) {
         concluidas.delete(id)
         anomalias.push(`${id} está no log da ${BASE} sem PR mergeado de tarefa/${id}: não conta como concluída`)
       }
