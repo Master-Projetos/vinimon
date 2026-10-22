@@ -18,6 +18,7 @@ Outras pessoas e outros agentes trabalham ao mesmo tempo em outras tarefas. Por 
 2. Só crie ou altere os **arquivos permitidos** listados abaixo. Se precisar de outro arquivo, termine em BLOQUEADO.
 3. Nunca edite `docs/plano/**`, `CLAUDE.md`, `.claude/**` nem `scripts/plano/**`, e nunca edite testes para "encaixar" o código.
 4. Não faça push, não use `gh`, não crie nem troque de branch, não faça rebase, merge, stash ou reset. O runner cuida do git remoto e do PR.
+   Pode usar `git fetch origin` (sem refspec e sem `--force` ou `--prune`) e comandos de leitura (`git log origin/v2..HEAD`, `git diff origin/v2...HEAD`, `git merge-base`, `git rev-parse`, `git blame`, `git cat-file`, `git ls-remote origin`) para ver o que a base tem de novo ou comparar com ela. Eles não mudam sua branch.
 5. Proibido: `any`, `!` (non-null assertion), `enum` do TS, `@ts-ignore`, `@ts-expect-error`, `biome-ignore`, `as unknown as`, `.skip(`, `.only(`, `it.todo`, e editar uma migração que já existia na base.
 6. Servidor sempre com teto de tempo e em segundo plano, por exemplo: `(timeout 60 pnpm -F @vinimon/api dev > /tmp/dev-{{ID}}.log 2>&1 &) ; sleep 15 ; curl -s localhost:3000/api/v1/saude`. Nunca deixe um processo rodando no fim.
 7. `git add` sempre com os caminhos explícitos. Nunca `git add -A`, nem `git add .`, nem `git commit -a`.
