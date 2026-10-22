@@ -10,6 +10,7 @@ import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fas
 import { env } from './env'
 import { responderRotaInexistente } from './lib/erros'
 import { rotasAreas } from './modules/areas/routes'
+import { rotasAuth } from './modules/auth/routes'
 import { rotasSaude } from './modules/saude/routes'
 import { autenticacaoPlugin } from './plugins/autenticacao'
 import { docsPlugin } from './plugins/docs'
@@ -123,6 +124,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(autenticacaoPlugin)
       await api.register(segurancaPlugin)
       await api.register(rotasAreas)
+      await api.register(rotasAuth)
       await api.register(rotasSaude)
       // cada módulo novo: 1 import + 1 linha aqui (ordem alfabética)
     },
