@@ -22,7 +22,7 @@ export const BASE = process.env.VINIMON_BASE ?? 'v2'
 export const LIVRO = 'controle/travas'
 export const LIMITE_POR_AGENTE = 2
 const PROIBIDOS_TAREFA = ['docs/plano/', 'CLAUDE.md', '.claude/', 'scripts/plano/', '.github/']
-const PERMITIDOS_PLANO = ['docs/plano/', 'scripts/plano/', 'CLAUDE.md', '.claude/', '.gitattributes', '.github/workflows/protocolo.yml']
+const PERMITIDOS_PLANO = ['docs/plano/', 'scripts/plano/', 'CLAUDE.md', '.claude/', '.gitattributes', '.github/workflows/protocolo.yml', '.gitleaksignore', '.gitleaks.toml']
 const RE_AGENTE = /^[a-z0-9][a-z0-9._-]{2,39}$/
 const RE_RECUSA = /rejected|non-fast-forward|fetch first|failed to push|stale info|cannot lock ref/i
 
