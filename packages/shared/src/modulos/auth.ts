@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { DENSIDADES, ESTADOS_SESSAO, TEMAS } from '../enums'
-import { contrato } from '../http'
+import { contrato, UuidParamsSchema, zDataHora } from '../http'
 import { PERFIS, PERMISSOES } from '../permissoes'
 
 export const EntrarBodySchema = z.strictObject({
@@ -57,6 +57,16 @@ export const TrocarSenhaBodySchema = z.strictObject({
 })
 export type TrocarSenhaBody = z.output<typeof TrocarSenhaBodySchema>
 
+export const SessaoDispositivoSchema = z.object({
+  id: z.uuid(),
+  criadaEm: zDataHora(),
+  ultimoUsoEm: zDataHora(),
+  ip: z.string().nullable(),
+  userAgent: z.string().nullable(),
+  atual: z.boolean(),
+})
+export type SessaoDispositivo = z.output<typeof SessaoDispositivoSchema>
+
 export const authApi = {
   entrar: contrato({ metodo: 'POST', caminho: '/auth/login', body: EntrarBodySchema, resposta: SessaoRespostaSchema }),
   sessao: contrato({ metodo: 'GET', caminho: '/auth/sessao', resposta: SessaoRespostaSchema }),
@@ -84,6 +94,20 @@ export const authApi = {
     metodo: 'POST',
     caminho: '/auth/2fa/desativar',
     body: Desativar2faBodySchema,
+    resposta: z.undefined(),
+    status: 204,
+  }),
+  sessoes: contrato({ metodo: 'GET', caminho: '/auth/sessoes', resposta: z.array(SessaoDispositivoSchema) }),
+  revogarSessao: contrato({
+    metodo: 'DELETE',
+    caminho: '/auth/sessoes/:id',
+    params: UuidParamsSchema,
+    resposta: z.undefined(),
+    status: 204,
+  }),
+  encerrarTodas: contrato({
+    metodo: 'POST',
+    caminho: '/auth/sessoes/encerrar-todas',
     resposta: z.undefined(),
     status: 204,
   }),

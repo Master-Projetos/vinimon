@@ -5,6 +5,7 @@ import { csrfDaSessao, NOME_COOKIE, opcoesCookie, opcoesLimparCookie } from '../
 import * as mfa from './mfa'
 import { authApi as c } from './schemas'
 import * as service from './service'
+import * as sessoes from './sessoes'
 
 const tags = ['Autenticação']
 
@@ -140,6 +141,46 @@ export const rotasAuth: FastifyPluginAsyncZod = async (app) => {
       const r = await service.trocarSenha(req.body, contextoDe(req))
       aplicar(reply, r)
       return r.resposta
+    },
+  })
+
+  app.route({
+    method: c.sessoes.metodo,
+    url: c.sessoes.caminho,
+    schema: { tags, summary: 'Dispositivos conectados', response: { 200: c.sessoes.resposta } },
+    config: { acesso: 'autenticado' },
+    handler: (req) => sessoes.listarSessoes(contextoDe(req)),
+  })
+
+  app.route({
+    method: c.revogarSessao.metodo,
+    url: c.revogarSessao.caminho,
+    schema: {
+      tags,
+      summary: 'Encerra uma sessão do próprio usuário',
+      params: c.revogarSessao.params,
+      response: { 204: c.revogarSessao.resposta },
+    },
+    config: { acesso: 'autenticado' },
+    handler: async (req, reply) => {
+      await sessoes.revogarDispositivo(req.params.id, contextoDe(req))
+      return reply.code(204).send()
+    },
+  })
+
+  app.route({
+    method: c.encerrarTodas.metodo,
+    url: c.encerrarTodas.caminho,
+    schema: {
+      tags,
+      summary: 'Encerra todas as sessões, inclusive a atual',
+      response: { 204: c.encerrarTodas.resposta },
+    },
+    config: { acesso: 'autenticado' },
+    handler: async (req, reply) => {
+      await sessoes.encerrarTodas(contextoDe(req))
+      reply.clearCookie(NOME_COOKIE, opcoesLimparCookie())
+      return reply.code(204).send()
     },
   })
 }
