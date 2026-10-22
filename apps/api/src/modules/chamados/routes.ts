@@ -1,6 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { contextoDe } from '../../lib/contexto'
 import { naoAutenticado } from '../../lib/erros'
+import * as acoes from './acoes'
 import * as consultas from './consultas'
 import { chamadosApi as c } from './schemas'
 import * as service from './service'
@@ -84,5 +85,61 @@ export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
     schema: { tags, summary: 'Abre um chamado', body: c.criar.body, response: { 201: c.criar.resposta } },
     config: { acesso: 'chamado.abrir' },
     handler: async (req, reply) => reply.code(201).send(await service.abrirChamado(req.body, contextoDe(req), req.log)),
+  })
+
+  app.route({
+    method: c.assumir.metodo,
+    url: c.assumir.caminho,
+    schema: {
+      tags,
+      summary: 'Assume o chamado',
+      params: c.assumir.params,
+      body: c.assumir.body,
+      response: { 200: c.assumir.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.assumir(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.encaminhar.metodo,
+    url: c.encaminhar.caminho,
+    schema: {
+      tags,
+      summary: 'Encaminha o chamado para outra área ou operador',
+      params: c.encaminhar.params,
+      body: c.encaminhar.body,
+      response: { 200: c.encaminhar.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.encaminhar(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.status.metodo,
+    url: c.status.caminho,
+    schema: {
+      tags,
+      summary: 'Troca o status do chamado',
+      params: c.status.params,
+      body: c.status.body,
+      response: { 200: c.status.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.trocarStatus(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.prioridade.metodo,
+    url: c.prioridade.caminho,
+    schema: {
+      tags,
+      summary: 'Troca a prioridade do chamado',
+      params: c.prioridade.params,
+      body: c.prioridade.body,
+      response: { 200: c.prioridade.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.trocarPrioridade(req.params.id, req.body, contextoDe(req), req.log),
   })
 }
