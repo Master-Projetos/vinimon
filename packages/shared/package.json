@@ -1,5 +1,6 @@
 {
   "name": "@vinimon/shared",
+  "private": true,
   "type": "module",
   "sideEffects": false,
   "exports": {

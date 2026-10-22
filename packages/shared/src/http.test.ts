@@ -2,12 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { PaginacaoQuerySchema, zDataHora, zListaIds } from './http'
 
 describe('zDataHora', () => {
-  it('decodifica ISO para Date e codifica de volta para ISO', () => {
-    const iso = '2026-10-21T12:30:00.000Z'
-    const data = zDataHora().parse(iso)
-
+  it('decodifica ISO para Date e codifica de volta', () => {
+    const schema = zDataHora()
+    const data = schema.decode('2026-10-21T12:30:00.000Z')
     expect(data).toBeInstanceOf(Date)
-    expect(zDataHora().encode(data)).toBe(iso)
+    expect(schema.encode(data)).toBe('2026-10-21T12:30:00.000Z')
   })
 
   it('recusa data inválida', () => {
@@ -16,31 +15,30 @@ describe('zDataHora', () => {
 })
 
 describe('zListaIds', () => {
-  it('aceita um valor avulso', () => {
-    expect(zListaIds().parse('3')).toEqual([3])
+  const schema = zListaIds()
+
+  it('aceita um valor só e vários valores', () => {
+    expect(schema.parse('3')).toEqual([3])
+    expect(schema.parse(['1', '2'])).toEqual([1, 2])
   })
 
-  it('aceita vários valores', () => {
-    expect(zListaIds().parse(['1', '2'])).toEqual([1, 2])
+  it('aceita ausência', () => {
+    expect(schema.parse(undefined)).toBeUndefined()
   })
 
   it('recusa mais de 50 itens', () => {
-    const ids = Array.from({ length: 51 }, (_, i) => String(i + 1))
-
-    expect(zListaIds().safeParse(ids).success).toBe(false)
+    expect(schema.safeParse(Array.from({ length: 51 }, (_, i) => String(i + 1))).success).toBe(false)
   })
 })
 
 describe('PaginacaoQuerySchema', () => {
-  it('usa pagina 1 e porPagina 25 como padrão', () => {
+  it('usa os padrões', () => {
     expect(PaginacaoQuerySchema.parse({})).toEqual({ pagina: 1, porPagina: 25 })
   })
 
-  it('recusa porPagina=0', () => {
+  it('recusa porPagina fora de 1..100', () => {
     expect(PaginacaoQuerySchema.safeParse({ porPagina: '0' }).success).toBe(false)
-  })
-
-  it('recusa porPagina=101', () => {
     expect(PaginacaoQuerySchema.safeParse({ porPagina: '101' }).success).toBe(false)
+    expect(PaginacaoQuerySchema.safeParse({ porPagina: '100' }).success).toBe(true)
   })
 })

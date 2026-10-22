@@ -1,0 +1,42 @@
+name: CI
+on: { pull_request: {}, push: { branches: [main, v2] } }
+concurrency: { group: 'ci-${{ github.ref }}', cancel-in-progress: true }
+permissions: { contents: read }
+env:
+  GITLEAKS_VERSION: 8.30.0
+jobs:
+  verificar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env: { POSTGRES_USER: vinimon, POSTGRES_PASSWORD: vinimon, POSTGRES_DB: vinimon_test }
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U vinimon -d vinimon_test" --health-interval 5s --health-timeout 5s --health-retries 20
+    env: { DATABASE_URL_TESTE: 'postgresql://vinimon:vinimon@localhost:5432/vinimon_test' }
+    steps:
+      - uses: actions/checkout@v7
+        with: { fetch-depth: 0 }
+      - name: Gitleaks (S3)
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --no-banner --exit-code 1
+      - name: Higiene do repositório (T03)
+        # `if …; then exit 1; fi` em vez de `! cmd`: com `bash -e`, um `!` fora da última linha não derruba o passo.
+        run: |
+          if git ls-files | grep -E '\.(db|db-wal|db-shm|sqlite)$|(^|/)\.env$'; then exit 1; fi
+          if git grep -nE '\$queryRawUnsafe|\$executeRawUnsafe|\.innerHTML\s*=|dangerouslySetInnerHTML|data:\s*(req|request)\.body|trustProxy:\s*true|eval\(|new Function\(' -- apps packages ':!apps/web/src/components/ui/**' ':!**/generated/**'; then exit 1; fi
+          if git grep -nE 'console\.log' -- apps/api/src ':!**/generated/**'; then exit 1; fi
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --prod --audit-level=high
+      - run: pnpm db:generate
+      - run: pnpm exec biome ci .
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Prisma exata em 7.10.1 (T04)
+        run: test "$(node -p "require('./apps/api/package.json').devDependencies.prisma")" = "7.10.1"
+      - run: pnpm -F @vinimon/api build
