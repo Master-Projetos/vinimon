@@ -155,7 +155,7 @@ export function lerEstado({ cwd = process.cwd(), semGh = false, semFetch = false
   let ci = { estado: 'desconhecido', topo: topoBase }
   if (!semGh) {
     prs = gh(
-      ['pr', 'list', '--base', BASE, '--state', 'all', '--limit', '1000', '--json', 'number,headRefName,title,state,labels,isDraft,mergeStateStatus,updatedAt,url'],
+      ['pr', 'list', '--base', BASE, '--state', 'all', '--limit', '1000', '--json', 'number,headRefName,title,state,labels,isDraft,mergeStateStatus,statusCheckRollup,updatedAt,url'],
       { cwd, json: true },
     )
     const mergeados = new Set(prs.filter((p) => p.state === 'MERGED' && p.headRefName.startsWith('tarefa/')).map((p) => p.headRefName.slice(7)))

@@ -158,12 +158,45 @@ function atualizarControle() {
 
 // ---------- escolha ----------
 
+/** CI vermelho no PR (check falhou ou foi cancelado) ou PR sem condição de merge (conflito). */
+const FALHAS_CI = new Set(['FAILURE', 'CANCELLED', 'TIMED_OUT', 'STARTUP_FAILURE', 'ERROR'])
+export const ciVermelho = (pr) => (pr.statusCheckRollup ?? []).filter((c) => FALHAS_CI.has(c.conclusion ?? c.state))
+const MAX_RODADAS_CI = 3
+
+function rodadasCi(id) {
+  try {
+    return Number(readFileSync(join(DADOS, 'ci', `${id}.n`), 'utf8')) || 0
+  } catch {
+    return 0
+  }
+}
+function contarRodadaCi(id, n) {
+  mkdirSync(join(DADOS, 'ci'), { recursive: true })
+  writeFileSync(join(DADOS, 'ci', `${id}.n`), String(n))
+}
+
+/** Últimas linhas do log do job que falhou no PR da tarefa (o modelo não usa `gh`; o runner traz o log). */
+function logDaFalha(id) {
+  const runs = ghc(['run', 'list', '--branch', `tarefa/${id}`, '--limit', '10', '--json', 'databaseId,conclusion,workflowName'], { json: true, permitirFalha: true }) ?? []
+  const ruim = runs.find((r) => FALHAS_CI.has(String(r.conclusion).toUpperCase()))
+  if (!ruim) return '(não consegui localizar o log da execução que falhou; rode `pnpm verificar` e `pnpm exec biome ci .` localmente)'
+  const txt = ghc(['run', 'view', String(ruim.databaseId), '--log-failed'], { permitirFalha: true }) ?? ''
+  return `${ruim.workflowName}:\n${cauda(txt, 80)}`
+}
+
 function escolher(st, agente, trilhas) {
   const meus = [...st.travas.values()].filter((t) => t.agente === agente)
   const prAberto = (id) => st.prs.find((p) => p.state === 'OPEN' && p.headRefName === `tarefa/${id}`)
   for (const tv of meus) {
     const pr = prAberto(tv.id)
     if (pr && (pr.labels ?? []).some((l) => l.name === 'ajustes')) return { modo: 'ajustes', id: tv.id, pr }
+  }
+  for (const tv of meus) {
+    const pr = prAberto(tv.id)
+    if (!pr) continue
+    const falhas = ciVermelho(pr)
+    const conflito = pr.mergeStateStatus === 'DIRTY'
+    if (falhas.length || conflito) return { modo: 'ci', id: tv.id, pr, falhas, conflito }
   }
   for (const tv of meus.filter((t) => t.estado === 'desbloqueada')) {
     const r = P.retomar(tv.id, { cwd: CONTROLE })
@@ -526,6 +559,18 @@ async function executar(esc, st) {
     const c = ghc(['pr', 'view', String(esc.pr.number), '--json', 'comments,reviews'], { json: true })
     const textos = [...(c.reviews ?? []), ...(c.comments ?? [])].map((x) => `- ${x.author?.login ?? '?'}: ${x.body}`).slice(-15)
     extra = `Pedidos de ajuste no PR #${esc.pr.number} (corrija só os itens numerados do coordenador):\n${textos.join('\n')}`
+  }
+  if (esc.modo === 'ci') {
+    const n = rodadasCi(t.id) + 1
+    contarRodadaCi(t.id, n)
+    if (n > MAX_RODADAS_CI) {
+      const url = registrarBloqueio(t, wt, `CI do PR #${esc.pr.number} continua vermelho depois de ${MAX_RODADAS_CI} correções`, esc.falhas.map((c) => c.name ?? c.context ?? 'check'))
+      limparWorktree(t.id)
+      return { tipo: 'bloqueado', motivo: 'CI vermelho depois de 3 correções', url }
+    }
+    modelo = noMinimo(modelo, 'Sonnet')
+    modo = 'correcao'
+    extra = `O CI do PR #${esc.pr.number} está vermelho (rodada ${n} de ${MAX_RODADAS_CI}). Checks que falharam: ${esc.falhas.map((c) => c.name ?? c.context).join(', ') || '(conflito com a base)'}.\nLog do que falhou:\n${logDaFalha(t.id)}\n\nDiagnostique a causa, corrija só o que for do seu escopo e rode o MESMO comando localmente até ficar verde. Se a falha também acontece na base (${ORIGEM}) e não é de arquivo seu, termine em BLOQUEADO com motivo "CI da base vermelho" e a evidência.`
   }
   if (conflitos.length) {
     modo = 'conflito'
