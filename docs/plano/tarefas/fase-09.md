@@ -82,7 +82,7 @@
 ### T-9.5 — Cliente HTTP, QueryClient e storage
 - **Depende de:** T-9.2 · **Paralelo com:** T-9.3
 - **Requisitos:** S33, S80; §7 (`lib/api.ts`, `query-client.ts`)
-- **Arquivos:** `apps/web/src/lib/{api.ts,api.test.ts,query-client.ts,storage.ts,storage.test.ts}`
+- **Arquivos:** `apps/web/src/lib/{api.ts,api.test.ts,query-client.ts,storage.ts,storage.test.ts}`, `apps/web/package.json`
 - **Passos:**
   1. `api.ts` literal, mais `enviarArquivo(caminho, arquivos: File[], campos: Record<string,string>, aoProgresso: (pct:number)=>void, signal?)` com XHR, `X-CSRF-Token`, `withCredentials` e o mesmo tratamento de `ErroApi`.
   2. `query-client.ts` literal.
