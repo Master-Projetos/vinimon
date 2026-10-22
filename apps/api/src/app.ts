@@ -23,6 +23,7 @@ import { rotasPrioridades } from './modules/prioridades/routes'
 import { rotasProblemas } from './modules/problemas/routes'
 import { rotasSaude } from './modules/saude/routes'
 import { rotasSeguranca } from './modules/seguranca/routes'
+import { rotasStatus } from './modules/status/routes'
 import { rotasTags } from './modules/tags/routes'
 import { rotasTiposAtivo } from './modules/tipos-ativo/routes'
 import { rotasUnidades } from './modules/unidades/routes'
@@ -175,6 +176,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasUnidades)
       await api.register(rotasSaude)
       await api.register(rotasSeguranca)
+      await api.register(rotasStatus)
       await api.register(rotasTags)
       if (opcoes.rotasDeTeste) await api.register(opcoes.rotasDeTeste)
       // cada módulo novo: 1 import + 1 linha aqui (ordem alfabética)
