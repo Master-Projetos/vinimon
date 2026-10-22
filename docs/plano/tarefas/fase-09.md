@@ -98,7 +98,7 @@
 ### T-9.6 — Cores, datas e rótulos
 - **Depende de:** T-9.2 · **Paralelo com:** T-9.5, T-9.7–T-9.15
 - **Requisitos:** §6.1 (`cores.ts` e testes)
-- **Arquivos:** `apps/web/src/lib/{cores.ts,cores.test.ts,datas.ts,datas.test.ts,rotulos.ts}`
+- **Arquivos:** `apps/web/src/lib/{cores.ts,cores.test.ts,datas.ts,datas.test.ts,rotulos.ts}`, `apps/web/package.json`
 - **Passos:**
   1. `cores.ts` literal.
   2. `datas.ts` com date-fns `ptBR`: `formatarData`, `formatarDataHora`, `formatarHora`, `formatarCurto(d, agora)`, `formatarRelativo(d, agora)`, `formatarDuracao(min)`, `rotuloSeparador(d, agora)`. Fuso: `America/Sao_Paulo` via `Intl.DateTimeFormat` com `timeZone` vindo da config pública (padrão `America/Sao_Paulo`).
