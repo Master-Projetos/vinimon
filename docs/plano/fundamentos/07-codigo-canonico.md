@@ -929,7 +929,7 @@ export const spaPlugin = fp<{ raiz: string }>(
       root: resolve(raiz),
       setHeaders: (res, caminho) => {
         const imutavel = caminho.includes(`${sep}assets${sep}`)
-        res.setHeader('Cache-Control', imutavel ? 'public, max-age=31536000, immutable' : 'no-cache')
+        res.header('Cache-Control', imutavel ? 'public, max-age=31536000, immutable' : 'no-cache')
       },
     })
     app.setNotFoundHandler((req, reply) => {

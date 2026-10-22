@@ -1,4 +1,4 @@
-import { randomUUID, scrypt, timingSafeEqual } from 'node:crypto'
+import { randomBytes, randomUUID, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 import { hash, verify } from '@node-rs/argon2'
 
@@ -44,4 +44,18 @@ export async function verificarSenha(
   if (!armazenado.startsWith('$argon2id$')) return { ok: false, precisaRehash: false }
   const ok = await verify(armazenado, senha).catch(() => false)
   return { ok, precisaRehash: ok && precisaRehash(armazenado) }
+}
+
+const ALFABETO_SENHA = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+
+/** Senha aleatória sem caracteres ambíguos (0/O, 1/l/I). Para senhas temporárias, mostradas uma única vez. */
+export function senhaAleatoria(tamanho = 20): string {
+  const limite = 256 - (256 % ALFABETO_SENHA.length) // descarta bytes que enviesariam a escolha
+  let saida = ''
+  while (saida.length < tamanho) {
+    for (const b of randomBytes(tamanho * 2)) {
+      if (b < limite && saida.length < tamanho) saida += ALFABETO_SENHA[b % ALFABETO_SENHA.length]
+    }
+  }
+  return saida
 }

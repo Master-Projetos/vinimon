@@ -1,17 +1,12 @@
-/** BOM UTF-8 para o Excel abrir o CSV com acentuação correta. */
+/** BOM para o Excel abrir o CSV em UTF-8. */
 export const BOM_CSV = '﻿'
 
-/** S82: célula que começa com fórmula ganha apóstrofo antes do valor. */
-const INICIO_PERIGOSO = /^[=+\-@\t\r]/
-
+/** Escapa uma célula: neutraliza injeção de fórmula (prefixo `'`) e aspas, só envolvendo em aspas quando preciso. */
 export function celulaCsv(v: unknown): string {
-  const texto = String(v ?? '')
-  const neutro = INICIO_PERIGOSO.test(texto) ? `'${texto}` : texto
-
-  if (/[";\r\n]/.test(neutro)) return `"${neutro.replaceAll('"', '""')}"`
-  return neutro
+  if (v === null || v === undefined) return ''
+  let s = v instanceof Date ? v.toISOString() : String(v)
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`
+  return /[;"\r\n]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s
 }
 
-export function linhaCsv(valores: readonly unknown[]): string {
-  return `${valores.map(celulaCsv).join(';')}\r\n`
-}
+export const linhaCsv = (valores: readonly unknown[]): string => `${valores.map(celulaCsv).join(';')}\r\n`
