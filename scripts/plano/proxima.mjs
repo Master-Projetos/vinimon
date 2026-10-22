@@ -13,6 +13,7 @@
 //   VINIMON_PAPEL=coordenador node scripts/plano/proxima.mjs --transferir T-x.y --para <agente>
 //   VINIMON_PAPEL=coordenador node scripts/plano/proxima.mjs --desbloquear T-x.y
 import { spawnSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
 import { hostname } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { compararIds, cruzamento, montarGrafo, permitido } from './grafo.mjs'
@@ -125,6 +126,14 @@ function ciDaBase(cwd, topo) {
   return { estado: 'rodando', topo }
 }
 
+/** Tarefas que entraram na base por reconciliação (sem PR tarefa/<id>); lista fixa e revisada em docs/plano/execucao/reconciliadas.json. */
+function lerReconciliadas(cwd) {
+  const arq = `${cwd}/docs/plano/execucao/reconciliadas.json`
+  if (!existsSync(arq)) return new Set()
+  const ids = JSON.parse(readFileSync(arq, 'utf8'))
+  return new Set(Array.isArray(ids) ? ids.filter((i) => /^T-\d+\.\d+$/.test(i)) : [])
+}
+
 /**
  * Estado completo. `semGh` (--status offline, ou VINIMON_SEM_GH=1 nos executores da nuvem, que não têm
  * `gh` autenticado) pula PRs e CI; o runner nunca usa.
@@ -146,8 +155,9 @@ export function lerEstado({ cwd = process.cwd(), semGh = false, semFetch = false
       { cwd, json: true },
     )
     const mergeados = new Set(prs.filter((p) => p.state === 'MERGED' && p.headRefName.startsWith('tarefa/')).map((p) => p.headRefName.slice(7)))
+    const reconciliadas = lerReconciliadas(cwd)
     for (const id of [...concluidas]) {
-      if (!mergeados.has(id)) {
+      if (!mergeados.has(id) && !reconciliadas.has(id)) {
         concluidas.delete(id)
         anomalias.push(`${id} está no log da ${BASE} sem PR mergeado de tarefa/${id}: não conta como concluída`)
       }
