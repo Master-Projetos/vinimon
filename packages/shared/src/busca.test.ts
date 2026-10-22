@@ -14,7 +14,7 @@ describe('normalizarBusca', () => {
 
 describe('tokensBusca', () => {
   it('separa por pontuação e descarta tokens fora de 2 a 30 caracteres', () => {
-    expect(tokensBusca('Impressora-HP, a ' + 'b'.repeat(31))).toEqual(['impressora', 'hp'])
+    expect(tokensBusca(`Impressora-HP, a ${'b'.repeat(31)}`)).toEqual(['impressora', 'hp'])
   })
 
   it('usa no máximo 8 tokens', () => {
