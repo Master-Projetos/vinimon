@@ -216,7 +216,7 @@
 ### T-9.13 — Formulários, parte 3: upload, Markdown e menção
 - **Depende de:** T-9.11, T-6.1 · **Paralelo com:** T-9.12, T-9.14, T-9.15
 - **Requisitos:** S78; T67 (unidade)
-- **Arquivos:** `apps/web/src/components/form/{file-dropzone.tsx,upload-list.tsx,markdown-editor.tsx}`, `apps/web/src/components/display/{markdown.tsx,mention-chip.tsx,markdown.test.tsx}`
+- **Arquivos:** `apps/web/src/components/form/{file-dropzone.tsx,upload-list.tsx,markdown-editor.tsx}`, `apps/web/src/components/display/{markdown.tsx,mention-chip.tsx,markdown.test.tsx}`, `apps/web/package.json`
 - **Passos:**
   1. `FileDropzone` (react-dropzone) com colar imagem, limite, tipos aceitos e rejeição inline.
   2. `Markdown`:
