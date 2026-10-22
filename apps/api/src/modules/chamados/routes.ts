@@ -36,6 +36,49 @@ export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
   })
 
   app.route({
+    method: c.reincidencia.metodo,
+    url: c.reincidencia.caminho,
+    schema: {
+      tags,
+      summary: 'Chamados recorrentes do ativo e do solicitante (dentro do escopo)',
+      querystring: c.reincidencia.query,
+      response: { 200: c.reincidencia.resposta },
+    },
+    config: { acesso: 'autenticado' },
+    handler: (req) => {
+      if (!req.usuario) throw naoAutenticado()
+      return consultas.reincidencia(req.usuario, req.query)
+    },
+  })
+
+  app.route({
+    method: c.obter.metodo,
+    url: c.obter.caminho,
+    schema: { tags, summary: 'Obtém um chamado', params: c.obter.params, response: { 200: c.obter.resposta } },
+    config: { acesso: 'chamado.abrir' },
+    handler: (req) => {
+      if (!req.usuario) throw naoAutenticado()
+      return consultas.obterDetalhe(req.usuario, req.params.id)
+    },
+  })
+
+  app.route({
+    method: c.historico.metodo,
+    url: c.historico.caminho,
+    schema: {
+      tags,
+      summary: 'Histórico de eventos do chamado',
+      params: c.historico.params,
+      response: { 200: c.historico.resposta },
+    },
+    config: { acesso: 'chamado.abrir' },
+    handler: (req) => {
+      if (!req.usuario) throw naoAutenticado()
+      return consultas.historico(req.usuario, req.params.id)
+    },
+  })
+
+  app.route({
     method: c.criar.metodo,
     url: c.criar.caminho,
     schema: { tags, summary: 'Abre um chamado', body: c.criar.body, response: { 201: c.criar.resposta } },
