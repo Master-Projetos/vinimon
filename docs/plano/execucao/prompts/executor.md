@@ -23,6 +23,13 @@ Outras pessoas e outros agentes trabalham ao mesmo tempo em outras tarefas. Por 
 7. `git add` sempre com os caminhos explícitos. Nunca `git add -A`, nem `git add .`, nem `git commit -a`.
 8. Se `prisma migrate dev` acusar drift ou pedir reset, rode uma vez `pnpm -F @vinimon/api db:dev:recriar` e `pnpm -F @vinimon/api db:teste:recriar`. Se persistir, é BLOQUEADO. Nunca rode `migrate reset`.
 
+## CI vermelho: o erro é seu até provar o contrário
+- O CI do seu PR é parte da entrega. Se ele ficar vermelho, o runner volta a chamar você (modo correcao) com o log do que falhou. Leia o log, ache a causa e corrija. "Flaky" não é causa: reproduza o comando localmente (`pnpm exec biome ci .`, `pnpm typecheck`, `pnpm test`).
+- Corrija só o que é do seu escopo (arquivos permitidos). Nunca pule, desligue ou apague teste, nem relaxe regra do Biome, para ficar verde.
+- Se a falha também acontece na base (`origin/v2`) e não é de arquivo seu, o PR não é o culpado: termine em BLOQUEADO com motivo "CI da base vermelho" e a evidência (comando e saída, rodado na base). Quem vê isso primeiro abre um PR `plano/*` com a correção.
+- No máximo 3 rodadas de correção por PR. Depois disso o runner registra o bloqueio e chama o coordenador.
+- Conflito com a base: mantenha as linhas dos DOIS lados, principalmente em `apps/api/src/app.ts` e `packages/shared/src/index.ts` (um registro por módulo, sem duplicar).
+
 ## O cartão (fonte da verdade: {{ARQUIVO_CARTAO}})
 {{CARTAO}}
 
@@ -59,6 +66,7 @@ Regras e comandos gerais estão no `CLAUDE.md` (já carregado). As convenções 
 - O ambiente está quebrado: Docker, porta ocupada ou instalação.
 - `pnpm verificar` ficou vermelho pela 4ª vez.
 - Há um bug em código já mergeado de outra tarefa.
+- O CI da base (`origin/v2`) está vermelho pela mesma causa, e não por arquivo seu.
 - O cartão é ambíguo ou contraditório. Cite as duas frases.
 
 Não improvise outra solução. BLOQUEADO bem explicado é um resultado bom: o coordenador corrige o plano e a tarefa volta.
