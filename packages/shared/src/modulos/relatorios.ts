@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { NOTAS_AVALIACAO } from '../enums'
 import { contrato, zId } from '../http'
 
 export const TIPOS_RELATORIO = [
@@ -56,12 +57,54 @@ export const LinhaRelatorioSchema = IndicadoresSchema.extend({
 })
 export type LinhaRelatorio = z.output<typeof LinhaRelatorioSchema>
 
+/** Linha do relatório `sla`: percentuais só sobre os chamados com meta; `null` sem base de cálculo. */
+export const LinhaSlaSchema = z.object({
+  chave: z.string(),
+  nome: z.string(),
+  total: z.int(),
+  comMetaResposta: z.int(),
+  pctRespostaNoPrazo: z.number().nullable(),
+  comMetaSolucao: z.int(),
+  pctSolucaoNoPrazo: z.number().nullable(),
+})
+export type LinhaSla = z.output<typeof LinhaSlaSchema>
+
+/** Detalhe do tipo `sla`: o mesmo cálculo agrupado por área e por tipo de problema. */
+export const DetalheSlaSchema = z.object({
+  porArea: z.array(LinhaSlaSchema),
+  porProblema: z.array(LinhaSlaSchema),
+})
+export type DetalheSla = z.output<typeof DetalheSlaSchema>
+
+/** Média de notas por operador (OTIMO=4, BOM=3, REGULAR=2, RUIM=1), 2 casas decimais. */
+export const MediaOperadorSchema = z.object({
+  chave: z.string(),
+  nome: z.string(),
+  avaliadas: z.int(),
+  media: z.number(),
+})
+export type MediaOperador = z.output<typeof MediaOperadorSchema>
+
+/** Detalhe do tipo `avaliacoes`; `pctAutomaticas` e `mediaGeral` são `null` sem avaliações. */
+export const DetalheAvaliacoesSchema = z.object({
+  avaliadas: z.int(),
+  distribuicao: z.array(z.object({ nota: z.enum(NOTAS_AVALIACAO), total: z.int() })),
+  pctAutomaticas: z.number().nullable(),
+  mediaGeral: z.number().nullable(),
+  mediaPorOperador: z.array(MediaOperadorSchema),
+})
+export type DetalheAvaliacoes = z.output<typeof DetalheAvaliacoesSchema>
+
 export const RelatorioSchema = z.object({
   tipo: z.enum(TIPOS_RELATORIO),
   de: z.string(),
   ate: z.string(),
   totais: IndicadoresSchema,
   linhas: z.array(LinhaRelatorioSchema),
+  /** Só no tipo `sla`. */
+  sla: DetalheSlaSchema.optional(),
+  /** Só no tipo `avaliacoes`. */
+  avaliacoes: DetalheAvaliacoesSchema.optional(),
 })
 export type Relatorio = z.output<typeof RelatorioSchema>
 
@@ -72,5 +115,12 @@ export const relatoriosApi = {
     params: RelatorioParamsSchema,
     query: RelatorioQuerySchema,
     resposta: RelatorioSchema,
+  }),
+  csv: contrato({
+    metodo: 'GET',
+    caminho: '/relatorios/:tipo/csv',
+    params: RelatorioParamsSchema,
+    query: RelatorioQuerySchema,
+    resposta: z.string(),
   }),
 }
