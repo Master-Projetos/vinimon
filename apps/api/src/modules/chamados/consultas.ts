@@ -1,23 +1,27 @@
 import {
   type ChamadoContagens,
+  type ChamadoEvento,
   type ChamadoFiltros,
   type ChamadoResumo,
   idChamadoExato,
   normalizarBusca,
+  type Reincidencia,
+  type ReincidenciaQuery,
   temPermissao,
   tokensBusca,
   VISOES_CHAMADO,
   type VisaoChamado,
 } from '@vinimon/shared'
 import { DateTime } from 'luxon'
-import { escopoChamados, podeVerInterno } from '../../autorizacao/chamados'
+import { escopoChamados, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
 import type { Prisma } from '../../generated/prisma/client'
 import { obterConfig } from '../../lib/config'
-import { semPermissao } from '../../lib/erros'
+import { naoEncontrado, semPermissao } from '../../lib/erros'
 import { escaparLike } from '../../lib/like'
 import { paginar } from '../../lib/paginacao'
 import { prisma } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
+import { montarDetalhe } from './service'
 
 const DEZ_MINUTOS_MS = 10 * 60 * 1000
 const NOVENTA_DIAS_MS = 90 * 24 * 60 * 60 * 1000
@@ -238,4 +242,94 @@ export async function contagens(u: UsuarioSessao): Promise<ChamadoContagens> {
     prisma.chamado.count({ where: { AND: [escopo, filtroVisao(u, visao), { status: { ignorado: false } }] } })
   const totais = await prisma.$transaction(VISOES_CHAMADO.map((v) => contar(v)))
   return Object.fromEntries(VISOES_CHAMADO.map((v, i) => [v, totais[i] ?? 0])) as ChamadoContagens
+}
+
+const TRINTA_DIAS_MS = 30 * 24 * 60 * 60 * 1000
+const naoAchado = () => naoEncontrado('Chamado não encontrado.')
+
+/**
+ * Carrega só o que o escopo precisa. Inexistente e fora do escopo dão exatamente a mesma resposta (404, S46): quem
+ * não vê o chamado não descobre que ele existe.
+ */
+async function exigirVisivel(u: UsuarioSessao, id: number) {
+  const c = await prisma.chamado.findUnique({
+    where: { id },
+    select: { areaId: true, operadorId: true, solicitanteId: true },
+  })
+  if (!c || !podeVerChamado(u, c)) throw naoAchado()
+  return c
+}
+
+/** `GET /chamados/:id`: `tags` só para a equipe e `acoes` de `acoesDoUsuario` já vêm de `montarDetalhe`. */
+export async function obterDetalhe(u: UsuarioSessao, id: number) {
+  await exigirVisivel(u, id)
+  return montarDetalhe(u, id)
+}
+
+/**
+ * `GET /chamados/:id/historico`: eventos por id. Quem não passa em `podeVerInterno` não vê `interno=true` (S49), e a
+ * ausência de `chamado.atender` remove `TAGS_ALTERADAS` (tags são internas).
+ */
+export async function historico(u: UsuarioSessao, id: number): Promise<ChamadoEvento[]> {
+  const escopo = await exigirVisivel(u, id)
+  const where: Prisma.ChamadoEventoWhereInput = {
+    chamadoId: id,
+    ...(podeVerInterno(u, escopo) ? {} : { interno: false }),
+    ...(temPermissao(u.perfil, 'chamado.atender') ? {} : { tipo: { not: 'TAGS_ALTERADAS' } }),
+  }
+  const eventos = await prisma.chamadoEvento.findMany({
+    where,
+    orderBy: { id: 'asc' },
+    select: { id: true, tipo: true, dados: true, criadoEm: true, ator: { select: { id: true, nome: true } } },
+  })
+  return eventos.map((e) => ({
+    id: e.id,
+    tipo: e.tipo,
+    ator: e.ator,
+    dados: e.dados !== null && typeof e.dados === 'object' && !Array.isArray(e.dados) ? { ...e.dados } : {},
+    criadoEm: e.criadoEm,
+  }))
+}
+
+/**
+ * `GET /chamados/reincidencia?ativoId=&problemaId=`, tudo dentro do escopo: os 10 últimos do ativo (com `emAberto`) e
+ * os do mesmo solicitante (o próprio usuário) e problema nos últimos 30 dias.
+ */
+export async function reincidencia(u: UsuarioSessao, q: ReincidenciaQuery, agora = new Date()): Promise<Reincidencia> {
+  const escopo = escopoChamados(u)
+  const item = { id: true, assunto: true, abertoEm: true, concluidoEm: true } satisfies Prisma.ChamadoSelect
+  const mapear = (c: { id: number; assunto: string; abertoEm: Date; concluidoEm: Date | null }) => ({
+    id: c.id,
+    assunto: c.assunto,
+    abertoEm: c.abertoEm,
+    emAberto: c.concluidoEm === null,
+  })
+  const [doAtivo, doSolicitante] = await Promise.all([
+    q.ativoId === undefined
+      ? []
+      : prisma.chamado.findMany({
+          where: { AND: [escopo, { ativoId: q.ativoId }] },
+          select: item,
+          orderBy: { id: 'desc' },
+          take: 10,
+        }),
+    q.problemaId === undefined
+      ? []
+      : prisma.chamado.findMany({
+          where: {
+            AND: [
+              escopo,
+              {
+                solicitanteId: u.id,
+                problemaId: q.problemaId,
+                abertoEm: { gte: new Date(agora.getTime() - TRINTA_DIAS_MS) },
+              },
+            ],
+          },
+          select: item,
+          orderBy: { id: 'desc' },
+          take: 10,
+        }),
+  ])
+  return { ativo: doAtivo.map(mapear), solicitante: doSolicitante.map(mapear) }
 }
