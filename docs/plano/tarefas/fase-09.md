@@ -235,7 +235,7 @@
 ### T-9.14 — Tabela de dados
 - **Depende de:** T-9.4 · **Paralelo com:** T-9.12, T-9.13, T-9.15
 - **Requisitos:** §6.5 (`data/`)
-- **Arquivos:** `apps/web/src/components/data/{data-table.tsx,data-table-toolbar.tsx,data-table-faceted-filter.tsx,data-table-column-toggle.tsx,data-table-pagination.tsx,data-table-column-header.tsx,data-table-bulk-bar.tsx,data-table.test.tsx}`
+- **Arquivos:** `apps/web/src/components/data/{data-table.tsx,data-table-toolbar.tsx,data-table-faceted-filter.tsx,data-table-column-toggle.tsx,data-table-pagination.tsx,data-table-column-header.tsx,data-table-bulk-bar.tsx,data-table.test.tsx}`, `apps/web/package.json`
 - **Passos:**
   1. react-table v8 com `manualPagination`/`manualSorting`.
   2. `ColumnMeta` (`ocultarAbaixo`, `alinhar`).
