@@ -13,7 +13,6 @@
 //   VINIMON_PAPEL=coordenador node scripts/plano/proxima.mjs --transferir T-x.y --para <agente>
 //   VINIMON_PAPEL=coordenador node scripts/plano/proxima.mjs --desbloquear T-x.y
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
 import { hostname } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { compararIds, cruzamento, montarGrafo, permitido } from './grafo.mjs'
@@ -86,6 +85,7 @@ export function lerConcluidas(cwd, ref = `${REMOTO}/${BASE}`) {
     else if ((m = s.match(/^Reapply "T-(\d+\.\d+): /))) concluidas.add(`T-${m[1]}`)
     else if ((m = s.match(/^port[ãa]o: (P\d\d|MVP)\b/))) portoes.add(m[1])
   }
+  for (const id of lerReconciliadas(cwd, ref)) concluidas.add(id)
   return { concluidas, portoes }
 }
 
@@ -126,12 +126,16 @@ function ciDaBase(cwd, topo) {
   return { estado: 'rodando', topo }
 }
 
-/** Tarefas que entraram na base por reconciliação (sem PR tarefa/<id>); lista fixa e revisada em docs/plano/execucao/reconciliadas.json. */
-function lerReconciliadas(cwd) {
-  const arq = `${cwd}/docs/plano/execucao/reconciliadas.json`
-  if (!existsSync(arq)) return new Set()
-  const ids = JSON.parse(readFileSync(arq, 'utf8'))
-  return new Set(Array.isArray(ids) ? ids.filter((i) => /^T-\d+\.\d+$/.test(i)) : [])
+/** Tarefas que entraram na base por reconciliação (sem commit `T-x.y:` nem PR tarefa/<id>); lista fixa em docs/plano/execucao/reconciliadas.json. */
+function lerReconciliadas(cwd, ref) {
+  const r = git(['show', `${ref}:docs/plano/execucao/reconciliadas.json`], { cwd, permitirFalha: true })
+  if (!r.ok) return new Set()
+  try {
+    const ids = JSON.parse(r.out)
+    return new Set(Array.isArray(ids) ? ids.filter((i) => /^T-\d+\.\d+$/.test(i)) : [])
+  } catch {
+    return new Set()
+  }
 }
 
 /**
@@ -155,7 +159,7 @@ export function lerEstado({ cwd = process.cwd(), semGh = false, semFetch = false
       { cwd, json: true },
     )
     const mergeados = new Set(prs.filter((p) => p.state === 'MERGED' && p.headRefName.startsWith('tarefa/')).map((p) => p.headRefName.slice(7)))
-    const reconciliadas = lerReconciliadas(cwd)
+    const reconciliadas = lerReconciliadas(cwd, `${REMOTO}/${BASE}`)
     for (const id of [...concluidas]) {
       if (!mergeados.has(id) && !reconciliadas.has(id)) {
         concluidas.delete(id)
