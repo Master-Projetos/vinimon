@@ -28,6 +28,7 @@ import { rotasStatus } from './modules/status/routes'
 import { rotasTags } from './modules/tags/routes'
 import { rotasTiposAtivo } from './modules/tipos-ativo/routes'
 import { rotasUnidades } from './modules/unidades/routes'
+import { rotasUsuarios } from './modules/usuarios/routes'
 import { autenticacaoPlugin } from './plugins/autenticacao'
 import { docsPlugin } from './plugins/docs'
 import { errosPlugin } from './plugins/erros'
@@ -176,6 +177,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasProblemas)
       await api.register(rotasTiposAtivo)
       await api.register(rotasUnidades)
+      await api.register(rotasUsuarios)
       await api.register(rotasSaude)
       await api.register(rotasSeguranca)
       await api.register(rotasStatus)
