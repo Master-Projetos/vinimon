@@ -18,9 +18,12 @@ import { rotasAreas } from './modules/areas/routes'
 import { rotasAuth } from './modules/auth/routes'
 import { rotasCanais } from './modules/canais/routes'
 import { rotasCategoriasArtigo } from './modules/categorias-artigo/routes'
+import { rotasDepartamentos } from './modules/departamentos/routes'
+import { rotasPrioridades } from './modules/prioridades/routes'
 import { rotasProblemas } from './modules/problemas/routes'
 import { rotasSaude } from './modules/saude/routes'
 import { rotasSeguranca } from './modules/seguranca/routes'
+import { rotasStatus } from './modules/status/routes'
 import { rotasTags } from './modules/tags/routes'
 import { rotasTiposAtivo } from './modules/tipos-ativo/routes'
 import { rotasUnidades } from './modules/unidades/routes'
@@ -166,11 +169,14 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasAuth)
       await api.register(rotasCanais)
       await api.register(rotasCategoriasArtigo)
+      await api.register(rotasDepartamentos)
+      await api.register(rotasPrioridades)
       await api.register(rotasProblemas)
       await api.register(rotasTiposAtivo)
       await api.register(rotasUnidades)
       await api.register(rotasSaude)
       await api.register(rotasSeguranca)
+      await api.register(rotasStatus)
       await api.register(rotasTags)
       if (opcoes.rotasDeTeste) await api.register(opcoes.rotasDeTeste)
       // cada módulo novo: 1 import + 1 linha aqui (ordem alfabética)
