@@ -6,12 +6,18 @@ import rateLimit from '@fastify/rate-limit'
 import underPressure from '@fastify/under-pressure'
 import { configurarZod } from '@vinimon/shared'
 import Fastify, { type FastifyServerOptions } from 'fastify'
-import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod'
+import {
+  type FastifyPluginAsyncZod,
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from 'fastify-type-provider-zod'
 import { env } from './env'
 import { responderRotaInexistente } from './lib/erros'
 import { rotasAreas } from './modules/areas/routes'
 import { rotasAuth } from './modules/auth/routes'
 import { rotasSaude } from './modules/saude/routes'
+import { rotasSeguranca } from './modules/seguranca/routes'
 import { autenticacaoPlugin } from './plugins/autenticacao'
 import { docsPlugin } from './plugins/docs'
 import { errosPlugin } from './plugins/erros'
@@ -20,7 +26,7 @@ import { spaPlugin } from './plugins/spa'
 
 configurarZod()
 
-const REDACT = [
+export const REDACT = [
   'req.headers.cookie',
   'req.headers.authorization',
   'req.headers["x-csrf-token"]',
@@ -37,12 +43,33 @@ const PERMISSIONS_POLICY = 'camera=(), microphone=(), geolocation=(), payment=()
 
 export interface OpcoesApp {
   logger?: FastifyServerOptions['logger']
+  /** Só em testes: rotas extras registradas dentro de /api/v1, depois dos plugins de autenticação e segurança. */
+  rotasDeTeste?: FastifyPluginAsyncZod
 }
+
+export interface RotaRegistrada {
+  metodo: string
+  url: string
+  acesso: unknown
+}
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    /** Toda rota /api/v1 registrada, com o `config.acesso` declarado (T41, T40). */
+    rotasApi: RotaRegistrada[]
+  }
+}
+
+// O redact vale também quando o logger vem de fora (testes): segredos nunca chegam ao log (S83).
+const comRedact = (logger: FastifyServerOptions['logger']): FastifyServerOptions['logger'] =>
+  typeof logger === 'object' && logger !== null
+    ? { ...logger, redact: { paths: REDACT, censor: '[REDACTED]' } }
+    : logger
 
 export async function buildApp(opcoes: OpcoesApp = {}) {
   const host = new URL(env.APP_ORIGIN).host
   const app = Fastify({
-    logger: opcoes.logger ?? {
+    logger: comRedact(opcoes.logger) ?? {
       level: env.LOG_LEVEL,
       redact: { paths: REDACT, censor: '[REDACTED]' },
       ...(env.NODE_ENV === 'development' ? { transport: { target: 'pino-pretty' } } : {}),
@@ -119,6 +146,12 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
   })
   if (env.API_DOCS) await app.register(docsPlugin)
 
+  const rotasApi: RotaRegistrada[] = []
+  app.addHook('onRoute', (r) => {
+    if (r.url.startsWith('/api/v1')) rotasApi.push({ metodo: String(r.method), url: r.url, acesso: r.config?.acesso })
+  })
+  app.decorate('rotasApi', rotasApi)
+
   await app.register(
     async (api) => {
       await api.register(autenticacaoPlugin)
@@ -126,6 +159,8 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasAreas)
       await api.register(rotasAuth)
       await api.register(rotasSaude)
+      await api.register(rotasSeguranca)
+      if (opcoes.rotasDeTeste) await api.register(opcoes.rotasDeTeste)
       // cada módulo novo: 1 import + 1 linha aqui (ordem alfabética)
     },
     { prefix: '/api/v1' },
