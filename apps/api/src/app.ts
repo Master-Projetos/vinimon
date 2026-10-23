@@ -35,6 +35,7 @@ import { rotasMencoes } from './modules/mencoes/routes'
 import { rotasMeta } from './modules/meta/routes'
 import { rotasNotificacoes } from './modules/notificacoes/routes'
 import { rotasPainel } from './modules/painel/routes'
+import { rotasPresenca } from './modules/presenca/routes'
 import { rotasPrioridades } from './modules/prioridades/routes'
 import { rotasProblemas } from './modules/problemas/routes'
 import { rotasRelatorios } from './modules/relatorios/routes'
@@ -205,6 +206,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasMeta)
       await api.register(rotasNotificacoes)
       await api.register(rotasPainel)
+      await api.register(rotasPresenca)
       await api.register(rotasPrioridades)
       await api.register(rotasProblemas)
       await api.register(rotasTiposAtivo)
