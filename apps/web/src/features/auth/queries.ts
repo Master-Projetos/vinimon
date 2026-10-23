@@ -7,6 +7,8 @@ import {
   type Verificar2faBody,
 } from '@vinimon/shared'
 import { chamar, definirCsrf, ErroApi } from '@/lib/api'
+import { tempoRealAtual } from '@/lib/socket'
+import { limparDadosDoUsuario } from '@/lib/storage'
 
 export const authChaves = { sessao: ['auth', 'sessao'] as const }
 
@@ -97,5 +99,22 @@ export function useConfirmar2fa() {
   return useMutation({
     mutationFn: (codigo: string) => chamar(authApi.confirmar2fa, { body: { codigo } }),
     onSuccess: (r) => aceitarSessao(queryClient, r.sessao),
+  })
+}
+
+/**
+ * Sair: encerra a sessão no servidor e depois apaga tudo o que era do usuário no navegador (cache, CSRF em memória,
+ * `vinimon:u*` e a conexão em tempo real). Tema e densidade ficam (S80).
+ */
+export function useSair() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => chamar(authApi.sair, {}),
+    onSettled: () => {
+      tempoRealAtual()?.encerrar()
+      definirCsrf(null)
+      limparDadosDoUsuario()
+      queryClient.clear()
+    },
   })
 }

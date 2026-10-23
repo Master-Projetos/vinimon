@@ -1,14 +1,14 @@
 import { Link } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { KbdShortcut } from '@/components/display/kbd-shortcut'
-import { UserAvatar, type UsuarioAvatar } from '@/components/display/user-avatar'
+import type { UsuarioAvatar } from '@/components/display/user-avatar'
+import { UserMenu } from '@/features/presenca/components/user-menu'
 
 export interface TopBarProps {
   usuario: UsuarioAvatar | null
 }
 
-// Busca e menu do usuário da §6.2. A CommandPalette e o menu completo entram em tarefas posteriores:
-// aqui ficam os gatilhos acessíveis, sem ação ainda.
+// Busca e menu do usuário da §6.2. A CommandPalette entra em tarefa posterior: o gatilho de busca ainda não age.
 export function TopBar({ usuario }: TopBarProps) {
   return (
     <header className="flex h-(--topbar-h) items-center gap-3 bg-frame px-3 text-frame-foreground md:col-span-2">
@@ -38,17 +38,7 @@ export function TopBar({ usuario }: TopBarProps) {
         </span>
       </button>
 
-      <div className="ml-auto flex shrink-0 items-center">
-        {usuario ? (
-          <Link
-            to="/perfil"
-            aria-label={`Meu perfil, ${usuario.nome}`}
-            className="rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-          >
-            <UserAvatar usuario={usuario} tamanho="sm" />
-          </Link>
-        ) : null}
-      </div>
+      <div className="ml-auto flex shrink-0 items-center">{usuario ? <UserMenu usuario={usuario} /> : null}</div>
     </header>
   )
 }
