@@ -2,10 +2,12 @@ import type { FastifyBaseLogger } from 'fastify'
 import { PgBoss } from 'pg-boss'
 import { env } from '../env'
 import { definirFila } from '../lib/filas'
+import { removerAnexosOrfaos } from './anexos-orfaos'
 import { purgarAuditoria } from './auditoria-purga'
 import { autoAprovar } from './chamados-auto-aprovacao'
 import { retornarAgendados } from './chamados-retorno-agendados'
 import { varrerEventos } from './eventos-varrer'
+import { limparNotificacoes } from './notificacoes-limpeza'
 import { limparSessoes } from './sessoes-limpeza'
 import { alertarSla } from './sla-alertas'
 import { recalcularJornada } from './sla-recalcular-jornada'
@@ -19,6 +21,20 @@ export interface Job {
 }
 
 export const JOBS: Job[] = [
+  {
+    fila: 'notificacoes-limpeza',
+    cron: '23 3 * * *',
+    executar: async (_dados, agora) => {
+      await limparNotificacoes(agora)
+    },
+  },
+  {
+    fila: 'anexos-orfaos',
+    cron: '41 3 * * *',
+    executar: async (_dados, agora) => {
+      await removerAnexosOrfaos(agora)
+    },
+  },
   {
     fila: 'sla-alertas',
     cron: '*/5 * * * *',
