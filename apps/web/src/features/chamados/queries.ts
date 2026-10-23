@@ -1,5 +1,18 @@
 import { keepPreviousData, queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ativosApi, type ChamadoDetalhe, type CriarChamado, chamadosApi, metaApi, usuariosApi } from '@vinimon/shared'
+import {
+  type AgendarChamado,
+  type AssumirChamado,
+  ativosApi,
+  type CancelarChamado,
+  type ChamadoDetalhe,
+  type ConcluirChamado,
+  type CriarChamado,
+  chamadosApi,
+  type EncaminharChamado,
+  metaApi,
+  type ReabrirChamado,
+  usuariosApi,
+} from '@vinimon/shared'
 import { toast } from 'sonner'
 import { chamar, ErroApi } from '@/lib/api'
 import type { FiltrosChamado } from './filtros'
@@ -68,6 +81,26 @@ export function useAcaoChamado<V>(id: number, executar: (variaveis: V) => Promis
     },
   })
 }
+
+/** Erro de campo (400 com `detalhes`): o diálogo mostra no campo, em vez de só no toast. */
+export const temErroDeCampos = (erro: unknown): erro is ErroApi => erro instanceof ErroApi && erro.detalhes.length > 0
+
+/**
+ * Uma mutação por ação (§3.5). O diálogo monta o corpo completo, com a `versao` do detalhe que viu.
+ * Todas passam por `useAcaoChamado`: sucesso troca o detalhe no cache e invalida listas e contagens.
+ */
+export const useAssumirChamado = (id: number) =>
+  useAcaoChamado(id, (corpo: AssumirChamado) => chamar(chamadosApi.assumir, { params: { id }, body: corpo }))
+export const useEncaminharChamado = (id: number) =>
+  useAcaoChamado(id, (corpo: EncaminharChamado) => chamar(chamadosApi.encaminhar, { params: { id }, body: corpo }))
+export const useAgendarChamado = (id: number) =>
+  useAcaoChamado(id, (corpo: AgendarChamado) => chamar(chamadosApi.agendar, { params: { id }, body: corpo }))
+export const useConcluirChamado = (id: number) =>
+  useAcaoChamado(id, (corpo: ConcluirChamado) => chamar(chamadosApi.concluir, { params: { id }, body: corpo }))
+export const useReabrirChamado = (id: number) =>
+  useAcaoChamado(id, (corpo: ReabrirChamado) => chamar(chamadosApi.reabrir, { params: { id }, body: corpo }))
+export const useCancelarChamado = (id: number) =>
+  useAcaoChamado(id, (corpo: CancelarChamado) => chamar(chamadosApi.cancelar, { params: { id }, body: corpo }))
 
 /** Seguir e deixar de seguir (sem `versao`): atualiza `seguindo` no detalhe em cache. */
 export function useSeguirChamado(id: number) {
