@@ -7,8 +7,11 @@ import type { ItemConversa } from '../cache'
 import { conversaConsultas, useEnviarComentario } from '../queries'
 import { Composer } from './composer'
 import { DescricaoInicialCard } from './descricao-inicial-card'
+import { EncerradoBar } from './encerrado-bar'
 import { MessageList } from './message-list'
 import { NewMessagesPill } from './new-messages-pill'
+import { SolucaoCard } from './solucao-card'
+import { ValidacaoCard } from './validacao-card'
 
 export interface ConversaViewProps {
   chamadoId: number
@@ -180,6 +183,13 @@ export function ConversaView({ chamadoId, usuarioId, descricao, foco, aoConsumir
         />
         <NewMessagesPill quantidade={novas} aoClicar={irParaOFim} />
       </div>
+      {detalhe.status.tipo === 'CONCLUIDO' || detalhe.status.tipo === 'ENCERRADO' ? (
+        <div className="flex flex-col gap-3 px-4 pb-4">
+          <SolucaoCard detalhe={detalhe} />
+          {detalhe.acoes.aprovar || detalhe.acoes.rejeitar ? <ValidacaoCard detalhe={detalhe} /> : null}
+        </div>
+      ) : null}
+      {detalhe.status.tipo === 'ENCERRADO' ? <EncerradoBar detalhe={detalhe} /> : null}
       {podeComentar && usuario ? (
         <div className="sticky bottom-0">
           <Composer
