@@ -40,6 +40,7 @@ import { Route as AppConhecimentoIndexRouteImport } from './routes/_app/conhecim
 import { Route as AppInventarioIndexRouteImport } from './routes/_app/inventario/index'
 import { Route as AppPerfilIndexRouteImport } from './routes/_app/perfil/index'
 import { Route as AppRelatoriosIndexRouteImport } from './routes/_app/relatorios/index'
+import { Route as AppChamadosChamadoIdDetalhesRouteImport } from './routes/_app/chamados/$chamadoId/detalhes'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -197,6 +198,12 @@ const AppRelatoriosIndexRoute = AppRelatoriosIndexRouteImport.update({
   path: '/relatorios/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChamadosChamadoIdDetalhesRoute =
+  AppChamadosChamadoIdDetalhesRouteImport.update({
+    id: '/detalhes',
+    path: '/detalhes',
+    getParentRoute: () => AppChamadosChamadoIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -207,7 +214,7 @@ export interface FileRoutesByFullPath {
   '/atividade': typeof AppAtividadeRoute
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
-  '/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRoute
+  '/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRouteWithChildren
   '/admin/auditoria': typeof AppAdminAuditoriaRoute
   '/admin/canais': typeof AppAdminCanaisRoute
   '/admin/categorias-artigo': typeof AppAdminCategoriasArtigoRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/inventario/': typeof AppInventarioIndexRoute
   '/perfil/': typeof AppPerfilIndexRoute
   '/relatorios/': typeof AppRelatoriosIndexRoute
+  '/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
 }
 export interface FileRoutesByTo {
   '/configurar-2fa': typeof Configurar2faRoute
@@ -238,7 +246,7 @@ export interface FileRoutesByTo {
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
   '/': typeof AppIndexRoute
-  '/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRoute
+  '/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRouteWithChildren
   '/admin/auditoria': typeof AppAdminAuditoriaRoute
   '/admin/canais': typeof AppAdminCanaisRoute
   '/admin/categorias-artigo': typeof AppAdminCategoriasArtigoRoute
@@ -260,6 +268,7 @@ export interface FileRoutesByTo {
   '/inventario': typeof AppInventarioIndexRoute
   '/perfil': typeof AppPerfilIndexRoute
   '/relatorios': typeof AppRelatoriosIndexRoute
+  '/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -272,7 +281,7 @@ export interface FileRoutesById {
   '/_app/painel': typeof AppPainelRoute
   '/_app/sem-permissao': typeof AppSemPermissaoRoute
   '/_app/': typeof AppIndexRoute
-  '/_app/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRoute
+  '/_app/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRouteWithChildren
   '/_app/admin/auditoria': typeof AppAdminAuditoriaRoute
   '/_app/admin/canais': typeof AppAdminCanaisRoute
   '/_app/admin/categorias-artigo': typeof AppAdminCategoriasArtigoRoute
@@ -294,6 +303,7 @@ export interface FileRoutesById {
   '/_app/inventario/': typeof AppInventarioIndexRoute
   '/_app/perfil/': typeof AppPerfilIndexRoute
   '/_app/relatorios/': typeof AppRelatoriosIndexRoute
+  '/_app/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/inventario/'
     | '/perfil/'
     | '/relatorios/'
+    | '/chamados/$chamadoId/detalhes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/configurar-2fa'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/inventario'
     | '/perfil'
     | '/relatorios'
+    | '/chamados/$chamadoId/detalhes'
   id:
     | '__root__'
     | '/_app'
@@ -392,6 +404,7 @@ export interface FileRouteTypes {
     | '/_app/inventario/'
     | '/_app/perfil/'
     | '/_app/relatorios/'
+    | '/_app/chamados/$chamadoId/detalhes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -620,17 +633,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRelatoriosIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/chamados/$chamadoId/detalhes': {
+      id: '/_app/chamados/$chamadoId/detalhes'
+      path: '/detalhes'
+      fullPath: '/chamados/$chamadoId/detalhes'
+      preLoaderRoute: typeof AppChamadosChamadoIdDetalhesRouteImport
+      parentRoute: typeof AppChamadosChamadoIdRouteRoute
+    }
   }
 }
 
+interface AppChamadosChamadoIdRouteRouteChildren {
+  AppChamadosChamadoIdDetalhesRoute: typeof AppChamadosChamadoIdDetalhesRoute
+}
+
+const AppChamadosChamadoIdRouteRouteChildren: AppChamadosChamadoIdRouteRouteChildren =
+  {
+    AppChamadosChamadoIdDetalhesRoute: AppChamadosChamadoIdDetalhesRoute,
+  }
+
+const AppChamadosChamadoIdRouteRouteWithChildren =
+  AppChamadosChamadoIdRouteRoute._addFileChildren(
+    AppChamadosChamadoIdRouteRouteChildren,
+  )
+
 interface AppChamadosRouteRouteChildren {
-  AppChamadosChamadoIdRouteRoute: typeof AppChamadosChamadoIdRouteRoute
+  AppChamadosChamadoIdRouteRoute: typeof AppChamadosChamadoIdRouteRouteWithChildren
   AppChamadosNovoRoute: typeof AppChamadosNovoRoute
   AppChamadosIndexRoute: typeof AppChamadosIndexRoute
 }
 
 const AppChamadosRouteRouteChildren: AppChamadosRouteRouteChildren = {
-  AppChamadosChamadoIdRouteRoute: AppChamadosChamadoIdRouteRoute,
+  AppChamadosChamadoIdRouteRoute: AppChamadosChamadoIdRouteRouteWithChildren,
   AppChamadosNovoRoute: AppChamadosNovoRoute,
   AppChamadosIndexRoute: AppChamadosIndexRoute,
 }
