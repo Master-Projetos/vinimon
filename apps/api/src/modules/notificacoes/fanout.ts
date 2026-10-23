@@ -1,8 +1,17 @@
-import { TIPOS_INAPP_FIXOS, type TipoEvento, type TipoNotificacao, temPermissao } from '@vinimon/shared'
+import {
+  canalEmailPadrao,
+  TIPOS_INAPP_FIXOS,
+  type TipoEvento,
+  type TipoNotificacao,
+  temPermissao,
+} from '@vinimon/shared'
 import { podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
+import { obterConfig } from '../../lib/config'
+import { enfileirarEmail } from '../../lib/email'
 import { prisma } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
 import { tempoReal } from '../../lib/tempo-real'
+import { chaveEmailNotificacao, despacharEmailNotificacao, textoEmailNotificacao } from './email-notificacao'
 import { type ContextoDestinatarios, destinatarios, type EventoNotificavel } from './regras'
 import { whereNotificacoesVisiveis } from './service'
 
@@ -154,6 +163,7 @@ export async function processarEvento(eventoId: number): Promise<number[]> {
         id: true,
         nome: true,
         login: true,
+        email: true,
         perfil: true,
         areaId: true,
         areasSecundarias: { select: { areaId: true } },
@@ -203,9 +213,12 @@ export async function processarEvento(eventoId: number): Promise<number[]> {
     // 5. preferências (só as diferenças do padrão estão no banco; os tipos fixos ignoram)
     const preferencias = await tx.preferenciaNotificacao.findMany({
       where: { usuarioId: { in: alvos.map((a) => a.usuarioId) } },
-      select: { usuarioId: true, tipo: true, inApp: true },
+      select: { usuarioId: true, tipo: true, inApp: true, email: true },
     })
     const desligadas = new Set(preferencias.filter((p) => !p.inApp).map((p) => `${p.usuarioId}:${p.tipo}`))
+    const canaisEmail = new Map(
+      preferencias.flatMap((p) => (p.email === null ? [] : [[`${p.usuarioId}:${p.tipo}`, p.email] as const])),
+    )
     const finais = alvos.filter((a) => EH_FIXO(a.tipo) || !desligadas.has(`${a.usuarioId}:${a.tipo}`))
     if (finais.length === 0) return null
 
@@ -215,8 +228,9 @@ export async function processarEvento(eventoId: number): Promise<number[]> {
     const chaves = finais.map((a) => a.grupoChave)
     const atores = ev.ator_id === null ? [] : [ev.ator_id]
     const rotulos = await rotulosDe(tx, ev, c)
-    const dados = JSON.stringify(dadosDaNotificacao(ev, rotulos.areaNome, rotulos.statusNome))
-    const linhas = await tx.$queryRaw<Array<{ id: number; usuario_id: number }>>`
+    const rotulosDados = dadosDaNotificacao(ev, rotulos.areaNome, rotulos.statusNome)
+    const dados = JSON.stringify(rotulosDados)
+    const linhas = await tx.$queryRaw<Array<{ id: number; usuario_id: number; tipo: string; atualizado_em: Date }>>`
       INSERT INTO notificacoes (usuario_id, chamado_id, tipo, grupo_chave, evento_id, assentamento_id, ator_ids, interno, dados)
       SELECT d.u, ${c.id}, d.t::tipo_notificacao, d.k, ${ev.id}, ${ev.assentamento_id}, ${atores}::int[], ${ev.interno}, ${dados}::jsonb
       FROM unnest(${us}::int[], ${tipos}::text[], ${chaves}::text[]) AS d(u, t, k)
@@ -230,10 +244,46 @@ export async function processarEvento(eventoId: number): Promise<number[]> {
         ator_ids = CASE WHEN EXCLUDED.ator_ids[1] = ANY(notificacoes.ator_ids)
           THEN notificacoes.ator_ids
           ELSE (EXCLUDED.ator_ids || notificacoes.ator_ids)[1:10] END
-      RETURNING id, usuario_id`
-    return { linhas, usuarios: [...new Set(us)].flatMap((id) => sessoes.get(id) ?? []) }
+      RETURNING id, usuario_id, tipo::text AS tipo, atualizado_em`
+
+    // 7. e-mail IMEDIATO (§5.6/§5.7): outbox na mesma transação; o envio sai depois do commit. Nunca para o solicitante
+    // em evento interno, e só com `email.habilitado`.
+    const emails: number[] = []
+    if ((await obterConfig())['email.habilitado']) {
+      const emailDe = new Map(candidatos.map((x) => [x.id, x.email]))
+      for (const l of linhas) {
+        const tipo = l.tipo as TipoNotificacao
+        const usuario = sessoes.get(l.usuario_id)
+        const para = emailDe.get(l.usuario_id) ?? null
+        if (!usuario || para === null) continue
+        if (ev.interno && l.usuario_id === c.solicitanteId) continue
+        const canal = canaisEmail.get(`${l.usuario_id}:${tipo}`) ?? canalEmailPadrao(tipo, usuario.perfil)
+        if (canal !== 'IMEDIATO') continue
+        emails.push(
+          await enfileirarEmail(tx, {
+            para,
+            assunto: `Vinimon: chamado #${c.id}`,
+            texto: textoEmailNotificacao(tipo, ev.interno, c.id, rotulosDados),
+            evento: ev.tipo,
+            chamadoId: c.id,
+            usuarioId: l.usuario_id,
+            chaveIdempotencia: chaveEmailNotificacao(l.id, l.atualizado_em),
+          }),
+        )
+      }
+    }
+    return { linhas, usuarios: [...new Set(us)].flatMap((id) => sessoes.get(id) ?? []), emails }
   })
   if (!resultado) return []
+
+  // depois do commit: envio agendado (60 s). Se falhar aqui, o e-mail fica PENDENTE e `email-varrer` o reenfileira.
+  for (const emailId of resultado.emails) {
+    try {
+      await despacharEmailNotificacao(emailId)
+    } catch {
+      // falha de fila nunca desfaz o fanout
+    }
+  }
 
   // depois do commit: contagem de não lidas por destinatário (uma query) e emissão
   const destinatariosIds = [...new Set(resultado.linhas.map((l) => l.usuario_id))]
