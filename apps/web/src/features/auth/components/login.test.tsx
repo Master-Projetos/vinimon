@@ -78,12 +78,12 @@ describe('/login', () => {
     expect(queryClient.getQueryData(['auth', 'sessao'])).toMatchObject({ estado: 'ATIVA', csrf: 'csrf-novo' })
   })
 
-  it('sem redirect (ou com redirect externo) vai para /', async () => {
+  it('sem redirect (ou com redirect externo) vai para / e a guarda leva USUARIO a /chamados', async () => {
     const { router } = montar('/login?redirect=%2F%2Fevil.example', { 'POST /auth/login': () => json(sessao('ATIVA')) })
     await preencher()
     entrar()
     await waitFor(() => expect(router.state.location.pathname).not.toBe('/login'))
-    expect(router.state.location.pathname).toBe('/')
+    expect(router.state.location.pathname).toBe('/chamados')
   })
 
   it.each([

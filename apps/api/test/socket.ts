@@ -24,7 +24,7 @@ export async function conectar(
   })
 }
 
-export function esperarEvento<T = unknown>(s: Socket, evento: string, ms = 1000): Promise<T> {
+export function esperarEvento<T = unknown>(s: Socket, evento: string, ms = 5000): Promise<T> {
   return new Promise((resolver, rejeitar) => {
     const timer = setTimeout(() => rejeitar(new Error(`timeout esperando "${evento}"`)), ms)
     s.once(evento, (dados: T) => {
