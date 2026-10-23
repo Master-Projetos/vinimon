@@ -39,4 +39,4 @@ jobs:
       - run: pnpm test
       - name: Prisma exata em 7.10.1 (T04)
         run: test "$(node -p "require('./apps/api/package.json').devDependencies.prisma")" = "7.10.1"
-      - run: pnpm -F @vinimon/api build
+      - run: pnpm build

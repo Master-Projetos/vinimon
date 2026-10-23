@@ -14,18 +14,44 @@ import {
 } from 'fastify-type-provider-zod'
 import { env } from './env'
 import { responderRotaInexistente } from './lib/erros'
+import { rotasAnexos } from './modules/anexos/routes'
 import { rotasAreas } from './modules/areas/routes'
+import { rotasArtigos } from './modules/artigos/routes'
+import { rotasAssentamentos } from './modules/assentamentos/routes'
+import { rotasAtivos } from './modules/ativos/routes'
+import { rotasAuditoria } from './modules/auditoria/routes'
 import { rotasAuth } from './modules/auth/routes'
+import { rotasBusca } from './modules/busca/routes'
 import { rotasCanais } from './modules/canais/routes'
+import { rotasCategoriasArtigo } from './modules/categorias-artigo/routes'
+import { rotasChamados } from './modules/chamados/routes'
+import { rotasConfig } from './modules/config/routes'
+import { rotasDepartamentos } from './modules/departamentos/routes'
+import { rotasFeriados } from './modules/feriados/routes'
+import { rotasJornadas } from './modules/jornadas/routes'
+import { rotasLeituras } from './modules/leituras/routes'
+import { rotasMe } from './modules/me/routes'
+import { rotasMencoes } from './modules/mencoes/routes'
+import { rotasMeta } from './modules/meta/routes'
+import { rotasNotificacoes } from './modules/notificacoes/routes'
+import { rotasPainel } from './modules/painel/routes'
+import { rotasPresenca } from './modules/presenca/routes'
+import { rotasPrioridades } from './modules/prioridades/routes'
 import { rotasProblemas } from './modules/problemas/routes'
+import { rotasRelatorios } from './modules/relatorios/routes'
 import { rotasSaude } from './modules/saude/routes'
 import { rotasSeguranca } from './modules/seguranca/routes'
+import { rotasStatus } from './modules/status/routes'
 import { rotasTags } from './modules/tags/routes'
+import { rotasTiposAtivo } from './modules/tipos-ativo/routes'
+import { rotasUnidades } from './modules/unidades/routes'
+import { rotasUsuarios } from './modules/usuarios/routes'
 import { autenticacaoPlugin } from './plugins/autenticacao'
 import { docsPlugin } from './plugins/docs'
 import { errosPlugin } from './plugins/erros'
 import { segurancaPlugin } from './plugins/seguranca'
 import { spaPlugin } from './plugins/spa'
+import { tempoRealPlugin } from './realtime/plugin'
 
 configurarZod()
 
@@ -159,18 +185,45 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
     async (api) => {
       await api.register(autenticacaoPlugin)
       await api.register(segurancaPlugin)
+      await api.register(rotasAnexos)
       await api.register(rotasAreas)
+      await api.register(rotasArtigos)
+      await api.register(rotasAssentamentos)
+      await api.register(rotasAtivos)
+      await api.register(rotasAuditoria)
       await api.register(rotasAuth)
+      await api.register(rotasBusca)
       await api.register(rotasCanais)
+      await api.register(rotasChamados)
+      await api.register(rotasCategoriasArtigo)
+      await api.register(rotasConfig)
+      await api.register(rotasDepartamentos)
+      await api.register(rotasFeriados)
+      await api.register(rotasJornadas)
+      await api.register(rotasLeituras)
+      await api.register(rotasMe)
+      await api.register(rotasMencoes)
+      await api.register(rotasMeta)
+      await api.register(rotasNotificacoes)
+      await api.register(rotasPainel)
+      await api.register(rotasPresenca)
+      await api.register(rotasPrioridades)
       await api.register(rotasProblemas)
+      await api.register(rotasTiposAtivo)
+      await api.register(rotasUnidades)
+      await api.register(rotasUsuarios)
+      await api.register(rotasRelatorios)
       await api.register(rotasSaude)
       await api.register(rotasSeguranca)
+      await api.register(rotasStatus)
       await api.register(rotasTags)
       if (opcoes.rotasDeTeste) await api.register(opcoes.rotasDeTeste)
       // cada módulo novo: 1 import + 1 linha aqui (ordem alfabética)
     },
     { prefix: '/api/v1' },
   )
+
+  await app.register(tempoRealPlugin)
 
   if (env.WEB_DIST_DIR) await app.register(spaPlugin, { raiz: env.WEB_DIST_DIR })
   else app.setNotFoundHandler(responderRotaInexistente)

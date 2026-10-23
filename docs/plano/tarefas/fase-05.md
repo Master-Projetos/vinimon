@@ -35,10 +35,18 @@
      - `Agendar {versao, para: z.iso.datetime(), operadorId?, marcarPrimeiraResposta?}`;
      - `Concluir {versao, solucao, descricaoTecnica?}`, `Aprovar {versao, nota, comentario?}`, `Rejeitar {versao, motivo}`;
      - `Reabrir {versao, justificativa}`, `Cancelar {versao, motivo}`.
-  4. Schemas de resposta:
-     - `ChamadoResumoSchema` (para a lista: `id`, `assunto`, `novo`, `status`, `prioridade`, `area`, `problema`, `solicitante`, `operador`, `abertoEm`, `ultimaAtividadeEm`, `ultimaInteracao`, `naoLido`, `qtdAnexos`, `sla:{resposta,solucao}` com `prazo`/`alerta`/`cumprido`); `qtdAnexos` conta `interno=false` para quem não passa em `podeVerInterno`;
-     - `ChamadoDetalheSchema` (todos os campos visíveis, `abertoPor`, `participantes`, `tags` opcionais, `avaliacao`, `seguindo`, `acoes`).
+  4. Schemas de resposta (decisão do coordenador, issue 15; derivados do `schema.prisma` §4.2 e de `situacaoSla` em `sla.ts`):
+     - referências: `RefSchema = {id, nome}`; `StatusRefSchema = {id, nome, tipo: TipoStatus, papel: PapelStatus|null, cor}`; `PrioridadeRefSchema = {id, nome, cor, ordem}`. Datas com `zDataHora()`;
+     - `SlaPrazoSchema = {meta: int|null (minutos), prazo: data|null, alerta: data|null, cumprido: boolean|null, finalizado: boolean}`, o mesmo que `DadosSla` de `sla.ts` (resposta: `finalizado = primeiraRespostaEm !== null`; solução: `finalizado = concluidoEm !== null`; `prazo` nulo com `meta` = relógio parado). `ChamadoSlaSchema = {resposta: SlaPrazoSchema, solucao: SlaPrazoSchema}`;
+     - `ChamadoResumoSchema` (lista): `id`, `assunto`, `novo: boolean`, `cancelado: boolean`, `status: StatusRef`, `prioridade: PrioridadeRef`, `area: Ref`, `problema: Ref|null`, `solicitante: Ref`, `operador: Ref|null`, `abertoEm`, `agendadoPara: data|null`, `ultimaAtividadeEm`, `ultimaInteracao: {em: data, autorId: int|null}|null`, `naoLido: boolean`, `qtdAnexos: int`, `sla: ChamadoSla`; `qtdAnexos` conta `interno=false` para quem não passa em `podeVerInterno`;
+     - `ChamadoDetalheSchema` = `ChamadoResumoSchema.extend({...})` com: `descricao`, `solucao: string|null`, `descricaoTecnica?: string|null` (omitido para quem não passa em `podeVerInterno`), `contato`/`contatoEmail`/`telefone` (`string|null`), `abertoPor: Ref`, `canal: Ref`, `departamento: Ref|null`, `ativo: {id, etiqueta}|null`, `primeiraRespostaEm`, `concluidoEm`, `encerradoEm`, `validacaoLimiteEm`, `statusDesde` (datas, nulas quando vazias), `rejeicoes: int`, `versao: int`, `participantes: [{id, nome, papel: 'SOLICITANTE'|'OPERADOR'|'SEGUIDOR'}]`, `tags?: [{id, nome}]` (só para a equipe), `avaliacao: {nota: NotaAvaliacao, comentario: string|null, automatica: boolean, criadoEm}|null`, `seguindo: boolean`, `acoes: ChamadoAcoesSchema`;
+     - `ACOES_CHAMADO` = `['assumir','encaminhar','status','prioridade','classificar','tags','agendar','concluir','aprovar','rejeitar','reabrir','cancelar','comentar','comentarInterno','anexar']` e `ChamadoAcoesSchema` = `z.object` com um `boolean` por ação (as mesmas chaves de `acoesDoUsuario`, T-5.1);
+     - `ChamadoContagensSchema` = um `int` por `visao` (as 8 de `VISOES_CHAMADO`);
+     - `ChamadoEventoSchema` = `{id, tipo: TipoEvento, ator: Ref|null, dados: z.record(z.string(), z.unknown()), criadoEm}` (resposta do histórico: array);
+     - `ReincidenciaSchema` = `{ativo: ItemReincidencia[], solicitante: ItemReincidencia[]}`, com `ItemReincidencia = {id, assunto, abertoEm, emAberto: boolean}`.
   5. `chamadosApi` com `listar`, `contagens`, `criar`, `obter`, `historico`, `reincidencia`, `assumir`, `encaminhar`, `status`, `prioridade`, `classificacao`, `tags`, `agendar`, `concluir`, `aprovar`, `rejeitar`, `reabrir`, `cancelar`, `seguir` (PUT), `deixarDeSeguir` (DELETE).
+     - respostas: `listar` → `paginaDe(ChamadoResumoSchema)`; `contagens` → `ChamadoContagensSchema`; `criar` → 201 `ChamadoDetalhe`; `obter` e todas as ações (`assumir` … `cancelar`, `tags`) → `ChamadoDetalhe`; `historico` → `z.array(ChamadoEventoSchema)`; `reincidencia` → `ReincidenciaSchema`; `seguir` e `deixarDeSeguir` → 204;
+     - caminhos: `/chamados`, `/chamados/contagens`, `/chamados/reincidencia`, `/chamados/:id`, `/chamados/:id/{historico,assumir,encaminhar,status,prioridade,classificacao,agendar,concluir,aprovar,rejeitar,reabrir,cancelar}` (POST), `/chamados/:id/tags` (PUT), `/chamados/:id/seguir` (PUT/DELETE); `reincidencia` usa query `{ativoId?, problemaId?}`.
 - **Pronto quando:**
   - [ ] testes: `CriarChamado` com `statusId` dá erro (T36); `visao` inválida dá erro; `de` inválida dá erro;
   - [ ] `pnpm verificar`.
@@ -250,7 +258,7 @@
 ### T-5.11 — Matriz de autorização de chamados
 - **Depende de:** T-5.10 · **Paralelo com:** T-5.12
 - **Requisitos:** S44–S47; T33, T34
-- **Arquivos:** `apps/api/test/chamados-matriz.test.ts`, `apps/api/test/escopo-equivalencia.test.ts`
+- **Arquivos:** `apps/api/test/chamados-matriz.test.ts`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/src/modules/chamados/lista.test.ts` (corrigir `hoje` para o fuso do sistema: o teste falha entre 21h e 24h em São Paulo)
 - **Passos:**
   1. `it.each` sobre {rotas GET e POST de chamado} × {solicitante USUARIO, outro USUARIO, OPERADOR da área, OPERADOR de área secundária, OPERADOR de outra área, OPERADOR responsável de outra área, ADMIN}, com o status esperado em tabela. Fora do escopo é sempre 404.
   2. `escopo-equivalencia.test.ts`: fixture com os 7 atores de T33 e 12 chamados (área primária, secundária, outra área, operador responsável de outra área, solicitante OPERADOR, encerrado, cancelado). Para cada ator: `ids(await prisma.chamado.findMany({ where: escopoChamados(u), select: { id: true } }))` deve ser igual a `chamados.filter(c => podeVerChamado(u, c)).map(c => c.id)`.
@@ -265,7 +273,8 @@
 ### T-5.12 — Exportar CSV
 - **Depende de:** T-5.5 · **Paralelo com:** T-5.11
 - **Requisitos:** S82, S87; G01
-- **Arquivos:** `apps/api/src/modules/chamados/{exportar.ts,routes.ts,exportar.test.ts}`
+- **Arquivos:** `apps/api/src/modules/chamados/{consultas.ts,exportar.ts,routes.ts,exportar.test.ts}`
+- **Decisão do coordenador:** `apps/api/src/modules/chamados/consultas.ts` entra nesta tarefa. Exporte de lá `filtrosDeConsulta(u, f, fuso, agora)` (= `AND: [escopoChamados(u), filtroVisao, ...filtrosDa]`, o mesmo `where` de `listar`) e `selectExportacao` (com canal, primeira resposta e encerramento). `listar` passa a usar o mesmo construtor; o escopo continua só vindo de `autorizacao/chamados.ts` (S45). Sem mudar o comportamento de `listar`.
 - **Passos:**
   1. `GET /chamados/exportar?<ChamadoFiltros>` (`relatorio.ver`). Mesmos filtros e escopo de `listar`, com `take` de até 5000, lido em lotes de 500 por cursor de id.
   2. `import contentDisposition from 'content-disposition'` (`content-disposition@3.0.0` nas dependencies da API se não estiver na §2.2). `reply.type('text/csv; charset=utf-8').header('content-disposition', contentDisposition('chamados-AAAA-MM-DD.csv'))` e `return reply.send(Readable.from(gerador()))`, com BOM e `linhaCsv`.

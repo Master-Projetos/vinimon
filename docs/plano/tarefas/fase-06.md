@@ -67,7 +67,7 @@
 ### T-6.4 — Leituras ("Visto por")
 - **Depende de:** T-6.3 · **Paralelo com:** T-6.5
 - **Requisitos:** S98; TM4; §4.3 (SQL de leitura)
-- **Arquivos:** `apps/api/src/modules/leituras/{service.ts,routes.ts,leituras.test.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `packages/shared/src/{modulos/leituras.ts,index.ts}` (contrato, como na receita de módulo), `apps/api/src/modules/leituras/{service.ts,routes.ts,leituras.test.ts}`, `apps/api/src/app.ts`
 - **Passos:**
   1. `POST /chamados/:id/leitura {assentamentoId}` (120/min). O assentamento precisa ser do chamado e visível (senão 422). Usa o `$queryRaw` monotônico da §4.3.
   2. Se a query devolver linha: marca como lidas as notificações do chamado, exceto AVALIACAO_PENDENTE; depois do commit, `emitirLeitura` + `emitirContagem`.
@@ -156,7 +156,7 @@
 ### T-6.8 — Fanout e passo 4 do pós-commit
 - **Depende de:** T-6.7, T-6.3 · **Paralelo com:** T-6.10
 - **Requisitos:** S101, S105; §3.8 (fanout)
-- **Arquivos:** `apps/api/src/modules/notificacoes/{fanout.ts,fanout.test.ts}`, `apps/api/src/modules/chamados/eventos.ts`
+- **Arquivos:** `apps/api/src/modules/notificacoes/{fanout.ts,fanout.test.ts}`, `apps/api/src/modules/chamados/eventos.ts`, `apps/api/src/modules/chamados/{abrir.test.ts,acoes-atendimento.test.ts}` (ajustar as asserções que o passo 4 do pós-commit muda: `processadoEm` do evento CRIADO e a contagem reemitida em S53)
 - **Passos:**
   1. `processarEvento(id)`, com número fixo de queries:
      1. claim;
@@ -194,7 +194,7 @@
 ### T-6.9 — Rotas de notificações e preferências
 - **Depende de:** T-6.8 · **Paralelo com:** T-6.10
 - **Requisitos:** S102, S103; T60, T61; §3.6 (Notificações, `/me/preferencias-notificacao`)
-- **Arquivos:** `packages/shared/src/{modulos/notificacoes.ts,index.ts}`, `apps/api/src/modules/notificacoes/{service.ts,routes.ts,notificacoes.test.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `packages/shared/src/{modulos/notificacoes.ts,index.ts}`, `apps/api/src/modules/notificacoes/{service.ts,routes.ts,notificacoes.test.ts}`, `apps/api/src/app.ts`, `apps/api/src/modules/notificacoes/fanout.ts` e `apps/api/src/modules/leituras/service.ts` (passam a usar `whereNotificacoesVisiveis`: S103 pede uma função única também na contagem pós-fanout e na do "Visto por"; hoje cada um tem um `where` local)
 - **Passos:**
   1. `GET /notificacoes?filtro=&cursor=&limite=`:
      - `where: { usuarioId, chamado: escopoChamados(u), ...regra de interno da §3.8, ...filtro }`;

@@ -24,7 +24,7 @@
 ### T-10.1 — Login e verificação em duas etapas
 - **Depende de:** T-9.11, T-9.16, T-10.0, T-2.6 · **Paralelo com:** T-10.3
 - **Requisitos:** S79, S80; §6.3 (1)
-- **Arquivos:** `apps/web/src/routes/login.tsx`, `apps/web/src/features/auth/{queries.ts,components/auth-layout.tsx,components/login-form.tsx,components/dois-fatores-form.tsx,components/login.test.tsx}`
+- **Arquivos:** `apps/web/src/routes/login.tsx`, `apps/web/src/features/auth/{queries.ts,components/auth-layout.tsx,components/login-form.tsx,components/dois-fatores-form.tsx,components/login.test.tsx}`, `apps/web/src/lib/{api.ts,api.test.ts}` (expor `retryAfter` em `ErroApi`)
 - **Passos:**
   1. Login (`useEntrar`):
      - em `PENDENTE_MFA`, troca para a etapa de 2FA (`InputOTP`, ou código de recuperação);
@@ -43,7 +43,8 @@
 ### T-10.2 — Troca obrigatória de senha e cadastro do 2FA
 - **Depende de:** T-10.1, T-2.7, T-2.8 · **Paralelo com:** T-10.3, T-10.4
 - **Requisitos:** S26, S29, S30; T68
-- **Arquivos:** `apps/web/src/routes/{trocar-senha.tsx,configurar-2fa.tsx}`, `apps/web/src/features/auth/components/{trocar-senha-form.tsx,configurar-2fa-form.tsx,codigos-recuperacao-list.tsx}`, `apps/web/src/features/auth/queries.ts`
+- **Arquivos:** `apps/web/src/routes/{trocar-senha.tsx,configurar-2fa.tsx}`, `apps/web/src/features/auth/components/{trocar-senha-form.tsx,configurar-2fa-form.tsx,codigos-recuperacao-list.tsx}`, `apps/web/src/features/auth/queries.ts`, `apps/web/src/features/auth/components/{trocar-senha.test.tsx,configurar-2fa.test.tsx}`, `apps/web/package.json`, `pnpm-lock.yaml`, `apps/api/test/socket.ts` (`esperarEvento` com 5 s: flaky sob carga)
+- **Decisão do coordenador:** os dois testes citados em "Pronto quando" ficam em `features/auth/components/`. A dependência `qrcode.react@4.2.0` (§2.2) ainda não está em `apps/web`: entra aqui com `pnpm --filter @vinimon/web add -E qrcode.react@4.2.0`.
 - **Passos:**
   1. Trocar senha: confirmação e `PasswordStrength`.
   2. Configurar 2FA:
@@ -60,7 +61,7 @@
 ### T-10.3 — Shell, parte 1: AppShell, app bar, top bar e navegação móvel
 - **Depende de:** T-9.10, T-9.15, T-9.16, T-10.0 · **Paralelo com:** T-10.1, T-10.2
 - **Requisitos:** §6.2
-- **Arquivos:** `apps/web/src/components/layout/{app-shell.tsx,app-bar.tsx,app-bar-item.tsx,top-bar.tsx,mobile-nav.tsx,skip-link.tsx}`, `apps/web/src/routes/_app.tsx`
+- **Arquivos:** `apps/web/src/components/layout/{app-shell.tsx,app-bar.tsx,app-bar-item.tsx,top-bar.tsx,mobile-nav.tsx,skip-link.tsx,app-shell.test.tsx}`, `apps/web/src/routes/_app.tsx`
 - **Passos:**
   1. Grid, itens e permissões da §6.2. O contador fica como prop (ligado na T-10.15).
   2. `MobileNav` abaixo de 768 px, com "Mais" em `Sheet side="bottom"`.
@@ -77,7 +78,7 @@
 ### T-10.4 — Shell, parte 2: painéis, abas, guardas e redirecionamentos
 - **Depende de:** T-10.3 · **Paralelo com:** T-10.5
 - **Requisitos:** §6.2, §6.6 (`exigir`)
-- **Arquivos:** `apps/web/src/components/layout/{two-pane.tsx,pane-header.tsx,list-pane-section.tsx,list-pane-nav-item.tsx,route-tabs.tsx}`, `apps/web/src/features/auth/guards.ts`, `apps/web/src/routes/_app/{index.tsx,sem-permissao.tsx}`
+- **Arquivos:** `apps/web/src/components/layout/{two-pane.tsx,pane-header.tsx,list-pane-section.tsx,list-pane-nav-item.tsx,route-tabs.tsx}`, `apps/web/src/features/auth/guards.ts`, `apps/web/src/routes/_app/{index.tsx,sem-permissao.tsx}`, `apps/web/src/features/auth/guards.test.tsx` (testa o redirecionamento de `/`, no lugar de `routes/_app/index.test.tsx`, que o roteador trataria como rota), `apps/web/src/features/auth/components/login.test.tsx` (USUARIO passa a cair em `/chamados`)
 - **Passos:**
   1. `TwoPane` com as props do design. O recolhimento fica em `vinimon:painel-lista:<id>`.
   2. `exigir(p)` no `beforeLoad`.
@@ -296,7 +297,7 @@
 ### T-10.18 — Chamados: layout, filtros na URL e visões
 - **Depende de:** T-10.4, T-5.5 · **Paralelo com:** T-10.16, T-10.17
 - **Requisitos:** §3.6 (`ChamadoFiltros`), §6.3 (4)
-- **Arquivos:** `apps/web/src/routes/_app/chamados/route.tsx`, `apps/web/src/features/chamados/{queries.ts,filtros.ts,components/visoes-pane.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/chamados/route.tsx`, `apps/web/src/features/chamados/{queries.ts,filtros.ts,components/visoes-pane.tsx}`, `apps/web/src/features/chamados/route.test.tsx` (fora de `routes/`: o `tsr generate` trataria como rota)
 - **Passos:**
   1. `validateSearch` com `ChamadoFiltrosSchema` em que todos os campos são `.optional()`.
   2. `chamadoChaves` e `chamadosConsultas` (`lista` com `placeholderData: keepPreviousData`, `contagens` com `staleTime: 30_000`, `detalhe`).

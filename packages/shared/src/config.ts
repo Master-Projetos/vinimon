@@ -19,6 +19,7 @@ const CAMPOS = {
   'chamado.permitirReabertura': z.boolean(),
   'chamado.prazoReaberturaDias': z.int().min(0).max(365),
   'notificacoes.retencaoDias': z.int().min(30).max(365),
+  'email.habilitado': z.boolean(),
 }
 
 export const ConfigSchema = z.object(CAMPOS)
@@ -43,6 +44,7 @@ export const CONFIG_PADRAO: Config = {
   'chamado.permitirReabertura': true,
   'chamado.prazoReaberturaDias': 0,
   'notificacoes.retencaoDias': 180,
+  'email.habilitado': false,
 }
 
 /** PATCH /config: só as chaves enviadas; chave desconhecida = 400. */

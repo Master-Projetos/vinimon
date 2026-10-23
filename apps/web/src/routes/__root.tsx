@@ -1,3 +1,10 @@
-import { createRootRoute } from '@tanstack/react-router'
+import type { QueryClient } from '@tanstack/react-query'
+import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 
-export const Route = createRootRoute({ component: () => <p>Vinimon</p> })
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  component: RaizPagina,
+})
+
+function RaizPagina() {
+  return <Outlet />
+}
