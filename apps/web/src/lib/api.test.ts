@@ -78,6 +78,32 @@ describe('chamar()', () => {
     })
   })
 
+  it('429: expõe o Retry-After em segundos no ErroApi', async () => {
+    const resposta = new Response(JSON.stringify(erroCorpo('MUITAS_TENTATIVAS', 'Muitas tentativas.')), {
+      status: 429,
+      headers: { 'content-type': 'application/json', 'retry-after': '42' },
+    })
+    fetchSimulado.mockResolvedValueOnce(resposta)
+    const erro = await chamar(criarItem, { body: { nome: 'x' } }).catch((e: unknown) => e)
+    expect(erro).toBeInstanceOf(ErroApi)
+    expect((erro as ErroApi).status).toBe(429)
+    expect((erro as ErroApi).retryAfter).toBe(42)
+  })
+
+  it('Retry-After ausente ou inválido vira undefined', async () => {
+    fetchSimulado.mockResolvedValueOnce(json(erroCorpo('MUITAS_TENTATIVAS', 'x'), 429))
+    const sem = await chamar(criarItem, { body: { nome: 'x' } }).catch((e: unknown) => e)
+    expect((sem as ErroApi).retryAfter).toBeUndefined()
+    fetchSimulado.mockResolvedValueOnce(
+      new Response(JSON.stringify(erroCorpo('MUITAS_TENTATIVAS', 'x')), {
+        status: 429,
+        headers: { 'content-type': 'application/json', 'retry-after': 'amanhã' },
+      }),
+    )
+    const lixo = await chamar(criarItem, { body: { nome: 'x' } }).catch((e: unknown) => e)
+    expect((lixo as ErroApi).retryAfter).toBeUndefined()
+  })
+
   it('401: lança ErroApi com status 401', async () => {
     fetchSimulado.mockResolvedValueOnce(json(erroCorpo('NAO_AUTENTICADO', 'Entre para continuar.'), 401))
 

@@ -23,14 +23,29 @@ export class ErroApi extends Error {
   readonly codigo: string
   readonly detalhes: { campo: string; mensagem: string }[]
   readonly requestId: string | undefined
-  constructor(status: number, corpo: ErroResposta | null, mensagemPadrao = 'Falha de comunicação com o servidor.') {
+  /** Segundos pedidos pelo servidor em `Retry-After` (429); `undefined` quando não vem. */
+  readonly retryAfter: number | undefined
+  constructor(
+    status: number,
+    corpo: ErroResposta | null,
+    mensagemPadrao = 'Falha de comunicação com o servidor.',
+    retryAfter?: number,
+  ) {
     super(corpo?.erro.mensagem ?? mensagemPadrao)
     this.name = 'ErroApi'
     this.status = status
     this.codigo = corpo?.erro.codigo ?? (status === 0 ? 'REDE' : 'INTERNO')
     this.detalhes = corpo?.erro.detalhes ?? []
     this.requestId = corpo?.erro.requestId
+    this.retryAfter = retryAfter
   }
+}
+
+/** `Retry-After` em segundos (formato numérico); valores inválidos viram `undefined`. */
+function segundosDe(valor: string | null): number | undefined {
+  if (valor === null) return undefined
+  const n = Number(valor)
+  return Number.isFinite(n) && n >= 0 ? Math.ceil(n) : undefined
 }
 
 function montarUrl(c: Contrato, params?: Record<string, unknown>, query?: Record<string, unknown>): string {
@@ -82,7 +97,13 @@ export async function chamar<C extends Contrato>(
   }
   if (resposta.status === 204) return undefined as z.output<C['resposta']>
   const json: unknown = await resposta.json().catch(() => null)
-  if (!resposta.ok) throw new ErroApi(resposta.status, json as ErroResposta | null)
+  if (!resposta.ok)
+    throw new ErroApi(
+      resposta.status,
+      json as ErroResposta | null,
+      undefined,
+      segundosDe(resposta.headers.get('retry-after')),
+    )
   return c.resposta.parse(json) as z.output<C['resposta']>
 }
 
@@ -121,7 +142,15 @@ export function enviarArquivo(
         return
       }
       if (xhr.status >= 200 && xhr.status < 300) resolve(json)
-      else reject(new ErroApi(xhr.status, json as ErroResposta | null))
+      else
+        reject(
+          new ErroApi(
+            xhr.status,
+            json as ErroResposta | null,
+            undefined,
+            segundosDe(xhr.getResponseHeader('retry-after')),
+          ),
+        )
     }
     xhr.onerror = () => reject(new ErroApi(0, null, 'Sem conexão com o servidor.'))
     xhr.onabort = () => reject(new DOMException('Envio cancelado.', 'AbortError'))
