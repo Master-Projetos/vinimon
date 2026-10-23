@@ -19,6 +19,7 @@ import { compararIds, cruzamento, montarGrafo, permitido } from './grafo.mjs'
 
 export const REMOTO = process.env.VINIMON_REMOTO ?? 'origin'
 export const BASE = process.env.VINIMON_BASE ?? 'v2'
+export const BASE_MAIN_CORTE = `release/${BASE}-em-main`
 export const LIVRO = 'controle/travas'
 export const LIMITE_POR_AGENTE = 2
 const PROIBIDOS_TAREFA = ['docs/plano/', 'CLAUDE.md', '.claude/', 'scripts/plano/', '.github/']
@@ -435,7 +436,9 @@ export function conferirPR({ repo, controle }) {
   const v = []
   if (!mesmoRepo) return [`PR de fork não é aceito: as branches precisam estar neste repositório`]
   if (base === 'main') {
-    if (head !== BASE) v.push(`PR para main só a partir de ${BASE} (corte); head = ${head}`)
+    if (head !== BASE && head !== BASE_MAIN_CORTE) {
+      v.push(`PR para main só a partir de ${BASE} (corte); head = ${head}`)
+    }
     return v
   }
   if (base !== BASE) return v

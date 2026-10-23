@@ -366,6 +366,7 @@ async function cenarioConferir() {
   checar('check do PR: PR de fork reprova', pr({ TITULO: 'T-0.1: x', HEAD_REF: 'tarefa/T-0.1', BASE_REF: 'v2', MESMO_REPO: 'false' }).code === 1)
   checar('check do PR: plano/* tocando código reprova', pr({ TITULO: 'plano: x', HEAD_REF: 'plano/x', BASE_REF: 'v2' }).code === 1)
   checar('check do PR: main só a partir da v2', pr({ TITULO: 'x', HEAD_REF: 'tarefa/T-0.1', BASE_REF: 'main' }).code === 1)
+  checar('check do PR: main aceita release/v2-em-main no corte', pr({ TITULO: 'x', HEAD_REF: 'release/v2-em-main', BASE_REF: 'main' }).code === 0)
 }
 
 async function cenarioRunner() {
