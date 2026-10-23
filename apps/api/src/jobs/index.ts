@@ -6,6 +6,8 @@ import { removerAnexosOrfaos } from './anexos-orfaos'
 import { purgarAuditoria } from './auditoria-purga'
 import { autoAprovar } from './chamados-auto-aprovacao'
 import { retornarAgendados } from './chamados-retorno-agendados'
+import { executarEnvioEmail } from './email-enviar'
+import { varrerEmails } from './email-varrer'
 import { varrerEventos } from './eventos-varrer'
 import { limparNotificacoes } from './notificacoes-limpeza'
 import { limparSessoes } from './sessoes-limpeza'
@@ -49,6 +51,19 @@ export const JOBS: Job[] = [
       const jornadaId = dados.jornadaId
       if (typeof jornadaId !== 'number' || !Number.isInteger(jornadaId)) return
       await recalcularJornada(jornadaId, agora)
+    },
+  },
+  {
+    fila: 'email-enviar',
+    executar: async (dados) => {
+      await executarEnvioEmail(dados)
+    },
+  },
+  {
+    fila: 'email-varrer',
+    cron: '*/5 * * * *',
+    executar: async (_dados, agora) => {
+      await varrerEmails(agora)
     },
   },
   {

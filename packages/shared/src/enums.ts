@@ -88,3 +88,6 @@ export type SituacaoArtigo = (typeof SITUACOES_ARTIGO)[number]
 
 export const VISIBILIDADES_ARTIGO = ['PUBLICO', 'INTERNO'] as const
 export type VisibilidadeArtigo = (typeof VISIBILIDADES_ARTIGO)[number]
+
+export const STATUS_EMAIL = ['PENDENTE', 'ENVIADO', 'FALHOU'] as const
+export type StatusEmail = (typeof STATUS_EMAIL)[number]
