@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Construction } from 'lucide-react'
-import { EmptyState } from '@/components/feedback/empty-state'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+
 export const Route = createFileRoute('/_app/relatorios/')({
-  component: () => <EmptyState icone={Construction} titulo="Em construção" />,
+  beforeLoad: () => {
+    throw redirect({ to: '/relatorios/$relatorio', params: { relatorio: 'visao-geral' }, replace: true })
+  },
 })
