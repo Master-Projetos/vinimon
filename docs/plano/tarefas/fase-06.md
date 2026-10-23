@@ -156,7 +156,7 @@
 ### T-6.8 — Fanout e passo 4 do pós-commit
 - **Depende de:** T-6.7, T-6.3 · **Paralelo com:** T-6.10
 - **Requisitos:** S101, S105; §3.8 (fanout)
-- **Arquivos:** `apps/api/src/modules/notificacoes/{fanout.ts,fanout.test.ts}`, `apps/api/src/modules/chamados/eventos.ts`
+- **Arquivos:** `apps/api/src/modules/notificacoes/{fanout.ts,fanout.test.ts}`, `apps/api/src/modules/chamados/eventos.ts`, `apps/api/src/modules/chamados/{abrir.test.ts,acoes-atendimento.test.ts}` (ajustar as asserções que o passo 4 do pós-commit muda: `processadoEm` do evento CRIADO e a contagem reemitida em S53)
 - **Passos:**
   1. `processarEvento(id)`, com número fixo de queries:
      1. claim;
