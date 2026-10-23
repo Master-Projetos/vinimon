@@ -24,7 +24,8 @@
   - linha em `app.ts`.
   - Testes mínimos: 401, 403, 400 com `detalhes`, 201/200, 404 e 409 (duplicata e em uso).
 - **Padrão de tela de cadastro:** copia `routes/_app/admin/areas.tsx` + `features/areas/queries.ts` (§7). A tabela e o Sheet usam os campos da entidade.
-- **Critério de tela:** em tarefa de tela, todo critério 'manual' é substituído por `<rota>.test.tsx` com `renderRota` + `apiFalsa` (T-9.16), cobrindo (a) renderização com os dados; (b) submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`. Fluxos que passam por várias telas entram no spec Playwright da área. Toda tarefa da Fase 10 posterior à T-11.4 acrescenta 1 caso ao spec da sua área.
+- **Critério de tela:** em tarefa de tela, todo critério 'manual' é substituído por `features/<feature>/<rota>.test.tsx` com `renderRota` + `apiFalsa` (T-9.16), cobrindo (a) renderização com os dados; (b) submit chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`. Fluxos que passam por várias telas entram no spec Playwright da área. Toda tarefa da Fase 10 posterior à T-11.4 acrescenta 1 caso ao spec da sua área.
+  - O teste de tela fica em `apps/web/src/features/<feature>/` (nunca em `apps/web/src/routes/`, onde o `tsr generate` o trataria como rota) e entra na linha "Arquivos" do cartão. `routeTree.gen.ts` e `pnpm-lock.yaml` mudam junto com as rotas e a dependência; o `--conferir` já os aceita.
 
 ### Resumo
 
