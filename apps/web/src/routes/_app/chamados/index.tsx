@@ -1,6 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Construction } from 'lucide-react'
-import { EmptyState } from '@/components/feedback/empty-state'
+import { createFileRoute, useRouteContext } from '@tanstack/react-router'
+import { ChamadosTable } from '@/features/chamados/components/chamados-table'
+
 export const Route = createFileRoute('/_app/chamados/')({
-  component: () => <EmptyState icone={Construction} titulo="Em construção" />,
+  component: ListaPagina,
 })
+
+function ListaPagina() {
+  const { sessao } = useRouteContext({ from: '/_app' })
+  const busca = Route.useSearch()
+  const perfil = sessao.usuario?.perfil
+  if (!perfil) return null
+  return <ChamadosTable busca={busca} perfil={perfil} />
+}
