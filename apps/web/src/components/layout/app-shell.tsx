@@ -1,8 +1,11 @@
 import { useRouteContext } from '@tanstack/react-router'
 import { type Perfil, temPermissao } from '@vinimon/shared'
 import { Bell, BookOpenText, ChartColumn, LayoutDashboard, Monitor, Settings, Ticket } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { type ReactNode, useCallback, useState } from 'react'
+import { AtalhosDialog } from '@/components/command/atalhos-dialog'
+import { CommandPalette } from '@/components/command/command-palette'
 import { useContagemNotificacoes } from '@/features/notificacoes/queries'
+import { useAtalhos } from '@/hooks/use-atalhos'
 import { useContadorNoTitulo } from '@/hooks/use-contador-no-titulo'
 import { useFocoAoNavegar } from '@/hooks/use-foco-ao-navegar'
 import { AppBar } from './app-bar'
@@ -70,6 +73,11 @@ export function itensVisiveis(perfil: Perfil | null, contadores: Partial<Record<
 export function AppShell({ children, contadores }: AppShellProps) {
   const { sessao } = useRouteContext({ from: '/_app' })
   useFocoAoNavegar()
+  const [buscaAberta, setBuscaAberta] = useState(false)
+  const [atalhosAbertos, setAtalhosAbertos] = useState(false)
+  const abrirBusca = useCallback(() => setBuscaAberta(true), [])
+  const abrirAtalhos = useCallback(() => setAtalhosAbertos(true), [])
+  useAtalhos({ aoAbrirBusca: abrirBusca, aoAbrirAtalhos: abrirAtalhos })
   const naoLidas = useContagemNotificacoes()
   useContadorNoTitulo(naoLidas)
 
@@ -79,9 +87,12 @@ export function AppShell({ children, contadores }: AppShellProps) {
   return (
     <div className="grid h-dvh grid-rows-[var(--topbar-h)_minmax(0,1fr)_auto] md:grid-cols-[var(--appbar-w)_minmax(0,1fr)] md:grid-rows-[var(--topbar-h)_minmax(0,1fr)]">
       <SkipLink />
-      <TopBar usuario={usuario ? { id: usuario.id, nome: usuario.nome } : null} />
-      {/* O diálogo de atalhos entra na tarefa de atalhos; até lá o botão Ajuda não faz nada. */}
-      <AppBar itens={itens} aoAbrirAjuda={() => undefined} />
+      <TopBar
+        usuario={usuario ? { id: usuario.id, nome: usuario.nome } : null}
+        aoAbrirBusca={abrirBusca}
+        aoAbrirAtalhos={abrirAtalhos}
+      />
+      <AppBar itens={itens} aoAbrirAjuda={abrirAtalhos} />
       <div className="flex min-h-0 min-w-0 overflow-hidden bg-background md:rounded-tl-xl md:border-t md:border-l">
         <main
           id="conteudo"
@@ -92,6 +103,8 @@ export function AppShell({ children, contadores }: AppShellProps) {
         </main>
       </div>
       <MobileNav itens={itens} />
+      {usuario ? <CommandPalette aberto={buscaAberta} aoMudar={setBuscaAberta} usuarioId={usuario.id} /> : null}
+      <AtalhosDialog aberto={atalhosAbertos} aoMudar={setAtalhosAbertos} />
     </div>
   )
 }
