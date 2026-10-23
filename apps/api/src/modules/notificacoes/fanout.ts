@@ -1,10 +1,10 @@
 import { TIPOS_INAPP_FIXOS, type TipoEvento, type TipoNotificacao, temPermissao } from '@vinimon/shared'
 import { podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
-import type { Prisma } from '../../generated/prisma/client'
 import { prisma } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
 import { tempoReal } from '../../lib/tempo-real'
 import { type ContextoDestinatarios, destinatarios, type EventoNotificavel } from './regras'
+import { whereNotificacoesVisiveis } from './service'
 
 interface EventoReclamado {
   id: number
@@ -231,22 +231,16 @@ export async function processarEvento(eventoId: number): Promise<number[]> {
           THEN notificacoes.ator_ids
           ELSE (EXCLUDED.ator_ids || notificacoes.ator_ids)[1:10] END
       RETURNING id, usuario_id`
-    return { linhas, perfis: new Map(us.map((id) => [id, sessoes.get(id)?.perfil])), chamadoId: c.id }
+    return { linhas, usuarios: [...new Set(us)].flatMap((id) => sessoes.get(id) ?? []) }
   })
   if (!resultado) return []
 
   // depois do commit: contagem de não lidas por destinatário (uma query) e emissão
   const destinatariosIds = [...new Set(resultado.linhas.map((l) => l.usuario_id))]
-  const visivel = (usuarioId: number): Prisma.NotificacaoWhereInput => {
-    const perfil = resultado.perfis.get(usuarioId)
-    const verInterno = perfil !== undefined && temPermissao(perfil, 'chamado.verInterno')
-    return verInterno
-      ? { usuarioId, OR: [{ interno: false }, { interno: true, chamado: { solicitanteId: { not: usuarioId } } }] }
-      : { usuarioId, interno: false }
-  }
+  // o mesmo `where` do feed (S103, T60): só conta o que o destinatário ainda pode ver
   const grupos = await prisma.notificacao.groupBy({
     by: ['usuarioId'],
-    where: { lidaEm: null, OR: destinatariosIds.map(visivel) },
+    where: { AND: [{ lidaEm: null }, { OR: resultado.usuarios.map(whereNotificacoesVisiveis) }] },
     _count: { _all: true },
   })
   const naoLidas = new Map(grupos.map((g) => [g.usuarioId, g._count._all]))

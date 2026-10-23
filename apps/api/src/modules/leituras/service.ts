@@ -1,10 +1,10 @@
 import type { Leitura, LeituraMarcada } from '@vinimon/shared'
-import { temPermissao } from '@vinimon/shared'
 import { podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
 import { naoEncontrado, regraNegocio } from '../../lib/erros'
 import { prisma } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
 import { tempoReal } from '../../lib/tempo-real'
+import { contarNaoLidas } from '../notificacoes/service'
 
 async function carregarVisivel(id: number, u: UsuarioSessao) {
   const c = await prisma.chamado.findUnique({
@@ -13,20 +13,6 @@ async function carregarVisivel(id: number, u: UsuarioSessao) {
   })
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
   return c
-}
-
-/** Não lidas do usuário, com a mesma regra de interno do feed (§3.8). */
-async function naoLidasDe(u: UsuarioSessao): Promise<number> {
-  const verInterno = temPermissao(u.perfil, 'chamado.verInterno')
-  return prisma.notificacao.count({
-    where: {
-      usuarioId: u.id,
-      lidaEm: null,
-      ...(verInterno
-        ? { OR: [{ interno: false }, { interno: true, chamado: { solicitanteId: { not: u.id } } }] }
-        : { interno: false }),
-    },
-  })
 }
 
 /**
@@ -71,7 +57,7 @@ export async function marcarLeitura(id: number, assentamentoId: number, u: Usuar
   if (r.avancou) {
     try {
       tempoReal.emitirLeitura(id, u.id, r.ponteiro, r.lidoEm)
-      tempoReal.emitirContagem(u.id, await naoLidasDe(u))
+      tempoReal.emitirContagem(u.id, await contarNaoLidas(u))
     } catch {
       // falha de socket nunca desfaz a leitura
     }
