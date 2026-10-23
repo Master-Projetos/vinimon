@@ -297,7 +297,7 @@
 ### T-10.18 — Chamados: layout, filtros na URL e visões
 - **Depende de:** T-10.4, T-5.5 · **Paralelo com:** T-10.16, T-10.17
 - **Requisitos:** §3.6 (`ChamadoFiltros`), §6.3 (4)
-- **Arquivos:** `apps/web/src/routes/_app/chamados/route.tsx`, `apps/web/src/features/chamados/{queries.ts,filtros.ts,components/visoes-pane.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/chamados/route.tsx`, `apps/web/src/features/chamados/{queries.ts,filtros.ts,components/visoes-pane.tsx}`, `apps/web/src/features/chamados/route.test.tsx` (fora de `routes/`: o `tsr generate` trataria como rota)
 - **Passos:**
   1. `validateSearch` com `ChamadoFiltrosSchema` em que todos os campos são `.optional()`.
   2. `chamadoChaves` e `chamadosConsultas` (`lista` com `placeholderData: keepPreviousData`, `contagens` com `staleTime: 30_000`, `detalhe`).

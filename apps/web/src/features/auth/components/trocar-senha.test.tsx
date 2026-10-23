@@ -1,10 +1,30 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
-import type { SessaoResposta } from '@vinimon/shared'
+import type { SessaoResposta, UsuarioMe } from '@vinimon/shared'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { ApiFalsa } from '@/test/api-falsa'
 import { renderRota } from '@/test/render-rota'
 
-const sessao = (estado: SessaoResposta['estado']): SessaoResposta => ({ estado, csrf: 'csrf-novo', usuario: null })
+const usuario: UsuarioMe = {
+  id: 7,
+  nome: 'Ana Souza',
+  login: 'ana',
+  email: null,
+  telefone: null,
+  perfil: 'USUARIO',
+  areaId: null,
+  areaIds: [],
+  permissoes: [],
+  mfaAtivo: false,
+  deveTrocarSenha: false,
+  tema: 'SISTEMA',
+  densidade: null,
+  enviarComEnter: true,
+}
+const sessao = (estado: SessaoResposta['estado']): SessaoResposta => ({
+  estado,
+  csrf: 'csrf-novo',
+  usuario: estado === 'ATIVA' ? usuario : null,
+})
 const json = (corpo: unknown, status = 200) =>
   new Response(JSON.stringify(corpo), { status, headers: { 'content-type': 'application/json' } })
 
@@ -51,11 +71,11 @@ describe('/trocar-senha', () => {
     expect(queryClient.getQueryData(['auth', 'sessao'])).toMatchObject({ estado: 'CADASTRO_MFA', csrf: 'csrf-novo' })
   })
 
-  it('sessão ATIVA depois da troca (USUARIO sem 2FA) vai para /', async () => {
+  it('sessão ATIVA depois da troca (USUARIO sem 2FA) vai para / e a guarda leva a /chamados', async () => {
     const { router } = montar({ 'POST /auth/trocar-senha': () => json(sessao('ATIVA')) })
     await preencher()
     enviar()
-    await waitFor(() => expect(router.state.location.pathname).toBe('/'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/chamados'))
   })
 
   it('a confirmação diferente da nova senha bloqueia o envio', async () => {

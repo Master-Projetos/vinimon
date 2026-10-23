@@ -22,3 +22,4 @@ export const _notaAvaliacao: Igual<Shared.NotaAvaliacao, Prisma.NotaAvaliacao> =
 export const _situacaoAtivo: Igual<Shared.SituacaoAtivo, Prisma.SituacaoAtivo> = true
 export const _situacaoArtigo: Igual<Shared.SituacaoArtigo, Prisma.SituacaoArtigo> = true
 export const _visibilidadeArtigo: Igual<Shared.VisibilidadeArtigo, Prisma.VisibilidadeArtigo> = true
+export const _statusEmail: Igual<Shared.StatusEmail, Prisma.StatusEmail> = true

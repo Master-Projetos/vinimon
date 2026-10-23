@@ -180,6 +180,14 @@ enum VisibilidadeArtigo {
   @@map("visibilidade_artigo")
 }
 
+enum StatusEmail {
+  PENDENTE
+  ENVIADO
+  FALHOU
+
+  @@map("status_email")
+}
+
 // ═════════════════════════ ORGANIZAÇÃO ═════════════════════════
 
 model Unidade {
@@ -224,7 +232,7 @@ model Area {
   criadoEm     DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
   atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
 
-  jornada             Jornada?      @relation(fields: [jornadaId], references: [id], onDelete: Restrict)
+  jornada             Jornada?       @relation(fields: [jornadaId], references: [id], onDelete: Restrict)
   usuarios            Usuario[]
   usuariosSecundarios UsuarioArea[]
   problemas           ProblemaArea[]
@@ -957,23 +965,23 @@ model CategoriaArtigo {
 
 /// Artigo da base (antiga FAQ + roteiros). IDs da v1 preservados
 model Artigo {
-  id            Int                @id @default(autoincrement())
-  titulo        String             @db.VarChar(200)
-  resumo        String?            @db.VarChar(500)
+  id            Int                      @id @default(autoincrement())
+  titulo        String                   @db.VarChar(200)
+  resumo        String?                  @db.VarChar(500)
   /// Markdown
-  conteudo      String             @db.Text
-  categoriaId   Int?               @map("categoria_id")
-  situacao      SituacaoArtigo     @default(RASCUNHO)
-  visibilidade  VisibilidadeArtigo @default(PUBLICO)
-  autorId       Int?               @map("autor_id")
-  visualizacoes Int                @default(0)
-  publicadoEm   DateTime?          @map("publicado_em") @db.Timestamptz(3)
-  criadoEm      DateTime           @default(now()) @map("criado_em") @db.Timestamptz(3)
-  atualizadoEm  DateTime           @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+  conteudo      String                   @db.Text
+  categoriaId   Int?                     @map("categoria_id")
+  situacao      SituacaoArtigo           @default(RASCUNHO)
+  visibilidade  VisibilidadeArtigo       @default(PUBLICO)
+  autorId       Int?                     @map("autor_id")
+  visualizacoes Int                      @default(0)
+  publicadoEm   DateTime?                @map("publicado_em") @db.Timestamptz(3)
+  criadoEm      DateTime                 @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm  DateTime                 @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
   /// trigger: titulo(A) resumo(B) conteudo(C), 'portuguese' + f_unaccent
   busca         Unsupported("tsvector")?
   /// trigger: lower(f_unaccent(titulo resumo))
-  buscaNorm     String?            @map("busca_norm") @db.Text
+  buscaNorm     String?                  @map("busca_norm") @db.Text
 
   categoria CategoriaArtigo? @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
   autor     Usuario?         @relation(fields: [autorId], references: [id], onDelete: Restrict)
@@ -1021,4 +1029,28 @@ model Config {
   atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
 
   @@map("config")
+}
+
+// ═════════════════════════ E-MAIL ═════════════════════════
+
+/// Outbox de e-mails de saída (NOT-7): gravado na mesma transação do evento; o job `email-enviar` envia depois do commit.
+model EmailSaida {
+  id                Int         @id @default(autoincrement())
+  para              String      @db.VarChar(254)
+  assunto           String      @db.VarChar(300)
+  texto             String      @db.Text
+  html              String?     @db.Text
+  evento            String      @db.VarChar(60)
+  chamadoId         Int?        @map("chamado_id")
+  usuarioId         Int?        @map("usuario_id")
+  /// chave de deduplicação: a mesma chave nunca gera dois envios
+  chaveIdempotencia String      @unique @map("chave_idempotencia")
+  status            StatusEmail @default(PENDENTE)
+  tentativas        Int         @default(0)
+  erro              String?     @db.VarChar(1000)
+  criadoEm          DateTime    @default(now()) @map("criado_em") @db.Timestamptz(3)
+  enviadoEm         DateTime?   @map("enviado_em") @db.Timestamptz(3)
+
+  @@index([status, criadoEm], map: "ix_emails_saida_status_criado_em")
+  @@map("emails_saida")
 }
