@@ -110,6 +110,8 @@ enum TipoEvento {
   APROVADO
   REJEITADO
   AUTO_APROVADO
+  SOLICITADO_RETORNO
+  AUTO_ENCERRADO
   REABERTO
   CANCELADO
   ANEXO_ADICIONADO
@@ -186,6 +188,14 @@ enum StatusEmail {
   FALHOU
 
   @@map("status_email")
+}
+
+enum CanalEmail {
+  NUNCA
+  IMEDIATO
+  RESUMO
+
+  @@map("canal_email")
 }
 
 // ═════════════════════════ ORGANIZAÇÃO ═════════════════════════
@@ -435,6 +445,8 @@ model PreferenciaNotificacao {
   tipo      TipoNotificacao
   inApp     Boolean         @map("in_app")
   desktop   Boolean
+  /// null = padrão de `canalEmailPadrao` (shared); só as diferenças são gravadas
+  email     CanalEmail?
 
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 

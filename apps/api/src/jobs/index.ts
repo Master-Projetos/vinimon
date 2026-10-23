@@ -2,11 +2,13 @@ import type { FastifyBaseLogger } from 'fastify'
 import { PgBoss } from 'pg-boss'
 import { env } from '../env'
 import { definirFila } from '../lib/filas'
+import { executarEnvioEmailNotificacao } from '../modules/notificacoes/email-notificacao'
 import { removerAnexosOrfaos } from './anexos-orfaos'
 import { purgarAuditoria } from './auditoria-purga'
 import { autoAprovar } from './chamados-auto-aprovacao'
+import { autoEncerrarPorInatividade } from './chamados-auto-encerramento-inatividade'
 import { retornarAgendados } from './chamados-retorno-agendados'
-import { executarEnvioEmail } from './email-enviar'
+import { enviarResumoDiario } from './email-resumo-diario'
 import { varrerEmails } from './email-varrer'
 import { varrerEventos } from './eventos-varrer'
 import { limparNotificacoes } from './notificacoes-limpeza'
@@ -54,9 +56,17 @@ export const JOBS: Job[] = [
     },
   },
   {
+    // envio com a regra de notificação (não envia se a notificação de origem já foi lida)
     fila: 'email-enviar',
     executar: async (dados) => {
-      await executarEnvioEmail(dados)
+      await executarEnvioEmailNotificacao(dados)
+    },
+  },
+  {
+    fila: 'email-resumo-diario',
+    cron: '0 8 * * *',
+    executar: async (_dados, agora) => {
+      await enviarResumoDiario(agora)
     },
   },
   {
@@ -85,6 +95,13 @@ export const JOBS: Job[] = [
     cron: '*/5 * * * *',
     executar: async (_dados, agora) => {
       await autoAprovar(agora)
+    },
+  },
+  {
+    fila: 'chamados-auto-encerramento-inatividade',
+    cron: '*/15 * * * *',
+    executar: async (_dados, agora) => {
+      await autoEncerrarPorInatividade(agora)
     },
   },
   {

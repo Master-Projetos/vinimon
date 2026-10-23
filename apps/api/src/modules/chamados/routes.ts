@@ -254,6 +254,20 @@ export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
   })
 
   app.route({
+    method: c.solicitarRetorno.metodo,
+    url: c.solicitarRetorno.caminho,
+    schema: {
+      tags,
+      summary: 'Solicita o retorno do solicitante (comentário público, status aguardando e e-mail)',
+      params: c.solicitarRetorno.params,
+      body: c.solicitarRetorno.body,
+      response: { 200: c.solicitarRetorno.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.solicitarRetorno(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
     method: c.reabrir.metodo,
     url: c.reabrir.caminho,
     schema: {

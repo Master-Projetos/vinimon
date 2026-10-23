@@ -133,6 +133,7 @@ export const AprovarChamadoSchema = z.strictObject({
   comentario: z.string().trim().max(1_000, { error: 'Máximo de 1.000 caracteres.' }).optional(),
 })
 export const RejeitarChamadoSchema = z.strictObject({ versao: versao(), motivo: zMotivo() })
+export const SolicitarRetornoSchema = z.strictObject({ versao: versao(), mensagem: zMotivo() })
 export const ReabrirChamadoSchema = z.strictObject({ versao: versao(), justificativa: zMotivo() })
 export const CancelarChamadoSchema = z.strictObject({ versao: versao(), motivo: zMotivo() })
 
@@ -146,6 +147,7 @@ export type AgendarChamado = z.output<typeof AgendarChamadoSchema>
 export type ConcluirChamado = z.output<typeof ConcluirChamadoSchema>
 export type AprovarChamado = z.output<typeof AprovarChamadoSchema>
 export type RejeitarChamado = z.output<typeof RejeitarChamadoSchema>
+export type SolicitarRetorno = z.output<typeof SolicitarRetornoSchema>
 export type ReabrirChamado = z.output<typeof ReabrirChamadoSchema>
 export type CancelarChamado = z.output<typeof CancelarChamadoSchema>
 
@@ -348,6 +350,7 @@ export const chamadosApi = {
   concluir: acao('/chamados/:id/concluir', ConcluirChamadoSchema),
   aprovar: acao('/chamados/:id/aprovar', AprovarChamadoSchema),
   rejeitar: acao('/chamados/:id/rejeitar', RejeitarChamadoSchema),
+  solicitarRetorno: acao('/chamados/:id/solicitar-retorno', SolicitarRetornoSchema),
   reabrir: acao('/chamados/:id/reabrir', ReabrirChamadoSchema),
   cancelar: acao('/chamados/:id/cancelar', CancelarChamadoSchema),
   seguir: contrato({
