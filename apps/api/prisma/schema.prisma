@@ -285,6 +285,7 @@ model Usuario {
   areasSecundarias        UsuarioArea[]
   sessoes                 Sessao[]
   codigosRecuperacao      CodigoRecuperacao[]
+  tokensSenha             TokenSenha[]
   auditorias              Auditoria[]
   presenca                PresencaUsuario?
   preferenciasNotificacao PreferenciaNotificacao[]
@@ -373,6 +374,22 @@ model CodigoRecuperacao {
 
   @@index([usuarioId], map: "ix_codigos_recuperacao_usuario")
   @@map("codigos_recuperacao")
+}
+
+/// Token de redefinição de senha (SEN-10): o banco guarda só sha256(token) em hex; uso único, validade de 30 min
+model TokenSenha {
+  id        Int       @id @default(autoincrement())
+  usuarioId Int       @map("usuario_id")
+  tokenHash String    @unique @map("token_hash") @db.Char(64)
+  expiraEm  DateTime  @map("expira_em") @db.Timestamptz(3)
+  usadoEm   DateTime? @map("usado_em") @db.Timestamptz(3)
+  ip        String?   @db.VarChar(45)
+  criadoEm  DateTime  @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId], map: "ix_tokens_senha_usuario")
+  @@map("tokens_senha")
 }
 
 /// Trilha de auditoria — somente inserção (trigger)
