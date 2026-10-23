@@ -78,6 +78,21 @@ describe('chamar()', () => {
     })
   })
 
+  it('429 com Retry-After: lança ErroApi com retryAfter em segundos', async () => {
+    fetchSimulado.mockResolvedValueOnce(
+      new Response(JSON.stringify(erroCorpo('MUITAS_TENTATIVAS', 'Muitas requisições.')), {
+        status: 429,
+        headers: { 'content-type': 'application/json', 'retry-after': '30' },
+      }),
+    )
+
+    const erro = await chamar(lerItem, { params: { id: '7' } }).catch((e: unknown) => e)
+
+    expect(erro).toBeInstanceOf(ErroApi)
+    expect(erro).toMatchObject({ status: 429, codigo: 'MUITAS_TENTATIVAS' })
+    expect((erro as ErroApi).retryAfter).toBe(30)
+  })
+
   it('401: lança ErroApi com status 401', async () => {
     fetchSimulado.mockResolvedValueOnce(json(erroCorpo('NAO_AUTENTICADO', 'Entre para continuar.'), 401))
 

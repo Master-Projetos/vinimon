@@ -23,14 +23,29 @@ export class ErroApi extends Error {
   readonly codigo: string
   readonly detalhes: { campo: string; mensagem: string }[]
   readonly requestId: string | undefined
-  constructor(status: number, corpo: ErroResposta | null, mensagemPadrao = 'Falha de comunicação com o servidor.') {
+  /** Segundos até nova tentativa, vindos do header `Retry-After` (só quando válido). */
+  readonly retryAfter?: number
+  constructor(
+    status: number,
+    corpo: ErroResposta | null,
+    mensagemPadrao = 'Falha de comunicação com o servidor.',
+    retryAfter?: number,
+  ) {
     super(corpo?.erro.mensagem ?? mensagemPadrao)
     this.name = 'ErroApi'
     this.status = status
     this.codigo = corpo?.erro.codigo ?? (status === 0 ? 'REDE' : 'INTERNO')
     this.detalhes = corpo?.erro.detalhes ?? []
     this.requestId = corpo?.erro.requestId
+    if (retryAfter !== undefined) this.retryAfter = retryAfter
   }
+}
+
+/** Lê `Retry-After` como inteiro de segundos; valor ausente ou inválido vira undefined. */
+function lerRetryAfter(resposta: Response): number | undefined {
+  const valor = resposta.headers.get('retry-after')?.trim()
+  if (valor === undefined || !/^\d+$/.test(valor)) return undefined
+  return Number(valor)
 }
 
 function montarUrl(c: Contrato, params?: Record<string, unknown>, query?: Record<string, unknown>): string {
@@ -82,7 +97,7 @@ export async function chamar<C extends Contrato>(
   }
   if (resposta.status === 204) return undefined as z.output<C['resposta']>
   const json: unknown = await resposta.json().catch(() => null)
-  if (!resposta.ok) throw new ErroApi(resposta.status, json as ErroResposta | null)
+  if (!resposta.ok) throw new ErroApi(resposta.status, json as ErroResposta | null, undefined, lerRetryAfter(resposta))
   return c.resposta.parse(json) as z.output<C['resposta']>
 }
 
