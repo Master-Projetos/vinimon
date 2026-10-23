@@ -24,7 +24,7 @@
 ### T-10.1 — Login e verificação em duas etapas
 - **Depende de:** T-9.11, T-9.16, T-10.0, T-2.6 · **Paralelo com:** T-10.3
 - **Requisitos:** S79, S80; §6.3 (1)
-- **Arquivos:** `apps/web/src/routes/login.tsx`, `apps/web/src/features/auth/{queries.ts,components/auth-layout.tsx,components/login-form.tsx,components/dois-fatores-form.tsx,components/login.test.tsx}`
+- **Arquivos:** `apps/web/src/routes/login.tsx`, `apps/web/src/features/auth/{queries.ts,components/auth-layout.tsx,components/login-form.tsx,components/dois-fatores-form.tsx,components/login.test.tsx}`, `apps/web/src/lib/{api.ts,api.test.ts}` (expor `retryAfter` em `ErroApi`)
 - **Passos:**
   1. Login (`useEntrar`):
      - em `PENDENTE_MFA`, troca para a etapa de 2FA (`InputOTP`, ou código de recuperação);
@@ -60,7 +60,7 @@
 ### T-10.3 — Shell, parte 1: AppShell, app bar, top bar e navegação móvel
 - **Depende de:** T-9.10, T-9.15, T-9.16, T-10.0 · **Paralelo com:** T-10.1, T-10.2
 - **Requisitos:** §6.2
-- **Arquivos:** `apps/web/src/components/layout/{app-shell.tsx,app-bar.tsx,app-bar-item.tsx,top-bar.tsx,mobile-nav.tsx,skip-link.tsx}`, `apps/web/src/routes/_app.tsx`
+- **Arquivos:** `apps/web/src/components/layout/{app-shell.tsx,app-bar.tsx,app-bar-item.tsx,top-bar.tsx,mobile-nav.tsx,skip-link.tsx,app-shell.test.tsx}`, `apps/web/src/routes/_app.tsx`
 - **Passos:**
   1. Grid, itens e permissões da §6.2. O contador fica como prop (ligado na T-10.15).
   2. `MobileNav` abaixo de 768 px, com "Mais" em `Sheet side="bottom"`.

@@ -2,6 +2,7 @@ import type { TipoEvento } from '@vinimon/shared'
 import { paraJson } from '../../lib/auditoria'
 import { prisma, type Tx } from '../../lib/prisma'
 import { type CampoChamado, type MotivoFila, tempoReal } from '../../lib/tempo-real'
+import { processarEvento } from '../notificacoes/fanout'
 
 /** Retorno padrão das transações de ação: o que `aposCommitChamado` precisa para os efeitos pós-commit. */
 export interface EfeitosChamado {
@@ -92,7 +93,7 @@ async function tentar(
 
 /**
  * Efeitos depois do commit (§3.8, passos 1 a 3). Cada passo roda sozinho em try/catch: falha de socket nunca desfaz a
- * ação nem derruba os passos seguintes. O passo 4 (fanout de notificações) entra na T-6.8.
+ * ação nem derruba os passos seguintes. O passo 4 é o fanout de notificações (`processarEvento`, T-6.8).
  *
  * Evento com `interno=true` só emite `chamado:atualizado` para a sala interna e nunca chama `emitirFila`
  * (S49, S93). `chamado:atualizado` não sai quando `campos` está vazio (comentário não invalida cache).
@@ -128,4 +129,11 @@ export async function aposCommitChamado(p: EfeitosChamado & { chamadoId: number;
   await tentar(log, 'revalidar', p.chamadoId, () => {
     if (p.acessoMudou) tempoReal.revalidarChamado(p.chamadoId)
   })
+
+  // 4. fanout de notificações (um evento por vez; o claim por `processado_em` evita duplicar)
+  for (const eventoId of p.eventoIds) {
+    await tentar(log, 'fanout', p.chamadoId, async () => {
+      await processarEvento(eventoId)
+    })
+  }
 }

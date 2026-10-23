@@ -14,8 +14,10 @@ import {
 } from 'fastify-type-provider-zod'
 import { env } from './env'
 import { responderRotaInexistente } from './lib/erros'
+import { rotasAnexos } from './modules/anexos/routes'
 import { rotasAreas } from './modules/areas/routes'
 import { rotasArtigos } from './modules/artigos/routes'
+import { rotasAssentamentos } from './modules/assentamentos/routes'
 import { rotasAtivos } from './modules/ativos/routes'
 import { rotasAuditoria } from './modules/auditoria/routes'
 import { rotasAuth } from './modules/auth/routes'
@@ -27,10 +29,13 @@ import { rotasConfig } from './modules/config/routes'
 import { rotasDepartamentos } from './modules/departamentos/routes'
 import { rotasFeriados } from './modules/feriados/routes'
 import { rotasJornadas } from './modules/jornadas/routes'
+import { rotasLeituras } from './modules/leituras/routes'
 import { rotasMe } from './modules/me/routes'
 import { rotasMencoes } from './modules/mencoes/routes'
 import { rotasMeta } from './modules/meta/routes'
+import { rotasNotificacoes } from './modules/notificacoes/routes'
 import { rotasPainel } from './modules/painel/routes'
+import { rotasPresenca } from './modules/presenca/routes'
 import { rotasPrioridades } from './modules/prioridades/routes'
 import { rotasProblemas } from './modules/problemas/routes'
 import { rotasRelatorios } from './modules/relatorios/routes'
@@ -180,8 +185,10 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
     async (api) => {
       await api.register(autenticacaoPlugin)
       await api.register(segurancaPlugin)
+      await api.register(rotasAnexos)
       await api.register(rotasAreas)
       await api.register(rotasArtigos)
+      await api.register(rotasAssentamentos)
       await api.register(rotasAtivos)
       await api.register(rotasAuditoria)
       await api.register(rotasAuth)
@@ -193,10 +200,13 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasDepartamentos)
       await api.register(rotasFeriados)
       await api.register(rotasJornadas)
+      await api.register(rotasLeituras)
       await api.register(rotasMe)
       await api.register(rotasMencoes)
       await api.register(rotasMeta)
+      await api.register(rotasNotificacoes)
       await api.register(rotasPainel)
+      await api.register(rotasPresenca)
       await api.register(rotasPrioridades)
       await api.register(rotasProblemas)
       await api.register(rotasTiposAtivo)

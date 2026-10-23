@@ -150,7 +150,12 @@ describe('POST /chamados (abrir)', () => {
     ).toEqual([{ usuarioId: c.usuario.id, motivo: 'SOLICITANTE' }])
     const ev = await prisma.chamadoEvento.findMany({ where: { chamadoId: d.id } })
     expect(ev).toHaveLength(1)
-    expect(ev[0]).toMatchObject({ tipo: 'CRIADO', atorId: c.usuario.id, interno: false, processadoEm: null })
+    expect(ev[0]).toMatchObject({
+      tipo: 'CRIADO',
+      atorId: c.usuario.id,
+      interno: false,
+      processadoEm: expect.any(Date),
+    })
     const ass = await prisma.assentamento.findMany({ where: { chamadoId: d.id } })
     expect(ass).toHaveLength(1)
     expect(ass[0]).toMatchObject({ tipo: 'SISTEMA', interno: false, texto: 'Chamado aberto', evento: 'CRIADO' })

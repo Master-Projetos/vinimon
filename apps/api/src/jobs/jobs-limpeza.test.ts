@@ -13,9 +13,10 @@ describe('jobs de limpeza', () => {
     await limparBanco()
   })
 
-  it('registra os dois jobs com cron', () => {
-    expect(JOBS.map((j) => j.fila)).toEqual(['sessoes-limpeza', 'auditoria-purga'])
-    expect(JOBS.every((j) => j.cron !== undefined)).toBe(true)
+  it('registra os jobs de limpeza, com cron', () => {
+    expect(JOBS.map((j) => j.fila)).toEqual(expect.arrayContaining(['sessoes-limpeza', 'auditoria-purga']))
+    for (const fila of ['sessoes-limpeza', 'auditoria-purga'])
+      expect(JOBS.find((j) => j.fila === fila)?.cron, fila).toBeDefined()
   })
 
   it('sessoes-limpeza apaga só sessões expiradas/revogadas há mais de 7 dias e falhas com mais de 24 h', async () => {

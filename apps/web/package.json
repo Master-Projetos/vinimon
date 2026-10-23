@@ -15,6 +15,7 @@
     "@hookform/resolvers": "6.0.0",
     "@tanstack/react-query": "5.104.5",
     "@tanstack/react-router": "1.170.45",
+    "@tanstack/react-table": "8.21.3",
     "@vinimon/shared": "workspace:*",
     "@zxcvbn-ts/core": "4.2.0",
     "@zxcvbn-ts/language-common": "4.1.3",

@@ -300,7 +300,8 @@ describe('ações de atendimento: assumir, encaminhar, status e prioridade (S47,
       expect((await prisma.notificacao.findUniqueOrThrow({ where: { id: doO3.id } })).lidaEm).not.toBeNull()
       expect((await prisma.notificacao.findUniqueOrThrow({ where: { id: doU1.id } })).lidaEm).toBeNull()
       expect((await prisma.notificacao.findUniqueOrThrow({ where: { id: doO2.id } })).lidaEm).toBeNull()
-      expect(publicador.emitirContagem).toHaveBeenCalledExactlyOnceWith(x.o3.id, 0)
+      // o fanout do evento também reemite a contagem de outros usuários: aqui importa o O3 zerado
+      expect(publicador.emitirContagem).toHaveBeenCalledWith(x.o3.id, 0)
     })
   })
 

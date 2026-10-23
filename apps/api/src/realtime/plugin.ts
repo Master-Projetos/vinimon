@@ -4,7 +4,9 @@ import fp from 'fastify-plugin'
 import { Server } from 'socket.io'
 import { carregarSessao, NOME_COOKIE, type UsuarioSessao } from '../lib/sessao'
 import { definirTempoReal, type PublicadorTempoReal } from '../lib/tempo-real'
+import { criarEmissores, registrarHandlers } from './handlers'
 import { erroRt, permitirHandshake, temCredencialIndevida } from './handshake'
+import { registrarPresenca } from './presenca'
 import { SALA_ADMINS, salaArea, salaSessao, salaUsuario } from './salas'
 
 export interface DadosSocket {
@@ -21,7 +23,7 @@ declare module 'fastify' {
 
 const MAX_SOCKETS_POR_USUARIO = 10
 
-/** Publicador da T-7.2: ainda sem emissões (entram na T-7.3 e na T-7.4). */
+/** Revogação e revalidação (T-7.4) ainda sem efeito; as emissões reais vêm de `criarEmissores` (T-7.3). */
 const publicador: PublicadorTempoReal = {
   encerrarSessao: () => undefined,
   encerrarSessoesDoUsuario: () => undefined,
@@ -77,8 +79,11 @@ export const tempoRealPlugin = fp(
       if (u.perfil === 'ADMIN') socket.join(SALA_ADMINS)
     })
 
-    definirTempoReal(publicador)
+    registrarHandlers(io, app.log)
+    const presenca = registrarPresenca(io, app.log)
+    definirTempoReal({ ...publicador, ...criarEmissores(io, app.log) })
 
+    app.addHook('onClose', async () => presenca.fechar())
     app.addHook('preClose', async () => {
       io.local.disconnectSockets(true)
     })
