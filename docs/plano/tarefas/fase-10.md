@@ -43,7 +43,8 @@
 ### T-10.2 — Troca obrigatória de senha e cadastro do 2FA
 - **Depende de:** T-10.1, T-2.7, T-2.8 · **Paralelo com:** T-10.3, T-10.4
 - **Requisitos:** S26, S29, S30; T68
-- **Arquivos:** `apps/web/src/routes/{trocar-senha.tsx,configurar-2fa.tsx}`, `apps/web/src/features/auth/components/{trocar-senha-form.tsx,configurar-2fa-form.tsx,codigos-recuperacao-list.tsx}`, `apps/web/src/features/auth/queries.ts`
+- **Arquivos:** `apps/web/src/routes/{trocar-senha.tsx,configurar-2fa.tsx}`, `apps/web/src/features/auth/components/{trocar-senha-form.tsx,configurar-2fa-form.tsx,codigos-recuperacao-list.tsx}`, `apps/web/src/features/auth/queries.ts`, `apps/web/src/features/auth/components/{trocar-senha.test.tsx,configurar-2fa.test.tsx}`, `apps/web/package.json`, `pnpm-lock.yaml`
+- **Decisão do coordenador:** os dois testes citados em "Pronto quando" ficam em `features/auth/components/`. A dependência `qrcode.react@4.2.0` (§2.2) ainda não está em `apps/web`: entra aqui com `pnpm --filter @vinimon/web add -E qrcode.react@4.2.0`.
 - **Passos:**
   1. Trocar senha: confirmação e `PasswordStrength`.
   2. Configurar 2FA:
