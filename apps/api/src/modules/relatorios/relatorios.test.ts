@@ -121,9 +121,4 @@ describe('módulo relatórios, parte 1 (S58, T34)', () => {
     expect(passado.statusCode).toBe(200)
     expect(passado.json().totais.total).toBe(0)
   })
-
-  it('sla e avaliacoes ainda não existem nesta parte (404)', async () => {
-    const x = await cenario()
-    expect((await obter('sla', await headersDe(x.admin.id))).statusCode).toBe(404)
-  })
 })
