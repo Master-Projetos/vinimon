@@ -281,7 +281,7 @@
 ### T-10.17 — Busca Ctrl+K e atalhos
 - **Depende de:** T-10.4, T-6.10 · **Paralelo com:** T-10.16
 - **Requisitos:** TM8; S106–S108; §6.2 (atalhos)
-- **Arquivos:** `apps/web/src/components/command/{command-palette.tsx,atalhos-dialog.tsx}`, `apps/web/src/features/busca/{queries.ts,acoes.ts}`, `apps/web/src/lib/atalhos.ts`, `apps/web/src/hooks/use-atalhos.ts`, `apps/web/src/components/layout/busca-global-trigger.tsx`
+- **Arquivos:** `apps/web/src/components/command/{command-palette.tsx,atalhos-dialog.tsx}`, `apps/web/src/features/busca/{queries.ts,acoes.ts}`, `apps/web/src/lib/atalhos.ts`, `apps/web/src/hooks/use-atalhos.ts`, `apps/web/src/components/layout/busca-global-trigger.tsx`, `apps/web/src/components/command/command.test.tsx`, `apps/web/src/components/layout/{app-shell.tsx,top-bar.tsx}` (estado da paleta e do diálogo de atalhos; gatilho na barra superior)
 - **Passos:**
   1. `CommandDialog` com `shouldFilter={false}` e debounce de 200 ms.
   2. Grupos: "Abrir #N", Chamados, Base, Ativos, Pessoas, Ir para, Ações e Recentes (`vinimon:u<id>:recentes`, 8).
