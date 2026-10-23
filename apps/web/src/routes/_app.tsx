@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { AppShell } from '@/components/layout/app-shell'
 import { authConsultas } from '@/features/auth/queries'
 
 export const Route = createFileRoute('/_app')({
@@ -13,5 +14,9 @@ export const Route = createFileRoute('/_app')({
 })
 
 function AppPagina() {
-  return <Outlet />
+  return (
+    <AppShell>
+      <Outlet />
+    </AppShell>
+  )
 }
