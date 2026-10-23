@@ -365,7 +365,7 @@
 ### T-10.22 — Detalhe: layout, cabeçalho, trilho e aba Detalhes
 - **Depende de:** T-10.18, T-5.6 · **Paralelo com:** T-10.21
 - **Requisitos:** §6.3 (6)
-- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/{route.tsx,detalhes.tsx}`, `apps/web/src/features/chamados/components/{chamado-header.tsx,quick-actions-rail.tsx,operador-select.tsx,chamado-detalhes.tsx}`, `apps/web/src/features/chamados/detalhes.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
+- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/{route.tsx,detalhes.tsx}`, `apps/web/src/features/chamados/components/{chamado-header.tsx,quick-actions-rail.tsx,operador-select.tsx,chamado-detalhes.tsx}`, `apps/web/src/features/chamados/queries.ts` (metaConsulta e as mutações com versao), `apps/web/src/features/chamados/detalhes.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. `route.tsx` substitui o placeholder da T-10.0, mantendo o `params.parse` com `z.coerce.number()`; parse com erro dá `notFound()`.
   2. Loader com `ensureQueryData`; abas via `RouteTabs`.
