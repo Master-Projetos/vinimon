@@ -43,7 +43,7 @@
 ### T-8.3 — Relatórios, parte 2: SLA, avaliações e CSV
 - **Depende de:** T-8.2 · **Paralelo com:** T-8.1, T-8.4, T-8.5
 - **Requisitos:** S82, S87; G04
-- **Arquivos:** `apps/api/src/modules/relatorios/{service.ts,routes.ts,csv.ts,relatorios-sla.test.ts}`
+- **Arquivos:** `apps/api/src/modules/relatorios/{service.ts,routes.ts,csv.ts,relatorios-sla.test.ts}`, `packages/shared/src/modulos/relatorios.ts` (formas de `sla` e `avaliacoes`) e `apps/api/src/modules/relatorios/relatorios.test.ts` (o teste da T-8.2 que exigia 404 para `sla` deixa de valer)
 - **Passos:**
   1. `sla`: % dentro do prazo de resposta e de solução, por área e por problema.
   2. `avaliacoes`: distribuição por nota, % automáticas e média por operador (OTIMO=4 … RUIM=1).

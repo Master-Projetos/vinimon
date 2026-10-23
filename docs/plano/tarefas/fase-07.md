@@ -83,7 +83,7 @@
 ### T-7.5 — Presença
 - **Depende de:** T-7.3 · **Paralelo com:** T-7.6–T-7.9
 - **Requisitos:** S97; TM2; T58; §3.7 (Presença)
-- **Arquivos:** `apps/api/src/realtime/{presenca.ts,presenca.test.ts}`, `packages/shared/src/{modulos/presenca.ts,index.ts}`, `apps/api/src/modules/presenca/{service.ts,routes.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `apps/api/src/realtime/{presenca.ts,presenca.test.ts}`, `packages/shared/src/{modulos/presenca.ts,index.ts}`, `apps/api/src/modules/presenca/{service.ts,routes.ts}`, `apps/api/src/app.ts`, `apps/api/src/realtime/plugin.ts` (registrar a presença no `connection` e expor o serviço à rota `PUT /me/presenca`)
 - **Passos:**
   1. `calcularEstado` (pura, §3.7). `PresencaService` com `Map` em memória:
      - conexões, manual vindo de `PresencaUsuario` na primeira conexão, timer de expiração do manual;
@@ -124,7 +124,7 @@
 ### T-7.7 — Jobs: retorno de agendados e auto-aprovação
 - **Depende de:** T-7.6, T-5.9 · **Paralelo com:** T-7.8, T-7.9
 - **Requisitos:** C09, C15; §3.10
-- **Arquivos:** `apps/api/src/jobs/{chamados-retorno-agendados.ts,chamados-auto-aprovacao.ts,jobs-chamados.test.ts,index.ts}`
+- **Arquivos:** `apps/api/src/jobs/{chamados-retorno-agendados.ts,chamados-auto-aprovacao.ts,jobs-chamados.test.ts,jobs-limpeza.test.ts,index.ts}`
 - **Passos:**
   1. Cada chamado candidato (lote de 200) passa por uma transação com `aplicarTransicaoStatus` usando a `versao` lida. Conflito: ignora e segue.
   2. Ator SISTEMA (`CONTEXTO_SISTEMA`). Eventos RETORNO_AGENDAMENTO e AUTO_APROVADO. Avaliação `automatica:true` com `chamado.avaliacaoAutomatica`. Comentário de sistema da §3.5.
@@ -140,7 +140,8 @@
 ### T-7.8 — Jobs: alertas de SLA, recálculo por jornada e varredura de eventos
 - **Depende de:** T-7.6, T-6.8 · **Paralelo com:** T-7.7, T-7.9
 - **Requisitos:** D05 adaptado; §3.10
-- **Arquivos:** `apps/api/src/jobs/{sla-alertas.ts,sla-recalcular-jornada.ts,eventos-varrer.ts,jobs-sla.test.ts,index.ts}`
+- **Arquivos:** `apps/api/src/jobs/{sla-alertas.ts,sla-recalcular-jornada.ts,eventos-varrer.ts,jobs-sla.test.ts,jobs-limpeza.test.ts,index.ts}`
+- **Decisão do coordenador:** `jobs-limpeza.test.ts` entra porque a asserção "todo job tem cron" não vale para o `sla-recalcular-jornada`, que é sob demanda.
 - **Passos:**
   1. `sla-alertas`: três consultas (risco, estouro, resposta), em lotes de 500 e com `concluidoEm: null`. Para cada chamado: `updateMany({ where: { id, slaAvisoRiscoEm: null } })`; se `count = 1`, registra o evento (SLA_RISCO, SLA_ESTOURADO ou SLA_RESPOSTA_ESTOURADO) e faz o fanout.
   2. `sla-recalcular-jornada {jornadaId}`: em lotes de 200, `recalcularChamado` em transação, zerando os avisos quando os prazos mudam.

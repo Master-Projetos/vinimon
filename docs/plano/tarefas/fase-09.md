@@ -25,7 +25,7 @@
 ### T-9.2 — Tokens, fontes, testes do front, ícones e CI
 - **Depende de:** T-9.1, T-1.11 · **Paralelo com:** —
 - **Requisitos:** §6.1 (`globals.css` literal), S77
-- **Arquivos:** `apps/web/src/styles/globals.css`, `apps/web/src/main.tsx`, `apps/web/vitest.config.ts`, `apps/web/src/test/setup.ts`, `apps/web/public/{favicon.svg,icon-192.png}`, `.github/workflows/ci.yml`
+- **Arquivos:** `apps/web/src/styles/globals.css`, `apps/web/src/main.tsx`, `apps/web/vitest.config.ts`, `apps/web/src/test/setup.ts`, `apps/web/public/{favicon.svg,icon-192.png}`, `apps/web/package.json`, `.github/workflows/ci.yml`
 - **Passos:**
   1. Copiar `globals.css` literal. `main.tsx` importa `@fontsource-variable/inter`, `@fontsource-variable/jetbrains-mono` e o CSS.
   2. Vitest: jsdom, `setupFiles` com `@testing-library/jest-dom/vitest`, alias `@`.
@@ -47,7 +47,7 @@
 ### T-9.3 — shadcn/ui
 - **Depende de:** T-9.2 · **Paralelo com:** —
 - **Requisitos:** §6.4
-- **Arquivos:** `apps/web/components.json`, `apps/web/src/lib/utils.ts`, `apps/web/src/components/ui/*` (gerados)
+- **Arquivos:** `apps/web/components.json`, `apps/web/src/lib/utils.ts`, `apps/web/src/components/ui/*` (gerados), `apps/web/package.json`
 - **Passos:**
   1. Itens 1–3 da §6.4. Se o CLI sobrescrever `globals.css`, restaure com `git checkout apps/web/src/styles/globals.css`.
   2. Componente que faltar no registro: anote no commit e siga em frente (a T-9.4 cria o equivalente).
@@ -82,7 +82,7 @@
 ### T-9.5 — Cliente HTTP, QueryClient e storage
 - **Depende de:** T-9.2 · **Paralelo com:** T-9.3
 - **Requisitos:** S33, S80; §7 (`lib/api.ts`, `query-client.ts`)
-- **Arquivos:** `apps/web/src/lib/{api.ts,api.test.ts,query-client.ts,storage.ts,storage.test.ts}`
+- **Arquivos:** `apps/web/src/lib/{api.ts,api.test.ts,query-client.ts,storage.ts,storage.test.ts}`, `apps/web/package.json`
 - **Passos:**
   1. `api.ts` literal, mais `enviarArquivo(caminho, arquivos: File[], campos: Record<string,string>, aoProgresso: (pct:number)=>void, signal?)` com XHR, `X-CSRF-Token`, `withCredentials` e o mesmo tratamento de `ErroApi`.
   2. `query-client.ts` literal.
@@ -98,7 +98,7 @@
 ### T-9.6 — Cores, datas e rótulos
 - **Depende de:** T-9.2 · **Paralelo com:** T-9.5, T-9.7–T-9.15
 - **Requisitos:** §6.1 (`cores.ts` e testes)
-- **Arquivos:** `apps/web/src/lib/{cores.ts,cores.test.ts,datas.ts,datas.test.ts,rotulos.ts}`
+- **Arquivos:** `apps/web/src/lib/{cores.ts,cores.test.ts,datas.ts,datas.test.ts,rotulos.ts}`, `apps/web/package.json`
 - **Passos:**
   1. `cores.ts` literal.
   2. `datas.ts` com date-fns `ptBR`: `formatarData`, `formatarDataHora`, `formatarHora`, `formatarCurto(d, agora)`, `formatarRelativo(d, agora)`, `formatarDuracao(min)`, `rotuloSeparador(d, agora)`. Fuso: `America/Sao_Paulo` via `Intl.DateTimeFormat` com `timeZone` vindo da config pública (padrão `America/Sao_Paulo`).
@@ -153,7 +153,7 @@
 ### T-9.9 — Display, parte 1: badges, SLA e tempo
 - **Depende de:** T-9.6 · **Paralelo com:** T-9.8, T-9.10–T-9.15
 - **Requisitos:** §6.1 (aplicação de cor), §6.5
-- **Arquivos:** `apps/web/src/components/display/{color-badge.tsx,status-badge.tsx,prioridade-badge.tsx,sla-badge.tsx,relative-time.tsx,display.test.tsx}`, `apps/web/src/hooks/use-agora.ts`
+- **Arquivos:** `apps/web/src/components/display/{color-badge.tsx,status-badge.tsx,prioridade-badge.tsx,sla-badge.tsx,relative-time.tsx,display.test.tsx}`, `apps/web/src/hooks/use-agora.ts`, `apps/web/package.json`
 - **Passos:**
   1. `ColorBadge` define as variáveis `--b-*` com `obterCores`.
   2. `SlaBadge` usa `situacaoSla` de shared com ícone e texto (`Clock`, `Hourglass`, `TriangleAlert`, `CircleCheck`, pausado).
@@ -169,7 +169,7 @@
 ### T-9.10 — Display, parte 2: avatar, presença e blocos
 - **Depende de:** T-9.6 · **Paralelo com:** T-9.8, T-9.9, T-9.11–T-9.15
 - **Requisitos:** §6.2 (acessibilidade), §6.5
-- **Arquivos:** `apps/web/src/components/display/{user-avatar.tsx,avatar-group.tsx,presence-indicator.tsx,key-value-grid.tsx,stat-card.tsx,kbd-shortcut.tsx,pode.tsx,display2.test.tsx}`
+- **Arquivos:** `apps/web/src/components/display/{user-avatar.tsx,avatar-group.tsx,presence-indicator.tsx,key-value-grid.tsx,stat-card.tsx,kbd-shortcut.tsx,pode.tsx,display2.test.tsx}`, `apps/web/package.json`
 - **Passos:**
   1. Avatar com iniciais e a cor por `id % 8` (§6.1).
   2. `PresenceIndicator` com glifo e `sr-only` ("Disponível").
@@ -186,7 +186,7 @@
 ### T-9.11 — Formulários, parte 1
 - **Depende de:** T-9.4 · **Paralelo com:** T-9.8–T-9.10, T-9.12–T-9.15
 - **Requisitos:** §7 (`lib/form.ts`, `campo-form.tsx`)
-- **Arquivos:** `apps/web/src/lib/form.ts`, `apps/web/src/components/form/{campo-form.tsx,password-input.tsx,password-strength.tsx,autosize-textarea.tsx,form.test.tsx}`
+- **Arquivos:** `apps/web/src/lib/form.ts`, `apps/web/src/components/form/{campo-form.tsx,password-input.tsx,password-strength.tsx,autosize-textarea.tsx,form.test.tsx}`, `apps/web/package.json`
 - **Passos:**
   1. `lib/form.ts` e `campo-form.tsx` literais.
   2. `PasswordStrength` carrega sob demanda com `const { ZxcvbnFactory } = await import('@zxcvbn-ts/core')` (e os dicionários `@zxcvbn-ts/language-common` e `@zxcvbn-ts/language-pt-br`), com a mesma construção preguiçosa da T-2.1 (`fabrica ??= new ZxcvbnFactory({ dictionary: { ...common.dictionary, ...ptBr.dictionary }, graphs: common.adjacencyGraphs, translations: ptBr.translations })` e `await fabrica.checkAsync(senha, userInputs)`), e mostra barra e texto. Se a §2.2 fixar a 3.0.4, usar a API `zxcvbnOptions`/`zxcvbnAsync` dessa versão e registrar a versão no commit.
@@ -216,7 +216,7 @@
 ### T-9.13 — Formulários, parte 3: upload, Markdown e menção
 - **Depende de:** T-9.11, T-6.1 · **Paralelo com:** T-9.12, T-9.14, T-9.15
 - **Requisitos:** S78; T67 (unidade)
-- **Arquivos:** `apps/web/src/components/form/{file-dropzone.tsx,upload-list.tsx,markdown-editor.tsx}`, `apps/web/src/components/display/{markdown.tsx,mention-chip.tsx,markdown.test.tsx}`
+- **Arquivos:** `apps/web/src/components/form/{file-dropzone.tsx,upload-list.tsx,markdown-editor.tsx}`, `apps/web/src/components/display/{markdown.tsx,mention-chip.tsx,markdown.test.tsx}`, `apps/web/package.json`
 - **Passos:**
   1. `FileDropzone` (react-dropzone) com colar imagem, limite, tipos aceitos e rejeição inline.
   2. `Markdown`:
@@ -235,7 +235,7 @@
 ### T-9.14 — Tabela de dados
 - **Depende de:** T-9.4 · **Paralelo com:** T-9.12, T-9.13, T-9.15
 - **Requisitos:** §6.5 (`data/`)
-- **Arquivos:** `apps/web/src/components/data/{data-table.tsx,data-table-toolbar.tsx,data-table-faceted-filter.tsx,data-table-column-toggle.tsx,data-table-pagination.tsx,data-table-column-header.tsx,data-table-bulk-bar.tsx,data-table.test.tsx}`
+- **Arquivos:** `apps/web/src/components/data/{data-table.tsx,data-table-toolbar.tsx,data-table-faceted-filter.tsx,data-table-column-toggle.tsx,data-table-pagination.tsx,data-table-column-header.tsx,data-table-bulk-bar.tsx,data-table.test.tsx}`, `apps/web/package.json`
 - **Passos:**
   1. react-table v8 com `manualPagination`/`manualSorting`.
   2. `ColumnMeta` (`ocultarAbaixo`, `alinhar`).
@@ -250,7 +250,7 @@
 ### T-9.15 — Hooks utilitários
 - **Depende de:** T-9.7 · **Paralelo com:** T-9.8–T-9.14
 - **Requisitos:** §6.6 (hooks)
-- **Arquivos:** `apps/web/src/hooks/{use-debounce.ts,use-media-query.ts,use-mobile.ts,use-prefers-reduced-motion.ts,use-document-title.ts,use-copiar.ts,use-alteracoes-nao-salvas.ts,use-foco-ao-navegar.ts}`
+- **Arquivos:** `apps/web/src/hooks/{use-debounce.ts,use-media-query.ts,use-mobile.ts,use-prefers-reduced-motion.ts,use-document-title.ts,use-copiar.ts,use-alteracoes-nao-salvas.ts,use-foco-ao-navegar.ts,use-debounce.test.ts}`
 - **Passos:**
   1. `useFocoAoNavegar`: `router.subscribe('onResolved')`; quando o `pathname` muda, foca o `h1[tabindex="-1"]`.
   2. `useAlteracoesNaoSalvas`: `useBlocker` do TanStack Router.

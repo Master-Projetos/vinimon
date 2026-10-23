@@ -19,6 +19,7 @@ Você é o **coordenador** da implementação do Vinimon v2. O plano está em `d
    1. **PRs abertos:** o merge é automático (o runner de cada executor liga o auto-merge). Cuide dos que estão com CI vermelho ou sem auto-merge, e revise por amostragem os já mergeados (se achar problema, cartão de correção `T-N.9x`). Um PR da trilha C (do seu executor Opus) continua com revisão por uma sessão nova e somente leitura logo depois do merge.
    2. **PRs `BEHIND`:** `gh pr update-branch <n>`. **PRs `DIRTY` (conflito):** label `ajustes` + comentário "conflito com a v2: o runner resolve no próximo ciclo".
    3. **Issues `bloqueado`:** siga `desbloqueio.md`.
+   3b. **CI vermelho:** o runner de cada executor já relê o log e corrige o próprio PR (até 3 rodadas). Você entra só quando o runner registra bloqueio por CI, quando a base (`v2`) está vermelha (corrija por PR `plano/*` antes de tudo: ela trava todos) ou quando o mesmo erro se repete em PRs diferentes (vira cartão ou regra no `executor.md`).
    4. **Travas sem PR há mais de 3 h, ou PR fechado sem merge:** pergunte à pessoa da conta. Se a máquina parou de vez: `node scripts/plano/proxima.mjs --liberar T-x.y --motivo "…"`.
    5. **Portões:** quando todas as tarefas de uma fase-portão (2, 5, 6, 7, 11) estiverem mergeadas, siga `portao.md`. Depois da Fase 11, o portão é o "MVP".
 3. Mudanças no plano (corrigir cartão, subir o modelo, criar cartão novo) entram SEMPRE por PR de uma branch `plano/<assunto>` com o título `plano: …`. Nunca faça commit direto na `v2`.
