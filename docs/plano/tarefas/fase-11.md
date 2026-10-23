@@ -73,7 +73,7 @@
 ### T-11.4 — Playwright: configuração, preparo e login
 - **Depende de:** T-10.2, T-10.4 · **Paralelo com:** T-11.1–T-11.3
 - **Requisitos:** T68, T70; §5.2 (\[P])
-- **Arquivos:** `apps/web/playwright.config.ts`, `apps/web/e2e/{totp.ts,ajudantes.ts,auth.setup.ts,login.spec.ts}`, `apps/api/scripts/e2e-preparar.ts`, `.github/workflows/ci.yml`, `.gitignore`
+- **Arquivos:** `apps/web/playwright.config.ts`, `apps/web/e2e/{totp.ts,ajudantes.ts,auth.setup.ts,login.spec.ts}`, `apps/api/scripts/e2e-preparar.ts`, `.github/workflows/ci.yml`, `.gitignore`, `apps/web/package.json` (`@playwright/test` 1.64.1)
 - **Passos:**
   1. `e2e-preparar.ts`:
      - exige que `DATABASE_URL` termine em `_e2e`;
