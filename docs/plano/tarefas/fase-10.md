@@ -459,7 +459,7 @@
 ### T-10.27 — Solução e validação pelo solicitante
 - **Depende de:** T-10.24, T-5.9 · **Paralelo com:** T-10.26, T-10.28
 - **Requisitos:** C13, C14; §6.3 (Chamado concluído)
-- **Arquivos:** `apps/web/src/features/conversa/components/{solucao-card.tsx,validacao-card.tsx,encerrado-bar.tsx,validacao-card.test.tsx}`
+- **Arquivos:** `apps/web/src/features/conversa/components/{solucao-card.tsx,validacao-card.tsx,encerrado-bar.tsx,validacao-card.test.tsx}`, `apps/web/src/features/conversa/components/conversa-view.tsx` (montar solução, validação e barra de encerrado)
 - **Passos:**
   1. `ValidacaoCard`: `RadioGroup` com Ótimo, Bom, Regular e Ruim (ícones `Laugh`, `Smile`, `Meh`, `Frown`) e comentário, ou "Não resolveu" com motivo obrigatório.
   2. Barra "Encerrado em … [Reabrir]".
