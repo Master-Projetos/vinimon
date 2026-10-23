@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppAtividadeRouteImport } from './routes/_app/atividade'
 import { Route as AppChamadosRouteRouteImport } from './routes/_app/chamados/route'
+import { Route as AppInventarioRouteRouteImport } from './routes/_app/inventario/route'
 import { Route as AppPainelRouteImport } from './routes/_app/painel'
 import { Route as AppSemPermissaoRouteImport } from './routes/_app/sem-permissao'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
@@ -80,6 +81,11 @@ const AppAtividadeRoute = AppAtividadeRouteImport.update({
 const AppChamadosRouteRoute = AppChamadosRouteRouteImport.update({
   id: '/chamados',
   path: '/chamados',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInventarioRouteRoute = AppInventarioRouteRouteImport.update({
+  id: '/inventario',
+  path: '/inventario',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPainelRoute = AppPainelRouteImport.update({
@@ -195,9 +201,9 @@ const AppConhecimentoIndexRoute = AppConhecimentoIndexRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 const AppInventarioIndexRoute = AppInventarioIndexRouteImport.update({
-  id: '/inventario/',
-  path: '/inventario/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppInventarioRouteRoute,
 } as any)
 const AppPerfilIndexRoute = AppPerfilIndexRouteImport.update({
   id: '/perfil/',
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/trocar-senha': typeof TrocarSenhaRoute
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/chamados': typeof AppChamadosRouteRouteWithChildren
+  '/inventario': typeof AppInventarioRouteRouteWithChildren
   '/atividade': typeof AppAtividadeRoute
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
@@ -284,6 +291,7 @@ export interface FileRoutesById {
   '/trocar-senha': typeof TrocarSenhaRoute
   '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/chamados': typeof AppChamadosRouteRouteWithChildren
+  '/_app/inventario': typeof AppInventarioRouteRouteWithChildren
   '/_app/atividade': typeof AppAtividadeRoute
   '/_app/painel': typeof AppPainelRoute
   '/_app/sem-permissao': typeof AppSemPermissaoRoute
@@ -321,6 +329,7 @@ export interface FileRouteTypes {
     | '/trocar-senha'
     | '/admin'
     | '/chamados'
+    | '/inventario'
     | '/atividade'
     | '/painel'
     | '/sem-permissao'
@@ -387,6 +396,7 @@ export interface FileRouteTypes {
     | '/trocar-senha'
     | '/_app/admin'
     | '/_app/chamados'
+    | '/_app/inventario'
     | '/_app/atividade'
     | '/_app/painel'
     | '/_app/sem-permissao'
@@ -479,6 +489,13 @@ declare module '@tanstack/react-router' {
       path: '/chamados'
       fullPath: '/chamados'
       preLoaderRoute: typeof AppChamadosRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inventario': {
+      id: '/_app/inventario'
+      path: '/inventario'
+      fullPath: '/inventario'
+      preLoaderRoute: typeof AppInventarioRouteRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/painel': {
@@ -637,10 +654,10 @@ declare module '@tanstack/react-router' {
     }
     '/_app/inventario/': {
       id: '/_app/inventario/'
-      path: '/inventario'
+      path: '/'
       fullPath: '/inventario/'
       preLoaderRoute: typeof AppInventarioIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppInventarioRouteRoute
     }
     '/_app/perfil/': {
       id: '/_app/perfil/'
@@ -716,15 +733,26 @@ const AppChamadosRouteRouteChildren: AppChamadosRouteRouteChildren = {
 const AppChamadosRouteRouteWithChildren =
   AppChamadosRouteRoute._addFileChildren(AppChamadosRouteRouteChildren)
 
+interface AppInventarioRouteRouteChildren {
+  AppInventarioIndexRoute: typeof AppInventarioIndexRoute
+}
+
+const AppInventarioRouteRouteChildren: AppInventarioRouteRouteChildren = {
+  AppInventarioIndexRoute: AppInventarioIndexRoute,
+}
+
+const AppInventarioRouteRouteWithChildren =
+  AppInventarioRouteRoute._addFileChildren(AppInventarioRouteRouteChildren)
+
 interface AppRouteChildren {
   AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
   AppChamadosRouteRoute: typeof AppChamadosRouteRouteWithChildren
+  AppInventarioRouteRoute: typeof AppInventarioRouteRouteWithChildren
   AppAtividadeRoute: typeof AppAtividadeRoute
   AppPainelRoute: typeof AppPainelRoute
   AppSemPermissaoRoute: typeof AppSemPermissaoRoute
   AppIndexRoute: typeof AppIndexRoute
   AppConhecimentoIndexRoute: typeof AppConhecimentoIndexRoute
-  AppInventarioIndexRoute: typeof AppInventarioIndexRoute
   AppPerfilIndexRoute: typeof AppPerfilIndexRoute
   AppRelatoriosIndexRoute: typeof AppRelatoriosIndexRoute
 }
@@ -732,12 +760,12 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
   AppChamadosRouteRoute: AppChamadosRouteRouteWithChildren,
+  AppInventarioRouteRoute: AppInventarioRouteRouteWithChildren,
   AppAtividadeRoute: AppAtividadeRoute,
   AppPainelRoute: AppPainelRoute,
   AppSemPermissaoRoute: AppSemPermissaoRoute,
   AppIndexRoute: AppIndexRoute,
   AppConhecimentoIndexRoute: AppConhecimentoIndexRoute,
-  AppInventarioIndexRoute: AppInventarioIndexRoute,
   AppPerfilIndexRoute: AppPerfilIndexRoute,
   AppRelatoriosIndexRoute: AppRelatoriosIndexRoute,
 }
