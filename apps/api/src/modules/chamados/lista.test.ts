@@ -277,7 +277,8 @@ describe('GET /chamados e /chamados/contagens (T34, T42)', () => {
     })
     expect(ids(await get('/api/v1/chamados?de=2026-03-10&ate=2026-03-10', x.hO1))).toEqual([x.c.c1])
     expect(ids(await get('/api/v1/chamados?de=2026-03-11&ate=2026-03-11', x.hO1))).toEqual([])
-    const hoje = new Date().toISOString().slice(0, 10)
+    // "hoje" no fuso do sistema (o filtro usa o dia de São Paulo, não o de UTC)
+    const hoje = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date())
     expect(ids(await get(`/api/v1/chamados?visao=todos&concluidoDe=${hoje}`, x.hO1))).toEqual([x.c.c5, x.c.c7])
   })
 
