@@ -489,7 +489,7 @@
 ### T-10.29 — Aba Histórico e impressão
 - **Depende de:** T-10.22 · **Paralelo com:** T-10.27, T-10.28
 - **Requisitos:** C22, C23
-- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/{historico.tsx,imprimir.tsx}`, `apps/web/src/features/historico/{queries.ts,components/historico-timeline.tsx,textos.ts}`
+- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/{historico.tsx,imprimir.tsx}`, `apps/web/src/features/historico/{queries.ts,components/historico-timeline.tsx,textos.ts}`, `apps/web/src/features/historico/historico.test.tsx`
 - **Passos:**
   1. `textos.ts`: o texto de cada `TipoEvento` a partir de `dados`.
   2. Filtro: Tudo, Status, Atribuição, SLA e Anexos.
