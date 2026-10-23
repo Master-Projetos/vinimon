@@ -39,7 +39,7 @@
 ### T-15.3 — Solicitar retorno e auto-encerramento por inatividade
 - **Depende de:** T-12.3 · **Paralelo com:** T-15.4
 - **Requisitos:** C18, C19
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enums), `packages/shared/src/{config.ts,modulos/chamados.ts,enums.ts}`, `apps/api/src/lib/enums-check.ts`, `apps/api/src/modules/chamados/{acoes.ts,routes.ts}`, `apps/api/src/jobs/{chamados-auto-encerramento-inatividade.ts,index.ts}`, `apps/api/test/inatividade.test.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enums), `packages/shared/src/{config.ts,modulos/chamados.ts,enums.ts}`, `apps/api/src/lib/enums-check.ts`, `apps/api/src/modules/chamados/{acoes.ts,routes.ts}`, `apps/api/src/jobs/{chamados-auto-encerramento-inatividade.ts,index.ts}`, `apps/api/test/inatividade.test.ts`, `apps/api/src/modules/assentamentos/service.ts` (comentário do solicitante leva ao status de retorno), `apps/api/src/modules/config/service.ts` (validação cruzada das chaves de inatividade), `packages/shared/src/modulos/chamados.test.ts` (linha da nova rota)
 - **Passos:**
   1. Config:
      - `inatividade.statusIds` (`int[]`, vazio desliga);
