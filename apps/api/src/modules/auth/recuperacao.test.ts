@@ -108,7 +108,7 @@ describe('recuperação de senha (SEN-10, S20)', () => {
     const u = await criarUsuario({ perfil: 'USUARIO' })
     const token = await pedirToken(u.login)
     expect((await redefinir(token, NOVA)).statusCode).toBe(204)
-    const de_novo = await redefinir(token, 'Outra-Senha-Forte-Maca-2028')
+    const de_novo = await redefinir(token, NOVA + 'x')
     expect(de_novo.statusCode).toBe(400)
     expect(de_novo.json().erro.mensagem).toBe('Link inválido ou expirado')
   })
