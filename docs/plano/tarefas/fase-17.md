@@ -5,7 +5,7 @@
 ### T-17.1 — Tokens de API: modelo e gestão
 - **Depende de:** MVP · **Paralelo com:** T-17.4
 - **Requisitos:** H01; S132–S138
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{permissoes.ts,modulos/tokens.ts}`, `apps/api/src/modules/tokens/{service.ts,routes.ts,tokens.test.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{permissoes.ts,modulos/tokens.ts}`, `apps/api/src/modules/tokens/{service.ts,routes.ts,tokens.test.ts}`, `apps/api/src/app.ts`, `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `TokenApi {id, usuarioId, nome VarChar(80), prefixo VarChar(12) @unique, tokenHash Char(64) @unique, escopos String[], expiraEm, ultimoUsoEm?, ultimoIp?, criadoEm, revogadoEm?}`.
   2. Permissão nova `tokenApi.gerenciarProprios` para OPERADOR (e ADMIN). Escopos `chamados:ler`, `chamados:escrever`, `comentarios:escrever`.
@@ -71,7 +71,7 @@
 ### T-17.5 — Inventário: movimentações e composição
 - **Depende de:** T-17.4 · **Paralelo com:** T-17.6
 - **Requisitos:** I05, I06
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/modules/ativos/{service.ts,routes.ts,movimentos.test.ts}`, `packages/shared/src/modulos/ativos.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/modules/ativos/{service.ts,routes.ts,movimentos.test.ts}`, `packages/shared/src/modulos/ativos.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `AtivoMovimento {id, ativoId, deDepartamentoId?, paraDepartamentoId?, deResponsavelId?, paraResponsavelId?, autorId, criadoEm}`, gravado a cada troca.
   2. `Ativo.paiId?`: pai precisa `podeTerComponentes` e filho `podeSerComponente`; sem ciclo; mover o pai move os filhos (na mesma transação, com movimento para cada um).
@@ -87,7 +87,7 @@
 ### T-17.6 — Inventário: garantias, documentos e relatórios
 - **Depende de:** T-17.4, T-12.1 · **Paralelo com:** T-17.5
 - **Requisitos:** I07, I08, I09
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/modules/ativos/{documentos.ts,routes.ts}`, `apps/api/src/jobs/{garantias-aviso.ts,anexos-orfaos.ts,index.ts}`, `apps/api/src/modules/relatorios/inventario.ts`, `packages/shared/src/modulos/notificacoes.ts`, `apps/api/src/modules/notificacoes/service.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (`TipoNotificacao.GARANTIA`), `apps/api/test/inventario-f2.test.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/modules/ativos/{documentos.ts,routes.ts}`, `apps/api/src/jobs/{garantias-aviso.ts,anexos-orfaos.ts,index.ts}`, `apps/api/src/modules/relatorios/inventario.ts`, `packages/shared/src/modulos/notificacoes.ts`, `apps/api/src/modules/notificacoes/service.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (`TipoNotificacao.GARANTIA`), `apps/api/test/inventario-f2.test.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. `Anexo` não muda. Criar `model DocumentoAtivo { id String @id @db.Uuid; ativoId Int; nomeOriginal String; mime String; tamanho Int; sha256 String @db.Char(64); autorId Int; criadoEm DateTime @default(now()) @@map("documentos_ativo") }`, reutilizando `armazenamento.ts` e `tipo-arquivo.ts`. Upload `POST /ativos/:id/documentos` pelo mesmo pipeline (`inventario.gerenciar`). O job `anexos-orfaos` (T-7.9) passa a consultar `anexos` e `documentos_ativo`.
   2. Config `inventario.garantiaAvisoDias` (padrão 30). Job às `0 7 * * *`: notificação GARANTIA (novo tipo) a quem tem `inventario.ver`, deduplicada por `grupoChave garantia:<ativoId>:<vencimento>`. Migração: `notificacoes.chamado_id` anulável e `ativo_id Int?` com FK, com CHECK `num_nonnulls(chamado_id, ativo_id) = 1`. `NotificacaoDTOSchema`: `chamado: {id, assunto} | null`, `ativo: {id, etiqueta} | null`. Em `GET /notificacoes`, o `where` vira `OR: [{ chamado: escopoChamados(u), ...regraInterno }, { chamadoId: null, ativoId: { not: null }, ...(temPermissao(u.perfil,'inventario.ver') ? {} : { id: -1 }) }]`.
