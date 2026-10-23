@@ -5,7 +5,7 @@
 ### T-19.1 — Abertura e resposta por e-mail (IMAP)
 - **Depende de:** T-12.3 · **Paralelo com:** T-19.5
 - **Requisitos:** B18; S139–S145
-- **Arquivos:** `apps/api/src/env.ts`, `apps/api/prisma/schema.prisma` + migração, `apps/api/src/lib/email-entrada.ts`, `apps/api/src/jobs/{email-importar.ts,index.ts}`, `apps/api/src/lib/email-entrada.test.ts`, `apps/api/src/lib/{cripto.ts,cripto.test.ts}`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (status de `EmailEntrada`), `apps/api/test/fixtures/emails/*.eml`
+- **Arquivos:** `apps/api/src/env.ts`, `apps/api/prisma/schema.prisma` + migração, `apps/api/src/lib/email-entrada.ts`, `apps/api/src/jobs/{email-importar.ts,index.ts}`, `apps/api/src/lib/email-entrada.test.ts`, `apps/api/src/lib/{cripto.ts,cripto.test.ts}`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (status de `EmailEntrada`), `apps/api/test/fixtures/emails/*.eml`, `apps/api/package.json` (imapflow 2.5.9 e mailparser 3.10.0, versões exatas do plano)
 - **Passos:**
   1. Instalar `imapflow@2.5.9` e `mailparser@3.10.0`.
   2. Env `IMAP_URL` e `IMAP_PASTA` (padrão INBOX), `MAIL_AUTHSERV_ID` e `MAIL_RESPOSTA_DOMINIO`.
