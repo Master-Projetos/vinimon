@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { CriarChamadoSchema, type Meta, temPermissao, type UsuarioMe } from '@vinimon/shared'
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Controller } from 'react-hook-form'
 import { toast } from 'sonner'
 import { CampoForm } from '@/components/form/campo-form'
@@ -11,11 +11,49 @@ import { MultiComboboxField } from '@/components/form/multi-combobox-field'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { enviarAnexosEmSequencia, mensagemDeFalhaDeAnexos } from '@/features/anexos/queries'
+import { useDebounce } from '@/hooks/use-debounce'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
+import { gravar, ler, remover } from '@/lib/storage'
 import { ativoPorEtiquetaConsulta, buscarAtivos, buscarUsuarios, useCriarChamado } from '../queries'
+import { ArtigosSugeridos } from './artigos-sugeridos'
 import { PrioridadeRadio } from './prioridade-radio'
+import { ReincidenciaPanel } from './reincidencia-panel'
 
 const LIMITE_ASSUNTO = 150
+const ATRASO_RASCUNHO_MS = 1_000
+
+/** Campos guardados no rascunho. Nunca contatos nem anexos. */
+interface Rascunho {
+  assunto?: string
+  descricao?: string
+  problemaId?: number
+  prioridadeId?: number
+  departamentoId?: number
+  ativoId?: number
+}
+
+function lerRascunho(chave: string): Rascunho | null {
+  const bruto = ler<unknown>(chave, null)
+  if (typeof bruto !== 'object' || bruto === null) return null
+  const texto = (k: string) => {
+    const v = Reflect.get(bruto, k)
+    return typeof v === 'string' && v !== '' ? v : undefined
+  }
+  const numero = (k: string) => {
+    const v = Reflect.get(bruto, k)
+    return typeof v === 'number' ? v : undefined
+  }
+  const r: Rascunho = {
+    assunto: texto('assunto'),
+    descricao: texto('descricao'),
+    problemaId: numero('problemaId'),
+    prioridadeId: numero('prioridadeId'),
+    departamentoId: numero('departamentoId'),
+    ativoId: numero('ativoId'),
+  }
+  return r.assunto || r.descricao ? r : null
+}
 
 export interface NovoChamadoFormProps {
   meta: Meta
@@ -60,12 +98,20 @@ export function NovoChamadoForm({ meta, usuario, problemaInicial, equipamento }:
   const problemaSemente = meta.problemas.find((p) => p.id === problemaInicial)
   const prioridadePadrao = meta.prioridades.find((p) => p.padrao)?.id
   const ativoInicial = useQuery(ativoPorEtiquetaConsulta(equipamento ?? ''))
+  const chaveRascunho = `u${usuario.id}:rascunho:novo-chamado`
+  const [rascunhoInicial] = useState(() => lerRascunho(chaveRascunho))
+  const [restaurado, setRestaurado] = useState(rascunhoInicial !== null)
+  const [arquivos, setArquivos] = useState<File[]>([])
+  const [envio, setEnvio] = useState<{ indice: number; pct: number } | null>(null)
+  const chavesArquivos = useRef(new WeakMap<File, string>())
+  const anexosHabilitados = meta.config['anexos.habilitados'] === true
 
   const form = useZodForm(CriarChamadoSchema, {
     defaultValues: {
-      problemaId: problemaSemente?.id,
+      ...(rascunhoInicial ?? {}),
+      problemaId: problemaSemente?.id ?? rascunhoInicial?.problemaId,
       areaId: equipe ? (problemaSemente?.areaPadraoId ?? undefined) : undefined,
-      prioridadeId: prioridadePadrao,
+      prioridadeId: rascunhoInicial?.prioridadeId ?? prioridadePadrao,
       contato: usuario.nome,
       contatoEmail: usuario.email ?? undefined,
       telefone: usuario.telefone ?? undefined,
@@ -76,6 +122,57 @@ export function NovoChamadoForm({ meta, usuario, problemaInicial, equipamento }:
   const problema = meta.problemas.find((p) => p.id === problemaId)
   const areas = problema ? meta.areas.filter((a) => problema.areaIds.includes(a.id)) : []
   const ativoEncontrado = ativoInicial.data
+  const assunto = watch('assunto')
+  const ativoId = watch('ativoId')
+  const campos = useDebounce(
+    {
+      assunto: assunto ?? '',
+      descricao: watch('descricao') ?? '',
+      problemaId: comoNumero(problemaId),
+      prioridadeId: comoNumero(watch('prioridadeId')),
+      departamentoId: comoNumero(watch('departamentoId')),
+      ativoId: comoNumero(ativoId),
+    },
+    ATRASO_RASCUNHO_MS,
+  )
+  const enviado = useRef(false)
+
+  useEffect(() => {
+    if (enviado.current) return
+    if (campos.assunto || campos.descricao) gravar(chaveRascunho, campos)
+  }, [campos, chaveRascunho])
+
+  function descartarRascunho() {
+    remover(chaveRascunho)
+    setRestaurado(false)
+    form.reset({
+      assunto: '',
+      descricao: '',
+      problemaId: problemaSemente?.id,
+      areaId: equipe ? (problemaSemente?.areaPadraoId ?? undefined) : undefined,
+      prioridadeId: prioridadePadrao,
+      contato: usuario.nome,
+      contatoEmail: usuario.email ?? undefined,
+      telefone: usuario.telefone ?? undefined,
+    })
+  }
+
+  function aoResolver(_artigoId: number) {
+    enviado.current = true
+    remover(chaveRascunho)
+    void navigate({ to: '/conhecimento' })
+  }
+
+  function adicionarArquivos(novos: File[]) {
+    setArquivos((atuais) => [...atuais, ...novos])
+  }
+  const chaveDe = (f: File): string => {
+    const atual = chavesArquivos.current.get(f)
+    if (atual) return atual
+    const nova = crypto.randomUUID()
+    chavesArquivos.current.set(f, nova)
+    return nova
+  }
 
   useEffect(() => {
     if (ativoEncontrado && getValues('ativoId') === undefined) setValue('ativoId', ativoEncontrado.id)
@@ -89,7 +186,14 @@ export function NovoChamadoForm({ meta, usuario, problemaInicial, equipamento }:
   const enviar = handleSubmit(async (corpo) => {
     try {
       const chamado = await criar.mutateAsync(corpo)
+      enviado.current = true
+      remover(chaveRascunho)
       toast.success(`Chamado #${chamado.id} aberto`)
+      if (arquivos.length > 0) {
+        const falhas = await enviarAnexosEmSequencia(chamado.id, arquivos, (indice, pct) => setEnvio({ indice, pct }))
+        setEnvio(null)
+        if (falhas > 0) toast.error(mensagemDeFalhaDeAnexos(falhas))
+      }
       await navigate({ to: '/chamados/$chamadoId', params: { chamadoId: chamado.id } })
     } catch (erro) {
       aplicarErrosDoServidor(setError, erro)
@@ -101,6 +205,18 @@ export function NovoChamadoForm({ meta, usuario, problemaInicial, equipamento }:
       <h1 className="text-title" tabIndex={-1}>
         Novo chamado
       </h1>
+
+      {restaurado ? (
+        <div
+          role="status"
+          className="flex items-center justify-between gap-3 rounded-md border bg-muted/40 px-3 py-2 text-sm"
+        >
+          <span>Rascunho restaurado</span>
+          <Button type="button" variant="ghost" size="sm" onClick={descartarRascunho}>
+            Descartar
+          </Button>
+        </div>
+      ) : null}
 
       <section aria-labelledby="secao-problema" className="space-y-4">
         <h2 id="secao-problema" className="text-sm font-semibold">
@@ -178,6 +294,7 @@ export function NovoChamadoForm({ meta, usuario, problemaInicial, equipamento }:
             />
           )}
         </CampoForm>
+        <ArtigosSugeridos assunto={assunto ?? ''} problemaId={comoNumero(problemaId)} aoResolver={aoResolver} />
         <Controller
           control={form.control}
           name="prioridadeId"
@@ -251,6 +368,59 @@ export function NovoChamadoForm({ meta, usuario, problemaInicial, equipamento }:
           )}
         </CampoForm>
       </section>
+
+      <ReincidenciaPanel ativoId={comoNumero(ativoId)} problemaId={comoNumero(problemaId)} />
+
+      {anexosHabilitados ? (
+        <section aria-labelledby="secao-anexos" className="space-y-3">
+          <h2 id="secao-anexos" className="text-sm font-semibold">
+            Anexos
+          </h2>
+          <label
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault()
+              adicionarArquivos([...e.dataTransfer.files])
+            }}
+            className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground hover:bg-accent/40"
+          >
+            <span>Arraste arquivos aqui ou clique para escolher</span>
+            <input
+              type="file"
+              multiple
+              className="sr-only"
+              aria-label="Anexar arquivos"
+              onChange={(e) => {
+                adicionarArquivos([...(e.target.files ?? [])])
+                e.target.value = ''
+              }}
+            />
+          </label>
+          {arquivos.length > 0 ? (
+            <ul aria-label="Arquivos para anexar" className="space-y-1 text-sm">
+              {arquivos.map((a, i) => (
+                <li key={chaveDe(a)} className="flex items-center justify-between gap-2">
+                  <span className="truncate">{a.name}</span>
+                  {envio?.indice === i ? (
+                    <span className="text-xs text-muted-foreground">{envio.pct}%</span>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`Remover ${a.name}`}
+                      disabled={envio !== null}
+                      onClick={() => setArquivos((atuais) => atuais.filter((x) => x !== a))}
+                    >
+                      Remover
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      ) : null}
 
       <section aria-labelledby="secao-contato" className="space-y-4">
         <h2 id="secao-contato" className="text-sm font-semibold">
@@ -361,8 +531,8 @@ export function NovoChamadoForm({ meta, usuario, problemaInicial, equipamento }:
       ) : null}
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={formState.isSubmitting || criar.isPending}>
-          Abrir chamado
+        <Button type="submit" disabled={formState.isSubmitting || criar.isPending || envio !== null}>
+          {envio ? `Enviando anexo ${envio.indice + 1} de ${arquivos.length}…` : 'Abrir chamado'}
         </Button>
       </div>
     </form>
