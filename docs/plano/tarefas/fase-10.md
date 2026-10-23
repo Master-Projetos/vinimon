@@ -383,7 +383,7 @@
 ### T-10.23 — Diálogos de ação
 - **Depende de:** T-10.22, T-5.10 · **Paralelo com:** T-10.24
 - **Requisitos:** §3.5 (ações)
-- **Arquivos:** `apps/web/src/features/chamados/components/{encaminhar-dialog.tsx,concluir-dialog.tsx,reabrir-dialog.tsx,cancelar-dialog.tsx,agendar-popover.tsx,assumir-button.tsx,operador-select.tsx}`, `apps/web/src/features/chamados/queries.ts`
+- **Arquivos:** `apps/web/src/features/chamados/components/{encaminhar-dialog.tsx,concluir-dialog.tsx,reabrir-dialog.tsx,cancelar-dialog.tsx,agendar-popover.tsx,assumir-button.tsx,operador-select.tsx}`, `apps/web/src/features/chamados/queries.ts`, `apps/web/src/features/chamados/acoes.test.tsx`
 - **Passos:**
   1. Uma mutação por ação. `onSuccess` faz `setQueryData(detalhe)` e invalida listas e contagens.
   2. Assumir com outro responsável pede confirmação e reenvia com `confirmarTroca:true`.
