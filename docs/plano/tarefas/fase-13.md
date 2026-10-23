@@ -50,7 +50,7 @@
 ### T-13.3 — Gerente de área
 - **Depende de:** T-13.2 · **Paralelo com:** T-13.4
 - **Requisitos:** A04
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/chamados.ts`, `apps/api/src/modules/areas-geridas/{service.ts,routes.ts,areas-geridas.test.ts}`, `packages/shared/src/modulos/areas-geridas.ts`, `apps/api/test/escopo-equivalencia.test.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/chamados.ts`, `apps/api/src/modules/areas-geridas/{service.ts,routes.ts,areas-geridas.test.ts}`, `packages/shared/src/modulos/areas-geridas.ts`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `AreaGerente {areaId, usuarioId, @@id}`. USUARIO só gerencia área com `atende=false`; OPERADOR e ADMIN só áreas entre as suas `areaIds` (validado no PATCH de usuário: `areasGeridasIds`).
   2. `UsuarioSessao.areasGeridas`. O escopo acrescenta `{ solicitante: { areaId: { in: areasGeridas } } }` dentro do `OR`; `podeVerChamado` recebe `solicitanteAreaId` em `ChamadoEscopo`.

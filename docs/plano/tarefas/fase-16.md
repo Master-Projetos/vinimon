@@ -5,7 +5,7 @@
 ### T-16.1 — Registro de horas
 - **Depende de:** MVP · **Paralelo com:** T-16.3–T-16.5
 - **Requisitos:** D07
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (SQL extra), `packages/shared/src/modulos/periodos.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (`TipoNotificacao.PARTICIPANTE`), `apps/api/src/plugins/erros.ts`, `apps/api/src/modules/periodos/{service.ts,routes.ts,periodos.test.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (SQL extra), `packages/shared/src/modulos/periodos.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (`TipoNotificacao.PARTICIPANTE`), `apps/api/src/plugins/erros.ts`, `apps/api/src/modules/periodos/{service.ts,routes.ts,periodos.test.ts}`, `apps/api/src/app.ts`, `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `PeriodoAtendimento {id, chamadoId, operadorId, inicio, fim, descricao VarChar(500)?, autorId, criadoEm}`.
   2. SQL extra: `CREATE EXTENSION IF NOT EXISTS btree_gist;` e `ALTER TABLE periodos_atendimento ADD CONSTRAINT ex_periodos_sobreposicao EXCLUDE USING gist (operador_id WITH =, tstzrange(inicio, fim) WITH &&);`, mais o CHECK `fim > inicio`.
@@ -23,7 +23,7 @@
 ### T-16.2 — Tempo em fila direta e participações
 - **Depende de:** T-16.1 · **Paralelo com:** T-16.3–T-16.5
 - **Requisitos:** D08, G05 (parte)
-- **Arquivos:** `apps/api/src/modules/relatorios/{tempos.ts,tempos.test.ts,routes.ts}`, `packages/shared/src/modulos/relatorios.ts`
+- **Arquivos:** `apps/api/src/modules/relatorios/{tempos.ts,tempos.test.ts,routes.ts}`, `packages/shared/src/modulos/relatorios.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Relatório `tempos-operador`: soma, por `ChamadoEstagio` com tipo EM_ATENDIMENTO ou PENDENTE e `operadorId`, o tempo útil (`msUteisEntre` com o calendário do chamado) e o absoluto. Inclui as horas informadas (D07).
   2. Relatório `participacoes`: direto, encaminhado, auxiliar e por períodos, sem contagem dupla.
@@ -37,7 +37,7 @@
 ### T-16.3 — Mural de avisos
 - **Depende de:** MVP · **Paralelo com:** T-16.1, T-16.4, T-16.5
 - **Requisitos:** E02
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{modulos/avisos.ts,realtime.ts}`, `apps/api/src/modules/avisos/{service.ts,routes.ts,avisos.test.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{modulos/avisos.ts,realtime.ts}`, `apps/api/src/modules/avisos/{service.ts,routes.ts,avisos.test.ts}`, `apps/api/src/app.ts`, `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Models `Aviso {id, titulo VarChar(60), texto Text, areaIds Int[] (vazio = todos), validoAte?, recorrente, ativo, autorId, criadoEm}` e `AvisoVisto {avisoId, usuarioId, ultimaExibicao, @@id}`.
   2. `GET /avisos/pendentes`: os não vistos; os recorrentes não vistos hoje no fuso.
@@ -55,7 +55,7 @@
 ### T-16.4 — Busca em soluções e soluções padrão
 - **Depende de:** MVP · **Paralelo com:** T-16.1, T-16.3, T-16.5
 - **Requisitos:** F02, F03; S60, S62
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (trigger), `packages/shared/src/modulos/solucoes.ts`, `apps/api/src/modules/solucoes/{service.ts,routes.ts,solucoes.test.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (trigger), `packages/shared/src/modulos/solucoes.ts`, `apps/api/src/modules/solucoes/{service.ts,routes.ts,solucoes.test.ts}`, `apps/api/src/app.ts`, `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. `Chamado.buscaSolucao Unsupported("tsvector")?` com índice GIN, trigger em `assunto`, `descricao` e `solucao` (pesos A, B, C, `f_unaccent`) e backfill `UPDATE chamados SET solucao = solucao`.
   2. `GET /solucoes/busca?q=&incluirComentarios=&incluirNaoConcluidos=&pagina=` (`chamado.atender`):
@@ -76,7 +76,7 @@
 ### T-16.5 — Filtros salvos, colunas salvas e XLSX
 - **Depende de:** MVP · **Paralelo com:** T-16.1, T-16.3, T-16.4
 - **Requisitos:** G02, filtros salvos
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/filtros-salvos.ts`, `apps/api/src/modules/filtros-salvos/{service.ts,routes.ts,filtros.test.ts}`, `apps/api/src/modules/chamados/exportar.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/filtros-salvos.ts`, `apps/api/src/modules/filtros-salvos/{service.ts,routes.ts,filtros.test.ts}`, `apps/api/src/modules/chamados/exportar.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `FiltroSalvo {id, usuarioId, nome VarChar(80), filtros Json (ChamadoFiltros), compartilhadoAreaId Int?, criadoEm, @@unique([usuarioId, nome])}`. O compartilhado é visível para operadores da área.
   2. `Usuario.preferenciasUi Json?`, validado por `{colunasChamados: {id: string, visivel: boolean}[]}` e lido no `PATCH /me`.
@@ -92,7 +92,7 @@
 ### T-16.6 — Relatórios avançados
 - **Depende de:** T-14.3, T-14.1 · **Paralelo com:** T-16.2
 - **Requisitos:** G05
-- **Arquivos:** `apps/api/src/modules/relatorios/{avancados.ts,avancados.test.ts,routes.ts}`, `packages/shared/src/modulos/relatorios.ts`
+- **Arquivos:** `apps/api/src/modules/relatorios/{avancados.ts,avancados.test.ts,routes.ts}`, `packages/shared/src/modulos/relatorios.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:** tipos `mudancas-status` (de `ChamadoEvento` STATUS_ALTERADO, matriz de→para), `por-campo/:chave`, `por-categoria/:grupo` e `quadro-area` (totais, SLA e avaliações por área).
 - **Pronto quando:**
   - [ ] fixture;
