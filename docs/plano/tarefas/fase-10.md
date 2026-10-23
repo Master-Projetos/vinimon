@@ -383,7 +383,7 @@
 ### T-10.23 — Diálogos de ação
 - **Depende de:** T-10.22, T-5.10 · **Paralelo com:** T-10.24
 - **Requisitos:** §3.5 (ações)
-- **Arquivos:** `apps/web/src/features/chamados/components/{encaminhar-dialog.tsx,concluir-dialog.tsx,reabrir-dialog.tsx,cancelar-dialog.tsx,agendar-popover.tsx,assumir-button.tsx,operador-select.tsx}`, `apps/web/src/features/chamados/queries.ts`
+- **Arquivos:** `apps/web/src/features/chamados/components/{encaminhar-dialog.tsx,concluir-dialog.tsx,reabrir-dialog.tsx,cancelar-dialog.tsx,agendar-popover.tsx,assumir-button.tsx,operador-select.tsx}`, `apps/web/src/features/chamados/queries.ts`, `apps/web/src/features/chamados/acoes.test.tsx`
 - **Passos:**
   1. Uma mutação por ação. `onSuccess` faz `setQueryData(detalhe)` e invalida listas e contagens.
   2. Assumir com outro responsável pede confirmação e reenvia com `confirmarTroca:true`.
@@ -489,7 +489,7 @@
 ### T-10.29 — Aba Histórico e impressão
 - **Depende de:** T-10.22 · **Paralelo com:** T-10.27, T-10.28
 - **Requisitos:** C22, C23
-- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/{historico.tsx,imprimir.tsx}`, `apps/web/src/features/historico/{queries.ts,components/historico-timeline.tsx,textos.ts}`
+- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/{historico.tsx,imprimir.tsx}`, `apps/web/src/features/historico/{queries.ts,components/historico-timeline.tsx,textos.ts}`, `apps/web/src/features/historico/historico.test.tsx`
 - **Passos:**
   1. `textos.ts`: o texto de cada `TipoEvento` a partir de `dados`.
   2. Filtro: Tudo, Status, Atribuição, SLA e Anexos.
@@ -520,7 +520,7 @@
 ### T-10.31 — Relatórios
 - **Depende de:** T-10.4, T-8.3 · **Paralelo com:** T-10.30, T-10.32–T-10.37
 - **Requisitos:** G04
-- **Arquivos:** `apps/web/src/routes/_app/relatorios/{route.tsx,index.tsx,$relatorio.tsx}`, `apps/web/src/features/relatorios/{queries.ts,components/relatorio-filtros.tsx,components/relatorio-tabela.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/relatorios/{route.tsx,index.tsx,$relatorio.tsx}`, `apps/web/src/features/relatorios/{queries.ts,components/relatorio-filtros.tsx,components/relatorio-tabela.tsx}`, `apps/web/src/features/relatorios/relatorios.test.tsx`
 - **Passos:**
   1. Layout com `exigir('relatorio.ver')`. O `index` redireciona para `visao-geral`; um `$relatorio` desconhecido dá `notFound()`.
   2. Filtros na URL, KPIs, gráfico, tabela ordenável no cliente, link CSV e impressão.
