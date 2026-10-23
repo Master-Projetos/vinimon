@@ -418,8 +418,9 @@
 ### T-10.25 — Compositor, menções e envio otimista
 - **Depende de:** T-10.24, T-6.2 · **Paralelo com:** —
 - **Requisitos:** TM5; S100, B16; §6.3 (Compositor)
-- **Arquivos:** `apps/web/src/features/conversa/{cache.ts,cache.test.ts,components/composer.tsx,components/mention-popover.tsx}`, `apps/web/src/features/conversa/queries.ts`
+- **Arquivos:** `apps/web/src/features/conversa/{cache.ts,cache.test.ts,components/composer.tsx,components/mention-popover.tsx}`, `apps/web/src/features/conversa/queries.ts`, `apps/web/src/features/conversa/components/{conversa-view.tsx,message-bubble.tsx,message-list.tsx}` (montar o compositor e mostrar os estados da mensagem), `apps/web/src/features/conversa/composer.test.tsx` (testes de tela ficam em features), `apps/web/src/features/conversa/conversa.test.tsx` (acréscimos), `apps/web/src/lib/api.test.ts` (só se `enviarArquivo` mudar)
 - **Passos:**
+  0. O contrato de `GET /chamados/:id/mencionaveis` não existe no shared; defina-o em `features/conversa/queries.ts` com `contrato()` (mesma resposta da rota: `id`, `nome`, `perfil`).
   1. `cache.ts`: `mesclarAssentamento(paginas, dto)`. Se o id existe, substitui; se o `clienteId` é de um pendente, substitui o pendente; senão, insere. Ordena por id, com os pendentes no fim.
   2. Compositor:
      - `@` abre o popover (`/mencionaveis`, debounce de 150 ms, ↑↓ Enter Tab Esc);
