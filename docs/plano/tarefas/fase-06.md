@@ -67,7 +67,7 @@
 ### T-6.4 — Leituras ("Visto por")
 - **Depende de:** T-6.3 · **Paralelo com:** T-6.5
 - **Requisitos:** S98; TM4; §4.3 (SQL de leitura)
-- **Arquivos:** `apps/api/src/modules/leituras/{service.ts,routes.ts,leituras.test.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `packages/shared/src/{modulos/leituras.ts,index.ts}` (contrato, como na receita de módulo), `apps/api/src/modules/leituras/{service.ts,routes.ts,leituras.test.ts}`, `apps/api/src/app.ts`
 - **Passos:**
   1. `POST /chamados/:id/leitura {assentamentoId}` (120/min). O assentamento precisa ser do chamado e visível (senão 422). Usa o `$queryRaw` monotônico da §4.3.
   2. Se a query devolver linha: marca como lidas as notificações do chamado, exceto AVALIACAO_PENDENTE; depois do commit, `emitirLeitura` + `emitirContagem`.
