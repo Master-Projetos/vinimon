@@ -93,7 +93,7 @@
 ### T-10.5 — Meta, layout de administração e áreas (canônico)
 - **Depende de:** T-10.4, T-3.15 · **Paralelo com:** —
 - **Requisitos:** §7 (`areas.tsx`, `features/areas/queries.ts`)
-- **Arquivos:** `apps/web/src/features/meta/queries.ts`, `apps/web/src/features/areas/queries.ts`, `apps/web/src/routes/_app/admin/{route.tsx,index.tsx,areas.tsx,areas.test.tsx}`, `apps/web/src/features/admin/components/admin-nav-pane.tsx`, `apps/web/src/test/render-rota.test.tsx`
+- **Arquivos:** `apps/web/src/features/meta/queries.ts`, `apps/web/src/features/areas/queries.ts`, `apps/web/src/routes/_app/admin/{route.tsx,index.tsx,areas.tsx}`, `apps/web/src/features/areas/areas.test.tsx` (fora de `routes/`: o `tsr generate` trataria como rota), `apps/web/src/features/admin/components/admin-nav-pane.tsx`, `apps/web/src/test/render-rota.test.tsx`
 - **Passos:**
   1. `metaConsultas.tudo()` com `staleTime` de 5 min.
   2. Layout admin com `exigir('cadastro.gerenciar')` e as seções do painel (Pessoas, Chamados, SLA, Estrutura, Sistema).
