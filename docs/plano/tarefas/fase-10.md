@@ -232,7 +232,7 @@
 ### T-10.14 — Menu do usuário, presença e cartão de perfil
 - **Depende de:** T-10.13, T-7.5 · **Paralelo com:** T-10.15
 - **Requisitos:** TM2, S97
-- **Arquivos:** `apps/web/src/features/presenca/components/user-menu.tsx`, `apps/web/src/components/display/user-hover-card.tsx`, `apps/web/src/features/presenca/{hooks.ts,queries.ts}`, `apps/web/src/components/layout/top-bar.tsx`
+- **Arquivos:** `apps/web/src/features/presenca/components/user-menu.tsx`, `apps/web/src/components/display/user-hover-card.tsx`, `apps/web/src/features/presenca/{hooks.ts,queries.ts}`, `apps/web/src/components/layout/top-bar.tsx`, `apps/web/src/features/presenca/presenca.test.tsx` (teste de tela fica em features, nunca em routes), `apps/web/src/features/auth/queries.ts` (mutação de logout para o item Sair do menu)
 - **Passos:**
   1. `UserMenu`:
      - status Disponível, Ocupado (1 h / hoje / até eu mudar), Ausente e Redefinir, via `PUT /me/presenca`;
