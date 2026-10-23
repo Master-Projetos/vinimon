@@ -6,6 +6,7 @@ import { carregarSessao, NOME_COOKIE, type UsuarioSessao } from '../lib/sessao'
 import { definirTempoReal, type PublicadorTempoReal } from '../lib/tempo-real'
 import { criarEmissores, registrarHandlers } from './handlers'
 import { erroRt, permitirHandshake, temCredencialIndevida } from './handshake'
+import { registrarPresenca } from './presenca'
 import { SALA_ADMINS, salaArea, salaSessao, salaUsuario } from './salas'
 
 export interface DadosSocket {
@@ -79,8 +80,10 @@ export const tempoRealPlugin = fp(
     })
 
     registrarHandlers(io, app.log)
+    const presenca = registrarPresenca(io, app.log)
     definirTempoReal({ ...publicador, ...criarEmissores(io, app.log) })
 
+    app.addHook('onClose', async () => presenca.fechar())
     app.addHook('preClose', async () => {
       io.local.disconnectSockets(true)
     })
