@@ -14,11 +14,14 @@ import { Route as Configurar2faRouteImport } from './routes/configurar-2fa'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as TrocarSenhaRouteImport } from './routes/trocar-senha'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppAtividadeRouteImport } from './routes/_app/atividade'
 import { Route as AppChamadosRouteRouteImport } from './routes/_app/chamados/route'
+import { Route as AppInventarioRouteRouteImport } from './routes/_app/inventario/route'
 import { Route as AppPainelRouteImport } from './routes/_app/painel'
 import { Route as AppSemPermissaoRouteImport } from './routes/_app/sem-permissao'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
+import { Route as AppAdminAreasRouteImport } from './routes/_app/admin/areas'
 import { Route as AppAdminAuditoriaRouteImport } from './routes/_app/admin/auditoria'
 import { Route as AppAdminCanaisRouteImport } from './routes/_app/admin/canais'
 import { Route as AppAdminCategoriasArtigoRouteImport } from './routes/_app/admin/categorias-artigo'
@@ -66,6 +69,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAtividadeRoute = AppAtividadeRouteImport.update({
   id: '/atividade',
   path: '/atividade',
@@ -74,6 +82,11 @@ const AppAtividadeRoute = AppAtividadeRouteImport.update({
 const AppChamadosRouteRoute = AppChamadosRouteRouteImport.update({
   id: '/chamados',
   path: '/chamados',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInventarioRouteRoute = AppInventarioRouteRouteImport.update({
+  id: '/inventario',
+  path: '/inventario',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPainelRoute = AppPainelRouteImport.update({
@@ -87,80 +100,85 @@ const AppSemPermissaoRoute = AppSemPermissaoRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminAreasRoute = AppAdminAreasRouteImport.update({
+  id: '/areas',
+  path: '/areas',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminAuditoriaRoute = AppAdminAuditoriaRouteImport.update({
-  id: '/admin/auditoria',
-  path: '/admin/auditoria',
-  getParentRoute: () => AppRoute,
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminCanaisRoute = AppAdminCanaisRouteImport.update({
-  id: '/admin/canais',
-  path: '/admin/canais',
-  getParentRoute: () => AppRoute,
+  id: '/canais',
+  path: '/canais',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminCategoriasArtigoRoute =
   AppAdminCategoriasArtigoRouteImport.update({
-    id: '/admin/categorias-artigo',
-    path: '/admin/categorias-artigo',
-    getParentRoute: () => AppRoute,
+    id: '/categorias-artigo',
+    path: '/categorias-artigo',
+    getParentRoute: () => AppAdminRouteRoute,
   } as any)
 const AppAdminConfiguracoesRoute = AppAdminConfiguracoesRouteImport.update({
-  id: '/admin/configuracoes',
-  path: '/admin/configuracoes',
-  getParentRoute: () => AppRoute,
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminDepartamentosRoute = AppAdminDepartamentosRouteImport.update({
-  id: '/admin/departamentos',
-  path: '/admin/departamentos',
-  getParentRoute: () => AppRoute,
+  id: '/departamentos',
+  path: '/departamentos',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminFeriadosRoute = AppAdminFeriadosRouteImport.update({
-  id: '/admin/feriados',
-  path: '/admin/feriados',
-  getParentRoute: () => AppRoute,
+  id: '/feriados',
+  path: '/feriados',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminJornadasRoute = AppAdminJornadasRouteImport.update({
-  id: '/admin/jornadas',
-  path: '/admin/jornadas',
-  getParentRoute: () => AppRoute,
+  id: '/jornadas',
+  path: '/jornadas',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminPrioridadesRoute = AppAdminPrioridadesRouteImport.update({
-  id: '/admin/prioridades',
-  path: '/admin/prioridades',
-  getParentRoute: () => AppRoute,
+  id: '/prioridades',
+  path: '/prioridades',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminProblemasRoute = AppAdminProblemasRouteImport.update({
-  id: '/admin/problemas',
-  path: '/admin/problemas',
-  getParentRoute: () => AppRoute,
+  id: '/problemas',
+  path: '/problemas',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminStatusRoute = AppAdminStatusRouteImport.update({
-  id: '/admin/status',
-  path: '/admin/status',
-  getParentRoute: () => AppRoute,
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminTagsRoute = AppAdminTagsRouteImport.update({
-  id: '/admin/tags',
-  path: '/admin/tags',
-  getParentRoute: () => AppRoute,
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminTiposAtivoRoute = AppAdminTiposAtivoRouteImport.update({
-  id: '/admin/tipos-ativo',
-  path: '/admin/tipos-ativo',
-  getParentRoute: () => AppRoute,
+  id: '/tipos-ativo',
+  path: '/tipos-ativo',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminUnidadesRoute = AppAdminUnidadesRouteImport.update({
-  id: '/admin/unidades',
-  path: '/admin/unidades',
-  getParentRoute: () => AppRoute,
+  id: '/unidades',
+  path: '/unidades',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminUsuariosRoute = AppAdminUsuariosRouteImport.update({
-  id: '/admin/usuarios',
-  path: '/admin/usuarios',
-  getParentRoute: () => AppRoute,
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppChamadosIndexRoute = AppChamadosIndexRouteImport.update({
   id: '/',
@@ -184,9 +202,9 @@ const AppConhecimentoIndexRoute = AppConhecimentoIndexRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 const AppInventarioIndexRoute = AppInventarioIndexRouteImport.update({
-  id: '/inventario/',
-  path: '/inventario/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppInventarioRouteRoute,
 } as any)
 const AppPerfilIndexRoute = AppPerfilIndexRouteImport.update({
   id: '/perfil/',
@@ -210,11 +228,14 @@ export interface FileRoutesByFullPath {
   '/configurar-2fa': typeof Configurar2faRoute
   '/login': typeof LoginRoute
   '/trocar-senha': typeof TrocarSenhaRoute
+  '/admin': typeof AppAdminRouteRouteWithChildren
   '/chamados': typeof AppChamadosRouteRouteWithChildren
+  '/inventario': typeof AppInventarioRouteRouteWithChildren
   '/atividade': typeof AppAtividadeRoute
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
   '/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRouteWithChildren
+  '/admin/areas': typeof AppAdminAreasRoute
   '/admin/auditoria': typeof AppAdminAuditoriaRoute
   '/admin/canais': typeof AppAdminCanaisRoute
   '/admin/categorias-artigo': typeof AppAdminCategoriasArtigoRoute
@@ -247,6 +268,7 @@ export interface FileRoutesByTo {
   '/sem-permissao': typeof AppSemPermissaoRoute
   '/': typeof AppIndexRoute
   '/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRouteWithChildren
+  '/admin/areas': typeof AppAdminAreasRoute
   '/admin/auditoria': typeof AppAdminAuditoriaRoute
   '/admin/canais': typeof AppAdminCanaisRoute
   '/admin/categorias-artigo': typeof AppAdminCategoriasArtigoRoute
@@ -276,12 +298,15 @@ export interface FileRoutesById {
   '/configurar-2fa': typeof Configurar2faRoute
   '/login': typeof LoginRoute
   '/trocar-senha': typeof TrocarSenhaRoute
+  '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/chamados': typeof AppChamadosRouteRouteWithChildren
+  '/_app/inventario': typeof AppInventarioRouteRouteWithChildren
   '/_app/atividade': typeof AppAtividadeRoute
   '/_app/painel': typeof AppPainelRoute
   '/_app/sem-permissao': typeof AppSemPermissaoRoute
   '/_app/': typeof AppIndexRoute
   '/_app/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRouteWithChildren
+  '/_app/admin/areas': typeof AppAdminAreasRoute
   '/_app/admin/auditoria': typeof AppAdminAuditoriaRoute
   '/_app/admin/canais': typeof AppAdminCanaisRoute
   '/_app/admin/categorias-artigo': typeof AppAdminCategoriasArtigoRoute
@@ -312,11 +337,14 @@ export interface FileRouteTypes {
     | '/configurar-2fa'
     | '/login'
     | '/trocar-senha'
+    | '/admin'
     | '/chamados'
+    | '/inventario'
     | '/atividade'
     | '/painel'
     | '/sem-permissao'
     | '/chamados/$chamadoId'
+    | '/admin/areas'
     | '/admin/auditoria'
     | '/admin/canais'
     | '/admin/categorias-artigo'
@@ -349,6 +377,7 @@ export interface FileRouteTypes {
     | '/sem-permissao'
     | '/'
     | '/chamados/$chamadoId'
+    | '/admin/areas'
     | '/admin/auditoria'
     | '/admin/canais'
     | '/admin/categorias-artigo'
@@ -377,12 +406,15 @@ export interface FileRouteTypes {
     | '/configurar-2fa'
     | '/login'
     | '/trocar-senha'
+    | '/_app/admin'
     | '/_app/chamados'
+    | '/_app/inventario'
     | '/_app/atividade'
     | '/_app/painel'
     | '/_app/sem-permissao'
     | '/_app/'
     | '/_app/chamados/$chamadoId'
+    | '/_app/admin/areas'
     | '/_app/admin/auditoria'
     | '/_app/admin/canais'
     | '/_app/admin/categorias-artigo'
@@ -451,6 +483,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/atividade': {
       id: '/_app/atividade'
       path: '/atividade'
@@ -463,6 +502,13 @@ declare module '@tanstack/react-router' {
       path: '/chamados'
       fullPath: '/chamados'
       preLoaderRoute: typeof AppChamadosRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inventario': {
+      id: '/_app/inventario'
+      path: '/inventario'
+      fullPath: '/inventario'
+      preLoaderRoute: typeof AppInventarioRouteRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/painel': {
@@ -481,108 +527,115 @@ declare module '@tanstack/react-router' {
     }
     '/_app/admin/': {
       id: '/_app/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/areas': {
+      id: '/_app/admin/areas'
+      path: '/areas'
+      fullPath: '/admin/areas'
+      preLoaderRoute: typeof AppAdminAreasRouteImport
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/auditoria': {
       id: '/_app/admin/auditoria'
-      path: '/admin/auditoria'
+      path: '/auditoria'
       fullPath: '/admin/auditoria'
       preLoaderRoute: typeof AppAdminAuditoriaRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/canais': {
       id: '/_app/admin/canais'
-      path: '/admin/canais'
+      path: '/canais'
       fullPath: '/admin/canais'
       preLoaderRoute: typeof AppAdminCanaisRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/categorias-artigo': {
       id: '/_app/admin/categorias-artigo'
-      path: '/admin/categorias-artigo'
+      path: '/categorias-artigo'
       fullPath: '/admin/categorias-artigo'
       preLoaderRoute: typeof AppAdminCategoriasArtigoRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/configuracoes': {
       id: '/_app/admin/configuracoes'
-      path: '/admin/configuracoes'
+      path: '/configuracoes'
       fullPath: '/admin/configuracoes'
       preLoaderRoute: typeof AppAdminConfiguracoesRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/departamentos': {
       id: '/_app/admin/departamentos'
-      path: '/admin/departamentos'
+      path: '/departamentos'
       fullPath: '/admin/departamentos'
       preLoaderRoute: typeof AppAdminDepartamentosRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/feriados': {
       id: '/_app/admin/feriados'
-      path: '/admin/feriados'
+      path: '/feriados'
       fullPath: '/admin/feriados'
       preLoaderRoute: typeof AppAdminFeriadosRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/jornadas': {
       id: '/_app/admin/jornadas'
-      path: '/admin/jornadas'
+      path: '/jornadas'
       fullPath: '/admin/jornadas'
       preLoaderRoute: typeof AppAdminJornadasRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/prioridades': {
       id: '/_app/admin/prioridades'
-      path: '/admin/prioridades'
+      path: '/prioridades'
       fullPath: '/admin/prioridades'
       preLoaderRoute: typeof AppAdminPrioridadesRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/problemas': {
       id: '/_app/admin/problemas'
-      path: '/admin/problemas'
+      path: '/problemas'
       fullPath: '/admin/problemas'
       preLoaderRoute: typeof AppAdminProblemasRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/status': {
       id: '/_app/admin/status'
-      path: '/admin/status'
+      path: '/status'
       fullPath: '/admin/status'
       preLoaderRoute: typeof AppAdminStatusRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/tags': {
       id: '/_app/admin/tags'
-      path: '/admin/tags'
+      path: '/tags'
       fullPath: '/admin/tags'
       preLoaderRoute: typeof AppAdminTagsRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/tipos-ativo': {
       id: '/_app/admin/tipos-ativo'
-      path: '/admin/tipos-ativo'
+      path: '/tipos-ativo'
       fullPath: '/admin/tipos-ativo'
       preLoaderRoute: typeof AppAdminTiposAtivoRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/unidades': {
       id: '/_app/admin/unidades'
-      path: '/admin/unidades'
+      path: '/unidades'
       fullPath: '/admin/unidades'
       preLoaderRoute: typeof AppAdminUnidadesRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/usuarios': {
       id: '/_app/admin/usuarios'
-      path: '/admin/usuarios'
+      path: '/usuarios'
       fullPath: '/admin/usuarios'
       preLoaderRoute: typeof AppAdminUsuariosRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/chamados/': {
       id: '/_app/chamados/'
@@ -614,10 +667,10 @@ declare module '@tanstack/react-router' {
     }
     '/_app/inventario/': {
       id: '/_app/inventario/'
-      path: '/inventario'
+      path: '/'
       fullPath: '/inventario/'
       preLoaderRoute: typeof AppInventarioIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppInventarioRouteRoute
     }
     '/_app/perfil/': {
       id: '/_app/perfil/'
@@ -642,6 +695,48 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AppAdminRouteRouteChildren {
+  AppAdminAreasRoute: typeof AppAdminAreasRoute
+  AppAdminAuditoriaRoute: typeof AppAdminAuditoriaRoute
+  AppAdminCanaisRoute: typeof AppAdminCanaisRoute
+  AppAdminCategoriasArtigoRoute: typeof AppAdminCategoriasArtigoRoute
+  AppAdminConfiguracoesRoute: typeof AppAdminConfiguracoesRoute
+  AppAdminDepartamentosRoute: typeof AppAdminDepartamentosRoute
+  AppAdminFeriadosRoute: typeof AppAdminFeriadosRoute
+  AppAdminJornadasRoute: typeof AppAdminJornadasRoute
+  AppAdminPrioridadesRoute: typeof AppAdminPrioridadesRoute
+  AppAdminProblemasRoute: typeof AppAdminProblemasRoute
+  AppAdminStatusRoute: typeof AppAdminStatusRoute
+  AppAdminTagsRoute: typeof AppAdminTagsRoute
+  AppAdminTiposAtivoRoute: typeof AppAdminTiposAtivoRoute
+  AppAdminUnidadesRoute: typeof AppAdminUnidadesRoute
+  AppAdminUsuariosRoute: typeof AppAdminUsuariosRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
+}
+
+const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminAreasRoute: AppAdminAreasRoute,
+  AppAdminAuditoriaRoute: AppAdminAuditoriaRoute,
+  AppAdminCanaisRoute: AppAdminCanaisRoute,
+  AppAdminCategoriasArtigoRoute: AppAdminCategoriasArtigoRoute,
+  AppAdminConfiguracoesRoute: AppAdminConfiguracoesRoute,
+  AppAdminDepartamentosRoute: AppAdminDepartamentosRoute,
+  AppAdminFeriadosRoute: AppAdminFeriadosRoute,
+  AppAdminJornadasRoute: AppAdminJornadasRoute,
+  AppAdminPrioridadesRoute: AppAdminPrioridadesRoute,
+  AppAdminProblemasRoute: AppAdminProblemasRoute,
+  AppAdminStatusRoute: AppAdminStatusRoute,
+  AppAdminTagsRoute: AppAdminTagsRoute,
+  AppAdminTiposAtivoRoute: AppAdminTiposAtivoRoute,
+  AppAdminUnidadesRoute: AppAdminUnidadesRoute,
+  AppAdminUsuariosRoute: AppAdminUsuariosRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
+}
+
+const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
+  AppAdminRouteRouteChildren,
+)
 
 interface AppChamadosChamadoIdRouteRouteChildren {
   AppChamadosChamadoIdDetalhesRoute: typeof AppChamadosChamadoIdDetalhesRoute
@@ -672,56 +767,39 @@ const AppChamadosRouteRouteChildren: AppChamadosRouteRouteChildren = {
 const AppChamadosRouteRouteWithChildren =
   AppChamadosRouteRoute._addFileChildren(AppChamadosRouteRouteChildren)
 
+interface AppInventarioRouteRouteChildren {
+  AppInventarioIndexRoute: typeof AppInventarioIndexRoute
+}
+
+const AppInventarioRouteRouteChildren: AppInventarioRouteRouteChildren = {
+  AppInventarioIndexRoute: AppInventarioIndexRoute,
+}
+
+const AppInventarioRouteRouteWithChildren =
+  AppInventarioRouteRoute._addFileChildren(AppInventarioRouteRouteChildren)
+
 interface AppRouteChildren {
+  AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
   AppChamadosRouteRoute: typeof AppChamadosRouteRouteWithChildren
+  AppInventarioRouteRoute: typeof AppInventarioRouteRouteWithChildren
   AppAtividadeRoute: typeof AppAtividadeRoute
   AppPainelRoute: typeof AppPainelRoute
   AppSemPermissaoRoute: typeof AppSemPermissaoRoute
   AppIndexRoute: typeof AppIndexRoute
-  AppAdminAuditoriaRoute: typeof AppAdminAuditoriaRoute
-  AppAdminCanaisRoute: typeof AppAdminCanaisRoute
-  AppAdminCategoriasArtigoRoute: typeof AppAdminCategoriasArtigoRoute
-  AppAdminConfiguracoesRoute: typeof AppAdminConfiguracoesRoute
-  AppAdminDepartamentosRoute: typeof AppAdminDepartamentosRoute
-  AppAdminFeriadosRoute: typeof AppAdminFeriadosRoute
-  AppAdminJornadasRoute: typeof AppAdminJornadasRoute
-  AppAdminPrioridadesRoute: typeof AppAdminPrioridadesRoute
-  AppAdminProblemasRoute: typeof AppAdminProblemasRoute
-  AppAdminStatusRoute: typeof AppAdminStatusRoute
-  AppAdminTagsRoute: typeof AppAdminTagsRoute
-  AppAdminTiposAtivoRoute: typeof AppAdminTiposAtivoRoute
-  AppAdminUnidadesRoute: typeof AppAdminUnidadesRoute
-  AppAdminUsuariosRoute: typeof AppAdminUsuariosRoute
-  AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppConhecimentoIndexRoute: typeof AppConhecimentoIndexRoute
-  AppInventarioIndexRoute: typeof AppInventarioIndexRoute
   AppPerfilIndexRoute: typeof AppPerfilIndexRoute
   AppRelatoriosIndexRoute: typeof AppRelatoriosIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
   AppChamadosRouteRoute: AppChamadosRouteRouteWithChildren,
+  AppInventarioRouteRoute: AppInventarioRouteRouteWithChildren,
   AppAtividadeRoute: AppAtividadeRoute,
   AppPainelRoute: AppPainelRoute,
   AppSemPermissaoRoute: AppSemPermissaoRoute,
   AppIndexRoute: AppIndexRoute,
-  AppAdminAuditoriaRoute: AppAdminAuditoriaRoute,
-  AppAdminCanaisRoute: AppAdminCanaisRoute,
-  AppAdminCategoriasArtigoRoute: AppAdminCategoriasArtigoRoute,
-  AppAdminConfiguracoesRoute: AppAdminConfiguracoesRoute,
-  AppAdminDepartamentosRoute: AppAdminDepartamentosRoute,
-  AppAdminFeriadosRoute: AppAdminFeriadosRoute,
-  AppAdminJornadasRoute: AppAdminJornadasRoute,
-  AppAdminPrioridadesRoute: AppAdminPrioridadesRoute,
-  AppAdminProblemasRoute: AppAdminProblemasRoute,
-  AppAdminStatusRoute: AppAdminStatusRoute,
-  AppAdminTagsRoute: AppAdminTagsRoute,
-  AppAdminTiposAtivoRoute: AppAdminTiposAtivoRoute,
-  AppAdminUnidadesRoute: AppAdminUnidadesRoute,
-  AppAdminUsuariosRoute: AppAdminUsuariosRoute,
-  AppAdminIndexRoute: AppAdminIndexRoute,
   AppConhecimentoIndexRoute: AppConhecimentoIndexRoute,
-  AppInventarioIndexRoute: AppInventarioIndexRoute,
   AppPerfilIndexRoute: AppPerfilIndexRoute,
   AppRelatoriosIndexRoute: AppRelatoriosIndexRoute,
 }
