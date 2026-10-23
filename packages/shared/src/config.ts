@@ -18,6 +18,11 @@ const CAMPOS = {
   'chamado.avaliacaoAutomatica': z.enum(NOTAS_AVALIACAO),
   'chamado.permitirReabertura': z.boolean(),
   'chamado.prazoReaberturaDias': z.int().min(0).max(365),
+  'inatividade.statusIds': z.array(z.int().positive()).max(50),
+  'inatividade.dias': z.int().min(1).max(365),
+  'inatividade.diasUteis': z.boolean(),
+  'inatividade.statusRetornoId': z.int().positive().nullable(),
+  'inatividade.avaliacao': z.enum(NOTAS_AVALIACAO),
   'notificacoes.retencaoDias': z.int().min(30).max(365),
   'email.habilitado': z.boolean(),
 }
@@ -43,6 +48,11 @@ export const CONFIG_PADRAO: Config = {
   'chamado.avaliacaoAutomatica': 'OTIMO',
   'chamado.permitirReabertura': true,
   'chamado.prazoReaberturaDias': 0,
+  'inatividade.statusIds': [],
+  'inatividade.dias': 7,
+  'inatividade.diasUteis': false,
+  'inatividade.statusRetornoId': null,
+  'inatividade.avaliacao': 'OTIMO',
   'notificacoes.retencaoDias': 180,
   'email.habilitado': false,
 }

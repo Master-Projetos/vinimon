@@ -25,6 +25,21 @@ export async function atualizarConfig(dados: AtualizarConfig, ctx: ContextoUsuar
       if (!jornada.ativo) throw regraNegocio(MENSAGEM_JORNADA_INATIVA)
     }
 
+    const retornoId = dados['inatividade.statusRetornoId']
+    if (typeof retornoId === 'number') {
+      const destino = await tx.status.findFirst({
+        where: { id: retornoId, ativo: true, tipo: { in: ['ABERTO', 'EM_ATENDIMENTO'] } },
+        select: { id: true },
+      })
+      if (!destino)
+        throw regraNegocio('O status de retorno precisa estar ativo e ser do tipo Aberto ou Em atendimento.')
+    }
+    const monitorados = dados['inatividade.statusIds']
+    if (monitorados !== undefined && monitorados.length > 0) {
+      const existentes = await tx.status.count({ where: { id: { in: monitorados }, ativo: true } })
+      if (existentes !== new Set(monitorados).size) throw regraNegocio('Há status monitorado inexistente ou inativo.')
+    }
+
     const linhas = await tx.config.findMany({ where: { chave: { in: entradas.map(([chave]) => chave) } } })
     const atualPorChave = new Map(linhas.map((linha) => [linha.chave, linha.valor]))
     const antes: Record<string, unknown> = {}
