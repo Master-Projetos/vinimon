@@ -83,7 +83,7 @@
 ### T-7.5 — Presença
 - **Depende de:** T-7.3 · **Paralelo com:** T-7.6–T-7.9
 - **Requisitos:** S97; TM2; T58; §3.7 (Presença)
-- **Arquivos:** `apps/api/src/realtime/{presenca.ts,presenca.test.ts}`, `packages/shared/src/{modulos/presenca.ts,index.ts}`, `apps/api/src/modules/presenca/{service.ts,routes.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `apps/api/src/realtime/{presenca.ts,presenca.test.ts}`, `packages/shared/src/{modulos/presenca.ts,index.ts}`, `apps/api/src/modules/presenca/{service.ts,routes.ts}`, `apps/api/src/app.ts`, `apps/api/src/realtime/plugin.ts` (registrar a presença no `connection` e expor o serviço à rota `PUT /me/presenca`)
 - **Passos:**
   1. `calcularEstado` (pura, §3.7). `PresencaService` com `Map` em memória:
      - conexões, manual vindo de `PresencaUsuario` na primeira conexão, timer de expiração do manual;
