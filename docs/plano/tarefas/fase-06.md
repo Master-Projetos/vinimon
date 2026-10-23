@@ -194,7 +194,7 @@
 ### T-6.9 — Rotas de notificações e preferências
 - **Depende de:** T-6.8 · **Paralelo com:** T-6.10
 - **Requisitos:** S102, S103; T60, T61; §3.6 (Notificações, `/me/preferencias-notificacao`)
-- **Arquivos:** `packages/shared/src/{modulos/notificacoes.ts,index.ts}`, `apps/api/src/modules/notificacoes/{service.ts,routes.ts,notificacoes.test.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `packages/shared/src/{modulos/notificacoes.ts,index.ts}`, `apps/api/src/modules/notificacoes/{service.ts,routes.ts,notificacoes.test.ts}`, `apps/api/src/app.ts`, `apps/api/src/modules/notificacoes/fanout.ts` e `apps/api/src/modules/leituras/service.ts` (passam a usar `whereNotificacoesVisiveis`: S103 pede uma função única também na contagem pós-fanout e na do "Visto por"; hoje cada um tem um `where` local)
 - **Passos:**
   1. `GET /notificacoes?filtro=&cursor=&limite=`:
      - `where: { usuarioId, chamado: escopoChamados(u), ...regra de interno da §3.8, ...filtro }`;
