@@ -258,7 +258,7 @@
 ### T-5.11 — Matriz de autorização de chamados
 - **Depende de:** T-5.10 · **Paralelo com:** T-5.12
 - **Requisitos:** S44–S47; T33, T34
-- **Arquivos:** `apps/api/test/chamados-matriz.test.ts`, `apps/api/test/escopo-equivalencia.test.ts`
+- **Arquivos:** `apps/api/test/chamados-matriz.test.ts`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/src/modules/chamados/lista.test.ts` (corrigir `hoje` para o fuso do sistema: o teste falha entre 21h e 24h em São Paulo)
 - **Passos:**
   1. `it.each` sobre {rotas GET e POST de chamado} × {solicitante USUARIO, outro USUARIO, OPERADOR da área, OPERADOR de área secundária, OPERADOR de outra área, OPERADOR responsável de outra área, ADMIN}, com o status esperado em tabela. Fora do escopo é sempre 404.
   2. `escopo-equivalencia.test.ts`: fixture com os 7 atores de T33 e 12 chamados (área primária, secundária, outra área, operador responsável de outra área, solicitante OPERADOR, encerrado, cancelado). Para cada ator: `ids(await prisma.chamado.findMany({ where: escopoChamados(u), select: { id: true } }))` deve ser igual a `chamados.filter(c => podeVerChamado(u, c)).map(c => c.id)`.
