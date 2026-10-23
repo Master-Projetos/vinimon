@@ -40,3 +40,25 @@ jobs:
       - name: Prisma exata em 7.10.1 (T04)
         run: test "$(node -p "require('./apps/api/package.json').devDependencies.prisma")" = "7.10.1"
       - run: pnpm build
+  e2e:
+    needs: verificar
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env: { POSTGRES_USER: vinimon, POSTGRES_PASSWORD: vinimon, POSTGRES_DB: vinimon_test }
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U vinimon -d vinimon_test" --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      # O service container não executa docker/postgres/init/*: o banco E2E é criado aqui.
+      - name: Banco E2E (vinimon_e2e)
+        run: PGPASSWORD=vinimon psql -h localhost -U vinimon -d postgres -c 'CREATE DATABASE vinimon_e2e OWNER vinimon'
+      - name: Chromium do Playwright
+        run: pnpm -F @vinimon/web exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
