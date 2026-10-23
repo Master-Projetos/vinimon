@@ -563,7 +563,7 @@
 ### T-10.34 — Inventário: lista e edição
 - **Depende de:** T-10.4, T-8.5 · **Paralelo com:** T-10.30–T-10.33, T-10.35–T-10.37
 - **Requisitos:** I01
-- **Arquivos:** `apps/web/src/routes/_app/inventario/{route.tsx,index.tsx}`, `apps/web/src/features/inventario/{queries.ts,components/tipos-pane.tsx,components/ativos-table.tsx,components/ativo-sheet.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/inventario/{route.tsx,index.tsx}`, `apps/web/src/features/inventario/{index.test.tsx,queries.ts,components/tipos-pane.tsx,components/ativos-table.tsx,components/ativo-sheet.tsx}`
 - **Passos:**
   1. Layout com `exigir('inventario.ver')`.
   2. Tabela com filtros e cores de situação (§6.3, item 10).
