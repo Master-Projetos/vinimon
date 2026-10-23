@@ -21,9 +21,9 @@ Ambiente só para acompanhar o andamento do front e da API com dados de teste. U
    ```sh
    pnpm install --frozen-lockfile
    DATABASE_URL="$DATABASE_URL_MIGRATOR" pnpm db:deploy
-   DATABASE_URL="$DATABASE_URL_MIGRATOR" pnpm db:seed
+   SEED_ADMIN_PASSWORD='<senha forte>' DATABASE_URL="$DATABASE_URL_MIGRATOR" pnpm db:seed
    ```
-   Repetir `db:deploy` a cada release que traga migração, **antes** de publicar a imagem nova. Para dados de demonstração (usuários e chamados de exemplo), `pnpm --filter @vinimon/api seed:dev` com a mesma URL; só em homologação, nunca em produção.
+   O `db:seed` cria a área TI e o administrador de login `admin`. Sem `SEED_ADMIN_PASSWORD`, ele gera uma senha e a mostra **uma única vez** na saída; anote-a. Repetir `db:deploy` a cada release que traga migração, **antes** de publicar a imagem nova. Para dados de demonstração (usuários e chamados de exemplo), `pnpm --filter @vinimon/api seed:dev` com a mesma URL; só em homologação, nunca em produção.
 3. **Segredos novos** (nunca reutilizar os de exemplo; o `env.ts` os recusa em produção):
    ```sh
    node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"   # CSRF_SECRET
@@ -46,7 +46,7 @@ Ambiente só para acompanhar o andamento do front e da API com dados de teste. U
 
    **`TRUST_PROXY`:** o `env.ts` aceita só `false` ou uma lista de IPs/CIDRs; `true` é proibido (S118). Pegue na documentação da plataforma a faixa de rede interna de onde o proxy dela chega ao contêiner. Se errar a faixa, a API enxerga o IP do proxy em vez do IP do usuário (o limite de taxa e as sessões ficam por proxy, não por pessoa). Não use `0.0.0.0/0`.
 5. **Publicar.** Apontar a plataforma para o repositório, branch `v2`, e o `Dockerfile` da raiz. Health check em `GET /api/v1/saude`. Montar o volume em `/data/anexos`. Anotar o domínio e conferir se `APP_ORIGIN` é exatamente ele.
-6. **Primeiro acesso.** Entrar com o administrador criado pelo `db:seed` e trocar a senha. O login pede troca de senha e cadastro do 2FA no primeiro acesso.
+6. **Primeiro acesso.** Entrar com o login `admin` e a senha do passo 2. O login pede troca de senha e cadastro do 2FA no primeiro acesso.
 
 ## Atualizar a cada merge
 
