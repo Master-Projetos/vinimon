@@ -45,6 +45,7 @@ import { Route as AppInventarioIndexRouteImport } from './routes/_app/inventario
 import { Route as AppPerfilIndexRouteImport } from './routes/_app/perfil/index'
 import { Route as AppRelatoriosIndexRouteImport } from './routes/_app/relatorios/index'
 import { Route as AppRelatoriosRelatorioRouteImport } from './routes/_app/relatorios/$relatorio'
+import { Route as AppChamadosChamadoIdIndexRouteImport } from './routes/_app/chamados/$chamadoId/index'
 import { Route as AppChamadosChamadoIdDetalhesRouteImport } from './routes/_app/chamados/$chamadoId/detalhes'
 import { Route as AppChamadosChamadoIdHistoricoRouteImport } from './routes/_app/chamados/$chamadoId/historico'
 import { Route as AppChamadosChamadoIdImprimirRouteImport } from './routes/_app/chamados/$chamadoId/imprimir'
@@ -230,6 +231,12 @@ const AppRelatoriosRelatorioRoute = AppRelatoriosRelatorioRouteImport.update({
   path: '/$relatorio',
   getParentRoute: () => AppRelatoriosRouteRoute,
 } as any)
+const AppChamadosChamadoIdIndexRoute =
+  AppChamadosChamadoIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppChamadosChamadoIdRouteRoute,
+  } as any)
 const AppChamadosChamadoIdDetalhesRoute =
   AppChamadosChamadoIdDetalhesRouteImport.update({
     id: '/detalhes',
@@ -288,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
   '/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
   '/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
+  '/chamados/$chamadoId/': typeof AppChamadosChamadoIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/configurar-2fa': typeof Configurar2faRoute
@@ -297,7 +305,6 @@ export interface FileRoutesByTo {
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
   '/': typeof AppIndexRoute
-  '/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRouteWithChildren
   '/admin/areas': typeof AppAdminAreasRoute
   '/admin/auditoria': typeof AppAdminAuditoriaRoute
   '/admin/canais': typeof AppAdminCanaisRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
   '/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
   '/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
+  '/chamados/$chamadoId': typeof AppChamadosChamadoIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/_app/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
   '/_app/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
   '/_app/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
+  '/_app/chamados/$chamadoId/': typeof AppChamadosChamadoIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/chamados/$chamadoId/detalhes'
     | '/chamados/$chamadoId/historico'
     | '/chamados/$chamadoId/imprimir'
+    | '/chamados/$chamadoId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/configurar-2fa'
@@ -417,7 +427,6 @@ export interface FileRouteTypes {
     | '/painel'
     | '/sem-permissao'
     | '/'
-    | '/chamados/$chamadoId'
     | '/admin/areas'
     | '/admin/auditoria'
     | '/admin/canais'
@@ -444,6 +453,7 @@ export interface FileRouteTypes {
     | '/chamados/$chamadoId/detalhes'
     | '/chamados/$chamadoId/historico'
     | '/chamados/$chamadoId/imprimir'
+    | '/chamados/$chamadoId'
   id:
     | '__root__'
     | '/_app'
@@ -485,6 +495,7 @@ export interface FileRouteTypes {
     | '/_app/chamados/$chamadoId/detalhes'
     | '/_app/chamados/$chamadoId/historico'
     | '/_app/chamados/$chamadoId/imprimir'
+    | '/_app/chamados/$chamadoId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -748,6 +759,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRelatoriosRelatorioRouteImport
       parentRoute: typeof AppRelatoriosRouteRoute
     }
+    '/_app/chamados/$chamadoId/': {
+      id: '/_app/chamados/$chamadoId/'
+      path: '/'
+      fullPath: '/chamados/$chamadoId/'
+      preLoaderRoute: typeof AppChamadosChamadoIdIndexRouteImport
+      parentRoute: typeof AppChamadosChamadoIdRouteRoute
+    }
     '/_app/chamados/$chamadoId/detalhes': {
       id: '/_app/chamados/$chamadoId/detalhes'
       path: '/detalhes'
@@ -818,6 +836,7 @@ interface AppChamadosChamadoIdRouteRouteChildren {
   AppChamadosChamadoIdDetalhesRoute: typeof AppChamadosChamadoIdDetalhesRoute
   AppChamadosChamadoIdHistoricoRoute: typeof AppChamadosChamadoIdHistoricoRoute
   AppChamadosChamadoIdImprimirRoute: typeof AppChamadosChamadoIdImprimirRoute
+  AppChamadosChamadoIdIndexRoute: typeof AppChamadosChamadoIdIndexRoute
 }
 
 const AppChamadosChamadoIdRouteRouteChildren: AppChamadosChamadoIdRouteRouteChildren =
@@ -825,6 +844,7 @@ const AppChamadosChamadoIdRouteRouteChildren: AppChamadosChamadoIdRouteRouteChil
     AppChamadosChamadoIdDetalhesRoute: AppChamadosChamadoIdDetalhesRoute,
     AppChamadosChamadoIdHistoricoRoute: AppChamadosChamadoIdHistoricoRoute,
     AppChamadosChamadoIdImprimirRoute: AppChamadosChamadoIdImprimirRoute,
+    AppChamadosChamadoIdIndexRoute: AppChamadosChamadoIdIndexRoute,
   }
 
 const AppChamadosChamadoIdRouteRouteWithChildren =
