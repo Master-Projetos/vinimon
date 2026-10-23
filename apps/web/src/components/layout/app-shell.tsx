@@ -2,6 +2,8 @@ import { useRouteContext } from '@tanstack/react-router'
 import { type Perfil, temPermissao } from '@vinimon/shared'
 import { Bell, BookOpenText, ChartColumn, LayoutDashboard, Monitor, Settings, Ticket } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useContagemNotificacoes } from '@/features/notificacoes/queries'
+import { useContadorNoTitulo } from '@/hooks/use-contador-no-titulo'
 import { useFocoAoNavegar } from '@/hooks/use-foco-ao-navegar'
 import { AppBar } from './app-bar'
 import type { AppBarItemDef, AppId } from './app-bar-item'
@@ -68,9 +70,11 @@ export function itensVisiveis(perfil: Perfil | null, contadores: Partial<Record<
 export function AppShell({ children, contadores }: AppShellProps) {
   const { sessao } = useRouteContext({ from: '/_app' })
   useFocoAoNavegar()
+  const naoLidas = useContagemNotificacoes()
+  useContadorNoTitulo(naoLidas)
 
   const usuario = sessao.usuario
-  const itens = itensVisiveis(usuario?.perfil ?? null, contadores)
+  const itens = itensVisiveis(usuario?.perfil ?? null, { atividade: naoLidas, ...contadores })
 
   return (
     <div className="grid h-dvh grid-rows-[var(--topbar-h)_minmax(0,1fr)_auto] md:grid-cols-[var(--appbar-w)_minmax(0,1fr)] md:grid-rows-[var(--topbar-h)_minmax(0,1fr)]">

@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { KbdShortcut } from '@/components/display/kbd-shortcut'
 import type { UsuarioAvatar } from '@/components/display/user-avatar'
+import { NotificationBell } from '@/features/notificacoes/components/notification-bell'
 import { UserMenu } from '@/features/presenca/components/user-menu'
 
 export interface TopBarProps {
@@ -38,7 +39,10 @@ export function TopBar({ usuario }: TopBarProps) {
         </span>
       </button>
 
-      <div className="ml-auto flex shrink-0 items-center">{usuario ? <UserMenu usuario={usuario} /> : null}</div>
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        {usuario ? <NotificationBell /> : null}
+        {usuario ? <UserMenu usuario={usuario} /> : null}
+      </div>
     </header>
   )
 }
