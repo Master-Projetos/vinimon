@@ -1,10 +1,30 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
-import type { SessaoResposta } from '@vinimon/shared'
+import type { SessaoResposta, UsuarioMe } from '@vinimon/shared'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { ApiFalsa } from '@/test/api-falsa'
 import { renderRota } from '@/test/render-rota'
 
-const sessao = (estado: SessaoResposta['estado']): SessaoResposta => ({ estado, csrf: 'csrf-novo', usuario: null })
+const usuario: UsuarioMe = {
+  id: 7,
+  nome: 'Ana Souza',
+  login: 'ana',
+  email: null,
+  telefone: null,
+  perfil: 'OPERADOR',
+  areaId: null,
+  areaIds: [],
+  permissoes: [],
+  mfaAtivo: true,
+  deveTrocarSenha: false,
+  tema: 'SISTEMA',
+  densidade: null,
+  enviarComEnter: true,
+}
+const sessao = (estado: SessaoResposta['estado']): SessaoResposta => ({
+  estado,
+  csrf: 'csrf-novo',
+  usuario: estado === 'ATIVA' ? usuario : null,
+})
 const json = (corpo: unknown, status = 200) =>
   new Response(JSON.stringify(corpo), { status, headers: { 'content-type': 'application/json' } })
 
@@ -50,7 +70,7 @@ describe('/configurar-2fa', () => {
     await waitFor(() => expect(escrever).toHaveBeenCalledWith('JBSWY3DPEHPK3PXP'))
   })
 
-  it('(b) confirmar envia o código, mostra os 10 códigos e "Concluir" só habilita depois de marcar; depois vai para /', async () => {
+  it('(b) confirmar envia o código, mostra os 10 códigos e "Concluir" só habilita depois de marcar; depois vai para / e a guarda leva a /atividade', async () => {
     const { falsa, router, queryClient } = montar({
       'POST /auth/2fa/iniciar': () => json(INICIAR),
       'POST /auth/2fa/confirmar': () => json({ codigos: CODIGOS, sessao: sessao('ATIVA') }),
@@ -71,7 +91,7 @@ describe('/configurar-2fa', () => {
     expect(concluir).toBeEnabled()
     expect(router.state.location.pathname).toBe('/configurar-2fa')
     fireEvent.click(concluir)
-    await waitFor(() => expect(router.state.location.pathname).toBe('/'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/atividade'))
     expect(queryClient.getQueryData(['auth', 'sessao'])).toMatchObject({ estado: 'ATIVA', csrf: 'csrf-novo' })
   })
 
