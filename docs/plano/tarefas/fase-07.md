@@ -140,7 +140,8 @@
 ### T-7.8 — Jobs: alertas de SLA, recálculo por jornada e varredura de eventos
 - **Depende de:** T-7.6, T-6.8 · **Paralelo com:** T-7.7, T-7.9
 - **Requisitos:** D05 adaptado; §3.10
-- **Arquivos:** `apps/api/src/jobs/{sla-alertas.ts,sla-recalcular-jornada.ts,eventos-varrer.ts,jobs-sla.test.ts,jobs-limpeza.test.ts,index.ts}` (`jobs-limpeza.test.ts`: a asserção "todo job tem cron" não vale para o `sla-recalcular-jornada`, que é sob demanda)
+- **Arquivos:** `apps/api/src/jobs/{sla-alertas.ts,sla-recalcular-jornada.ts,eventos-varrer.ts,jobs-sla.test.ts,jobs-limpeza.test.ts,index.ts}`
+- **Decisão do coordenador:** `jobs-limpeza.test.ts` entra porque a asserção "todo job tem cron" não vale para o `sla-recalcular-jornada`, que é sob demanda.
 - **Passos:**
   1. `sla-alertas`: três consultas (risco, estouro, resposta), em lotes de 500 e com `concluidoEm: null`. Para cada chamado: `updateMany({ where: { id, slaAvisoRiscoEm: null } })`; se `count = 1`, registra o evento (SLA_RISCO, SLA_ESTOURADO ou SLA_RESPOSTA_ESTOURADO) e faz o fanout.
   2. `sla-recalcular-jornada {jornadaId}`: em lotes de 200, `recalcularChamado` em transação, zerando os avisos quando os prazos mudam.
