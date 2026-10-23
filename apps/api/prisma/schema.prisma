@@ -222,10 +222,11 @@ model Departamento {
   criadoEm     DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
   atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
 
-  unidade  Unidade   @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
-  usuarios Usuario[]
-  chamados Chamado[]
-  ativos   Ativo[]
+  unidade            Unidade            @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
+  usuarios           Usuario[]
+  chamados           Chamado[]
+  ativos             Ativo[]
+  cadastrosPendentes CadastroPendente[]
 
   @@unique([unidadeId, nome])
   @@map("departamentos")
@@ -400,6 +401,25 @@ model TokenSenha {
 
   @@index([usuarioId], map: "ix_tokens_senha_usuario")
   @@map("tokens_senha")
+}
+
+/// Auto-cadastro (A14): pedido público aguardando confirmação do e-mail e aprovação do ADMIN. Só o sha256 do token é guardado.
+model CadastroPendente {
+  id             Int       @id @default(autoincrement())
+  /// minúsculo, ^[a-z0-9._@-]{3,64}$ (CHECK)
+  login          String    @unique @db.VarChar(64)
+  nome           String    @db.VarChar(120)
+  /// minúsculo (CHECK)
+  email          String    @unique @db.VarChar(254)
+  departamentoId Int?      @map("departamento_id")
+  tokenHash      String    @unique @map("token_hash") @db.Char(64)
+  confirmadoEm   DateTime? @map("confirmado_em") @db.Timestamptz(3)
+  criadoEm       DateTime  @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  departamento Departamento? @relation(fields: [departamentoId], references: [id], onDelete: SetNull)
+
+  @@index([confirmadoEm, criadoEm], map: "ix_cadastros_pendentes_confirmado")
+  @@map("cadastros_pendentes")
 }
 
 /// Trilha de auditoria — somente inserção (trigger)

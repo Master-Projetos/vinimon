@@ -25,6 +25,16 @@ const CAMPOS = {
   'inatividade.avaliacao': z.enum(NOTAS_AVALIACAO),
   'notificacoes.retencaoDias': z.int().min(30).max(365),
   'email.habilitado': z.boolean(),
+  'cadastro.habilitado': z.boolean(),
+  /** Domínios de e-mail aceitos no auto-cadastro: minúsculas, sem @. Lista vazia = ninguém se cadastra. */
+  'cadastro.dominiosPermitidos': z
+    .array(
+      z
+        .string()
+        .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/)
+        .max(253),
+    )
+    .max(50),
 }
 
 export const ConfigSchema = z.object(CAMPOS)
@@ -55,6 +65,8 @@ export const CONFIG_PADRAO: Config = {
   'inatividade.avaliacao': 'OTIMO',
   'notificacoes.retencaoDias': 180,
   'email.habilitado': false,
+  'cadastro.habilitado': false,
+  'cadastro.dominiosPermitidos': [],
 }
 
 /** PATCH /config: só as chaves enviadas; chave desconhecida = 400. */
