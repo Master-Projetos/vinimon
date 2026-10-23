@@ -5,7 +5,10 @@ import { definirFila } from '../lib/filas'
 import { purgarAuditoria } from './auditoria-purga'
 import { autoAprovar } from './chamados-auto-aprovacao'
 import { retornarAgendados } from './chamados-retorno-agendados'
+import { varrerEventos } from './eventos-varrer'
 import { limparSessoes } from './sessoes-limpeza'
+import { alertarSla } from './sla-alertas'
+import { recalcularJornada } from './sla-recalcular-jornada'
 
 export interface Job {
   fila: string
@@ -16,6 +19,29 @@ export interface Job {
 }
 
 export const JOBS: Job[] = [
+  {
+    fila: 'sla-alertas',
+    cron: '*/5 * * * *',
+    executar: async (_dados, agora) => {
+      await alertarSla(agora)
+    },
+  },
+  {
+    // sob demanda `{jornadaId}`: enfileirado quando a jornada ou os feriados mudam
+    fila: 'sla-recalcular-jornada',
+    executar: async (dados, agora) => {
+      const jornadaId = dados.jornadaId
+      if (typeof jornadaId !== 'number' || !Number.isInteger(jornadaId)) return
+      await recalcularJornada(jornadaId, agora)
+    },
+  },
+  {
+    fila: 'eventos-varrer',
+    cron: '* * * * *',
+    executar: async (_dados, agora) => {
+      await varrerEventos(agora)
+    },
+  },
   {
     fila: 'chamados-retorno-agendados',
     cron: '* * * * *',
