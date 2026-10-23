@@ -1,6 +1,11 @@
-import { useSuspenseInfiniteQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query'
+import { useRouteContext } from '@tanstack/react-router'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { conversaConsultas } from '../queries'
+import { chamadosConsultas } from '@/features/chamados/queries'
+import { metaConsultas } from '@/features/meta/queries'
+import type { ItemConversa } from '../cache'
+import { conversaConsultas, useEnviarComentario } from '../queries'
+import { Composer } from './composer'
 import { DescricaoInicialCard } from './descricao-inicial-card'
 import { MessageList } from './message-list'
 import { NewMessagesPill } from './new-messages-pill'
@@ -30,11 +35,19 @@ function acharRolagem(el: HTMLElement | null): HTMLElement | null {
 const pertoDoFim = (r: HTMLElement) => r.scrollHeight - r.scrollTop - r.clientHeight <= PERTO_DO_FIM_PX
 
 export function ConversaView({ chamadoId, usuarioId, descricao, foco, aoConsumirFoco }: ConversaViewProps) {
+  const { sessao } = useRouteContext({ from: '/_app' })
+  const { data: detalhe } = useSuspenseQuery(chamadosConsultas.detalhe(chamadoId))
+  const { data: meta } = useQuery(metaConsultas.tudo())
+  const usuario = sessao.usuario
+  const envio = useEnviarComentario(chamadoId, { id: usuarioId, nome: usuario?.nome ?? '' })
+  const [anexos, setAnexos] = useState<File[]>([])
+  const anexosHabilitados = meta?.config['anexos.habilitados'] === true && detalhe.acoes.anexar
   const consulta = useSuspenseInfiniteQuery(conversaConsultas.lista(chamadoId))
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage } = consulta
   // Páginas vêm da mais recente para a mais antiga; cada uma já está em ordem crescente.
   const itens = useMemo(() => [...data.pages].reverse().flatMap((p) => p.itens), [data.pages])
   const raiz = useRef<HTMLDivElement>(null)
+  const area = useRef<HTMLDivElement>(null)
   const [novas, setNovas] = useState(0)
   const [focadoId, setFocadoId] = useState<number | null>(null)
   const ancora = useRef<{ altura: number; topo: number } | null>(null)
@@ -85,7 +98,9 @@ export function ConversaView({ chamadoId, usuarioId, descricao, foco, aoConsumir
     const rolagem = acharRolagem(raiz.current)
     const ultimo = itens.at(-1)
     if (!rolagem || !ultimo) return
-    if (inicial.current && foco === undefined) {
+    if (ultimo.estado === 'enviando' && ultimo.autor?.id === usuarioId) {
+      rolagem.scrollTop = rolagem.scrollHeight
+    } else if (inicial.current && foco === undefined) {
       rolagem.scrollTop = rolagem.scrollHeight
       inicial.current = false
     } else if (ultimoId.current !== null && ultimo.id > ultimoId.current) {
@@ -112,25 +127,72 @@ export function ConversaView({ chamadoId, usuarioId, descricao, foco, aoConsumir
     setNovas(0)
   }
 
+  // Arrastar arquivos sobre a conversa anexa ao comentário (listeners no DOM: a área não é um controle).
+  useEffect(() => {
+    const el = area.current
+    if (!el || !anexosHabilitados) return
+    const aoArrastar = (e: DragEvent) => {
+      if (e.dataTransfer?.types.includes('Files')) e.preventDefault()
+    }
+    const aoSoltar = (e: DragEvent) => {
+      e.preventDefault()
+      const soltos = Array.from(e.dataTransfer?.files ?? [])
+      if (soltos.length > 0) setAnexos((atual) => [...atual, ...soltos])
+    }
+    el.addEventListener('dragover', aoArrastar)
+    el.addEventListener('drop', aoSoltar)
+    return () => {
+      el.removeEventListener('dragover', aoArrastar)
+      el.removeEventListener('drop', aoSoltar)
+    }
+  }, [anexosHabilitados])
+
+  function reenviar(item: ItemConversa) {
+    void envio.enviar({
+      texto: item.texto,
+      interno: item.interno,
+      arquivos: item.arquivos ?? [],
+      ...(item.clienteId ? { clienteId: item.clienteId } : {}),
+    })
+  }
+
+  const podeComentar = detalhe.acoes.comentar
   return (
-    <div ref={raiz} className="flex min-h-full flex-col gap-4 p-4">
-      {hasNextPage ? null : (
-        <DescricaoInicialCard
-          descricao={descricao.texto}
-          abertoPor={descricao.abertoPor}
-          solicitante={descricao.solicitante}
-          abertoEm={descricao.abertoEm}
+    <div ref={area} className="flex min-h-full flex-col">
+      <div ref={raiz} className="flex flex-1 flex-col gap-4 p-4">
+        {hasNextPage ? null : (
+          <DescricaoInicialCard
+            descricao={descricao.texto}
+            abertoPor={descricao.abertoPor}
+            solicitante={descricao.solicitante}
+            abertoEm={descricao.abertoEm}
+          />
+        )}
+        <MessageList
+          itens={itens}
+          usuarioId={usuarioId}
+          focadoId={focadoId}
+          temAnteriores={hasNextPage}
+          carregandoAnteriores={isFetchingNextPage}
+          aoCarregarAnteriores={carregarAnteriores}
+          aoTentarNovamente={reenviar}
+          aoDescartar={envio.descartar}
         />
-      )}
-      <MessageList
-        itens={itens}
-        usuarioId={usuarioId}
-        focadoId={focadoId}
-        temAnteriores={hasNextPage}
-        carregandoAnteriores={isFetchingNextPage}
-        aoCarregarAnteriores={carregarAnteriores}
-      />
-      <NewMessagesPill quantidade={novas} aoClicar={irParaOFim} />
+        <NewMessagesPill quantidade={novas} aoClicar={irParaOFim} />
+      </div>
+      {podeComentar && usuario ? (
+        <div className="sticky bottom-0">
+          <Composer
+            chamadoId={chamadoId}
+            enviarComEnter={usuario.enviarComEnter}
+            podeInterno={detalhe.acoes.comentarInterno}
+            podeAnexar={anexosHabilitados}
+            anexos={anexos}
+            aoMudarAnexos={setAnexos}
+            aoEnviar={(e) => void envio.enviar(e)}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }

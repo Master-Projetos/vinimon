@@ -1,6 +1,6 @@
-import type { Assentamento } from '@vinimon/shared'
 import { Button } from '@/components/ui/button'
 import { rotuloSeparador } from '@/lib/datas'
+import type { ItemConversa } from '../cache'
 import { MessageBubble } from './message-bubble'
 import { SystemEvent } from './system-event'
 
@@ -8,14 +8,14 @@ import { SystemEvent } from './system-event'
 export const JANELA_GRUPO_MS = 5 * 60_000
 
 export interface ItemDaLista {
-  assentamento: Assentamento
+  assentamento: ItemConversa
   inicioDeGrupo: boolean
   /** Rótulo ("Hoje", "Ontem" ou a data) quando o dia muda em relação ao item anterior. */
   separador: string | null
 }
 
 /** Agrupa por autor e marca onde entra um separador de data. A lista chega em ordem crescente. */
-export function prepararItens(itens: Assentamento[], agora: Date): ItemDaLista[] {
+export function prepararItens(itens: ItemConversa[], agora: Date): ItemDaLista[] {
   let rotuloAnterior: string | null = null
   return itens.map((assentamento, i) => {
     const rotulo = rotuloSeparador(assentamento.criadoEm, agora)
@@ -36,12 +36,14 @@ export function prepararItens(itens: Assentamento[], agora: Date): ItemDaLista[]
 }
 
 export interface MessageListProps {
-  itens: Assentamento[]
+  itens: ItemConversa[]
   usuarioId: number
   focadoId: number | null
   temAnteriores: boolean
   carregandoAnteriores: boolean
   aoCarregarAnteriores: () => void
+  aoTentarNovamente?: (item: ItemConversa) => void
+  aoDescartar?: (clienteId: string) => void
   agora?: Date
 }
 
@@ -53,6 +55,8 @@ export function MessageList({
   temAnteriores,
   carregandoAnteriores,
   aoCarregarAnteriores,
+  aoTentarNovamente,
+  aoDescartar,
   agora = new Date(),
 }: MessageListProps) {
   const preparados = prepararItens(itens, agora)
@@ -88,6 +92,8 @@ export function MessageList({
                 usuarioId={usuarioId}
                 inicioDeGrupo={inicioDeGrupo}
                 focado={focadoId === assentamento.id}
+                {...(aoTentarNovamente ? { aoTentarNovamente } : {})}
+                {...(aoDescartar ? { aoDescartar } : {})}
               />
             )}
           </div>

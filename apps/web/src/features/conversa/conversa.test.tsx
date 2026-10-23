@@ -4,6 +4,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ApiFalsa } from '@/test/api-falsa'
 import { renderRota } from '@/test/render-rota'
 
+// Radix (Switch, Popper) usa ResizeObserver, que o jsdom não tem.
+if (!('ResizeObserver' in globalThis)) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}
+
 let falsaAtual: ApiFalsa | undefined
 const rolar = vi.fn()
 
