@@ -57,6 +57,22 @@ export const TrocarSenhaBodySchema = z.strictObject({
 })
 export type TrocarSenhaBody = z.output<typeof TrocarSenhaBodySchema>
 
+export const EsqueciSenhaBodySchema = z.strictObject({
+  login: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9._@-]{3,64}$/, 'Login inválido.'),
+})
+export type EsqueciSenhaBody = z.output<typeof EsqueciSenhaBodySchema>
+export const EsqueciSenhaRespostaSchema = z.object({ mensagem: z.string() })
+
+export const RedefinirSenhaBodySchema = z.strictObject({
+  token: z.string().min(1).max(128),
+  novaSenha: z.string().min(1).max(128),
+})
+export type RedefinirSenhaBody = z.output<typeof RedefinirSenhaBodySchema>
+
 export const SessaoDispositivoSchema = z.object({
   id: z.uuid(),
   criadaEm: zDataHora(),
@@ -116,5 +132,18 @@ export const authApi = {
     caminho: '/auth/trocar-senha',
     body: TrocarSenhaBodySchema,
     resposta: SessaoRespostaSchema,
+  }),
+  esqueciSenha: contrato({
+    metodo: 'POST',
+    caminho: '/auth/esqueci-senha',
+    body: EsqueciSenhaBodySchema,
+    resposta: EsqueciSenhaRespostaSchema,
+  }),
+  redefinirSenha: contrato({
+    metodo: 'POST',
+    caminho: '/auth/redefinir-senha',
+    body: RedefinirSenhaBodySchema,
+    resposta: z.undefined(),
+    status: 204,
   }),
 }
