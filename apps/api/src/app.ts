@@ -33,6 +33,7 @@ import { rotasLeituras } from './modules/leituras/routes'
 import { rotasMe } from './modules/me/routes'
 import { rotasMencoes } from './modules/mencoes/routes'
 import { rotasMeta } from './modules/meta/routes'
+import { rotasModelosEmail } from './modules/modelos-email/routes'
 import { rotasNotificacoes } from './modules/notificacoes/routes'
 import { rotasPainel } from './modules/painel/routes'
 import { rotasPresenca } from './modules/presenca/routes'
@@ -204,6 +205,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasMe)
       await api.register(rotasMencoes)
       await api.register(rotasMeta)
+      await api.register(rotasModelosEmail)
       await api.register(rotasNotificacoes)
       await api.register(rotasPainel)
       await api.register(rotasPresenca)

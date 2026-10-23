@@ -1071,3 +1071,14 @@ model EmailSaida {
   @@index([status, criadoEm], map: "ix_emails_saida_status_criado_em")
   @@map("emails_saida")
 }
+
+/// Modelo editável de e-mail por evento (E04): o texto usa a lista fechada de variáveis de `render.ts`.
+model ModeloEmail {
+  evento       String   @id
+  assunto      String   @db.VarChar(200)
+  corpoTexto   String   @map("corpo_texto") @db.Text
+  ativo        Boolean
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  @@map("modelos_email")
+}
