@@ -520,7 +520,7 @@
 ### T-10.31 — Relatórios
 - **Depende de:** T-10.4, T-8.3 · **Paralelo com:** T-10.30, T-10.32–T-10.37
 - **Requisitos:** G04
-- **Arquivos:** `apps/web/src/routes/_app/relatorios/{route.tsx,index.tsx,$relatorio.tsx}`, `apps/web/src/features/relatorios/{queries.ts,components/relatorio-filtros.tsx,components/relatorio-tabela.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/relatorios/{route.tsx,index.tsx,$relatorio.tsx}`, `apps/web/src/features/relatorios/{queries.ts,components/relatorio-filtros.tsx,components/relatorio-tabela.tsx}`, `apps/web/src/features/relatorios/relatorios.test.tsx`
 - **Passos:**
   1. Layout com `exigir('relatorio.ver')`. O `index` redireciona para `visao-geral`; um `$relatorio` desconhecido dá `notFound()`.
   2. Filtros na URL, KPIs, gráfico, tabela ordenável no cliente, link CSV e impressão.
