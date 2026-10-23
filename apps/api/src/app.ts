@@ -14,6 +14,7 @@ import {
 } from 'fastify-type-provider-zod'
 import { env } from './env'
 import { responderRotaInexistente } from './lib/erros'
+import { rotasAnexos } from './modules/anexos/routes'
 import { rotasAreas } from './modules/areas/routes'
 import { rotasArtigos } from './modules/artigos/routes'
 import { rotasAssentamentos } from './modules/assentamentos/routes'
@@ -183,6 +184,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
     async (api) => {
       await api.register(autenticacaoPlugin)
       await api.register(segurancaPlugin)
+      await api.register(rotasAnexos)
       await api.register(rotasAreas)
       await api.register(rotasArtigos)
       await api.register(rotasAssentamentos)
