@@ -209,7 +209,7 @@
 ### T-10.13 — Cliente Socket.IO e sincronização
 - **Depende de:** T-10.4, T-7.4 · **Paralelo com:** T-10.6–T-10.12
 - **Requisitos:** S80; §3.7 (cliente se corrige via REST)
-- **Arquivos:** `apps/web/src/lib/socket.ts`, `apps/web/src/hooks/{use-socket-evento.ts,use-ocioso.ts}`, `apps/web/src/features/presenca/{queries.ts,hooks.ts}`, `apps/web/src/components/layout/offline-indicator.tsx`, `apps/web/src/routes/_app.tsx`
+- **Arquivos:** `apps/web/src/lib/socket.ts`, `apps/web/src/hooks/{use-socket-evento.ts,use-ocioso.ts}`, `apps/web/src/features/presenca/{queries.ts,hooks.ts}`, `apps/web/src/components/layout/offline-indicator.tsx`, `apps/web/src/routes/_app.tsx`, `apps/web/package.json` (socket.io-client 4.8.4, versão exata do plano), `apps/web/src/lib/socket.test.tsx` (inclui o teste do OfflineIndicator), `apps/web/src/test/socket-falso.ts` (socket falso dos testes)
 - **Passos:**
   1. `io({ path:'/socket.io', transports:['websocket'], autoConnect:false, withCredentials:true })`, tipado com `EventosServidor`/`EventosCliente`. Conecta no `_app` e desconecta no logout. No logout, chamar `limparDadosDoUsuario()` junto com `queryClient.clear()`.
   2. `connect_error`:

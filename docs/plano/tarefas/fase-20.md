@@ -5,7 +5,7 @@
 ### T-20.1 — Projetos
 - **Depende de:** T-15.4 · **Paralelo com:** T-20.2
 - **Requisitos:** C21
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/projetos.ts`, `apps/api/src/modules/projetos/{service.ts,routes.ts,projetos.test.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/projetos.ts`, `apps/api/src/modules/projetos/{service.ts,routes.ts,projetos.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `Projeto {id, nome, descricao?, chamadoRaizId @unique, criadoPorId, criadoEm}`.
   2. `GET /projetos/:id` com a árvore de subchamados visíveis (recursivo até 5 níveis via `findMany` iterativo).
@@ -43,7 +43,7 @@
 ### T-20.4 — Softwares e licenças
 - **Depende de:** T-17.4 · **Paralelo com:** T-20.3, T-20.5
 - **Requisitos:** I12
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/softwares.ts`, `apps/api/src/modules/softwares/{service.ts,routes.ts,softwares.test.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/softwares.ts`, `apps/api/src/modules/softwares/{service.ts,routes.ts,softwares.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Models `Software {id, nome, fabricanteId?, tipoLicenca, quantidadeLicencas Int?, chaveCifrada String? (cifrar), validade Date?}` e `SoftwareInstalacao {softwareId, ativoId, @@id}`.
   2. A chave da licença só é mostrada para `inventario.gerenciar`, com auditoria de leitura.
@@ -58,7 +58,7 @@
 ### T-20.5 — Alocação com termo e empréstimos
 - **Depende de:** T-17.6 · **Paralelo com:** T-20.3, T-20.4
 - **Requisitos:** I13, I17
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/alocacoes.ts`, `apps/api/src/modules/alocacoes/{service.ts,routes.ts,alocacoes.test.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/alocacoes.ts`, `apps/api/src/modules/alocacoes/{service.ts,routes.ts,alocacoes.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `TermoResponsabilidade {id, ativoId, usuarioId, emitidoEm, assinadoEm?, assinaturaAnexoId String?}`. A assinatura é um PNG do canvas enviado pelo pipeline de anexos do ativo.
   2. Model `Emprestimo {id, ativoId, usuarioId, retiradaEm, previstaDevolucaoEm, devolvidoEm?}`, com no máximo um em aberto por ativo (índice parcial único).
@@ -86,7 +86,7 @@
 ### T-20.7 — Escala horizontal
 - **Depende de:** Fase 2 · **Paralelo com:** T-20.6
 - **Requisitos:** Escala (§1.4); S90–S97
-- **Arquivos:** `apps/api/src/realtime/{plugin.ts,presenca.ts,limites.ts}`, `apps/api/src/lib/{config.ts,cache-invalidacao.ts}`, `apps/api/prisma/schema.prisma` + migração, `docs/operacao.md`
+- **Arquivos:** `apps/api/src/realtime/{plugin.ts,presenca.ts,limites.ts}`, `apps/api/src/lib/{config.ts,cache-invalidacao.ts}`, `apps/api/prisma/schema.prisma` + migração, `docs/operacao.md`, `apps/api/package.json` (@socket.io/postgres-adapter 0.5.0, versão exata do plano)
 - **Passos:**
   1. Instalar `@socket.io/postgres-adapter@0.5.0` + `pg`; tabela `socket_io_attachments` por migração, modelada com `@@ignore`. Env `REALTIME_ADAPTER=memoria|postgres`.
   2. Presença com conexões contadas por `fetchSockets()` e manual na tabela.

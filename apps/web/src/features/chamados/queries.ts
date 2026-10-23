@@ -1,5 +1,5 @@
 import { keepPreviousData, queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
-import { type ChamadoDetalhe, chamadosApi, metaApi } from '@vinimon/shared'
+import { ativosApi, type ChamadoDetalhe, type CriarChamado, chamadosApi, metaApi, usuariosApi } from '@vinimon/shared'
 import { toast } from 'sonner'
 import { chamar, ErroApi } from '@/lib/api'
 import type { FiltrosChamado } from './filtros'
@@ -86,3 +86,35 @@ export function useSeguirChamado(id: number) {
     },
   })
 }
+
+/** Abertura de chamado (§5 do plano, T-10.20). Sucesso: invalida listas e contagens; o formulário navega ao detalhe. */
+export function useCriarChamado() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (corpo: CriarChamado) => chamar(chamadosApi.criar, { body: corpo }),
+    meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: chamadoChaves.listas() })
+      void queryClient.invalidateQueries({ queryKey: chamadoChaves.contagens() })
+    },
+  })
+}
+
+/** Busca de ativos por etiqueta ou tipo (`GET /ativos/busca`, mínimo de 3 caracteres). */
+export const buscarAtivos = (termo: string, signal: AbortSignal) =>
+  chamar(ativosApi.buscar, { query: { q: termo.trim() } }, signal)
+
+/** Ativo com a etiqueta exata (vindo de `?equipamento=`). Vazio quando não há correspondência. */
+export const ativoPorEtiquetaConsulta = (etiqueta: string) =>
+  queryOptions({
+    queryKey: [...chamadoChaves.tudo, 'ativo-etiqueta', etiqueta] as const,
+    queryFn: async ({ signal }) => {
+      const lista = await chamar(ativosApi.buscar, { query: { q: etiqueta } }, signal)
+      return lista.find((ativo) => ativo.etiqueta === etiqueta) ?? null
+    },
+    enabled: etiqueta.trim().length >= 3,
+  })
+
+/** Usuários para "Abrir em nome de" (`GET /usuarios/busca`, mínimo de 2 caracteres). */
+export const buscarUsuarios = (termo: string, signal: AbortSignal) =>
+  chamar(usuariosApi.buscar, { query: { q: termo.trim() } }, signal)

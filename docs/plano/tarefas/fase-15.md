@@ -5,7 +5,7 @@
 ### T-15.1 — Operadores auxiliares
 - **Depende de:** MVP · **Paralelo com:** T-15.2, T-15.5
 - **Requisitos:** C08; S44, S53
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `packages/shared/src/modulos/chamados.ts`, `apps/api/src/modules/chamados/{acoes.ts,routes.ts,auxiliares.test.ts}`, `apps/api/test/escopo-equivalencia.test.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `packages/shared/src/modulos/chamados.ts`, `apps/api/src/modules/chamados/{acoes.ts,routes.ts,auxiliares.test.ts}`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `ChamadoAuxiliar {chamadoId, usuarioId, criadoEm, @@id}`. `Usuario.podeEncaminhar` e `podeReceber`, ambos com padrão `true`.
   2. `ChamadoEscopo.auxiliarIds`. O escopo acrescenta `{ auxiliares: { some: { usuarioId: u.id } } }`.
@@ -24,7 +24,7 @@
 ### T-15.2 — Calendário de chamados
 - **Depende de:** MVP · **Paralelo com:** T-15.1, T-15.5
 - **Requisitos:** C10
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/calendario.ts`, `apps/api/src/modules/calendario/{service.ts,routes.ts,calendario.test.ts}`, `apps/api/src/app.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/calendario.ts`, `apps/api/src/modules/calendario/{service.ts,routes.ts,calendario.test.ts}`, `apps/api/src/app.ts`, `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. `Usuario.corCalendario Char(7)?`.
   2. `GET /calendario?de=&ate=&areaIds=&operadorIds=` (`chamado.atender`, até 62 dias): eventos `{tipo: 'abertura'|'conclusao'|'agendamento', chamadoId, assunto, data, operador:{id, nome, cor}}` dentro do escopo, com `take` de até 2000.
@@ -39,7 +39,7 @@
 ### T-15.3 — Solicitar retorno e auto-encerramento por inatividade
 - **Depende de:** T-12.3 · **Paralelo com:** T-15.4
 - **Requisitos:** C18, C19
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enums), `packages/shared/src/{config.ts,modulos/chamados.ts,enums.ts}`, `apps/api/src/lib/enums-check.ts`, `apps/api/src/modules/chamados/{acoes.ts,routes.ts}`, `apps/api/src/jobs/{chamados-auto-encerramento-inatividade.ts,index.ts}`, `apps/api/test/inatividade.test.ts`, `apps/api/src/modules/assentamentos/service.ts` (comentário do solicitante leva ao status de retorno), `apps/api/src/modules/config/service.ts` (validação cruzada das chaves de inatividade), `packages/shared/src/modulos/chamados.test.ts` (linha da nova rota)
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enums), `packages/shared/src/{config.ts,modulos/chamados.ts,enums.ts}`, `apps/api/src/lib/enums-check.ts`, `apps/api/src/modules/chamados/{acoes.ts,routes.ts}`, `apps/api/src/jobs/{chamados-auto-encerramento-inatividade.ts,index.ts}`, `apps/api/test/inatividade.test.ts`, `apps/api/src/modules/assentamentos/service.ts` (comentário do solicitante leva ao status de retorno), `apps/api/src/modules/config/service.ts` (validação cruzada das chaves de inatividade), `packages/shared/src/modulos/chamados.test.ts` (linha da nova rota), `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Config:
      - `inatividade.statusIds` (`int[]`, vazio desliga);
@@ -79,7 +79,7 @@
 ### T-15.5 — Lembretes
 - **Depende de:** MVP · **Paralelo com:** T-15.1, T-15.2
 - **Requisitos:** C24
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/lembretes.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (`TipoNotificacao.LEMBRETE`), `apps/api/src/modules/lembretes/{service.ts,routes.ts,lembretes.test.ts}`, `apps/api/src/jobs/{lembretes-disparar.ts,index.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/lembretes.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (`TipoNotificacao.LEMBRETE`), `apps/api/src/modules/lembretes/{service.ts,routes.ts,lembretes.test.ts}`, `apps/api/src/jobs/{lembretes-disparar.ts,index.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `Lembrete {id, chamadoId, usuarioId, dataHora, texto VarChar(500), processadoEm?, criadoEm}` com índice parcial `processado_em IS NULL`.
   2. CRUD só do dono, exigindo ver o chamado.
@@ -95,7 +95,7 @@
 ### T-15.6 — Co-autoria
 - **Depende de:** T-15.1 · **Paralelo com:** T-15.7
 - **Requisitos:** C25; S44
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `apps/api/src/modules/chamados/{acoes.ts,routes.ts,coautores.test.ts}`, `packages/shared/src/modulos/chamados.ts`, `apps/api/test/escopo-equivalencia.test.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `apps/api/src/modules/chamados/{acoes.ts,routes.ts,coautores.test.ts}`, `packages/shared/src/modulos/chamados.ts`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `ChamadoCoautor {chamadoId, usuarioId, concedidoPorId, criadoEm, @@id}`. Só o solicitante concede, e só a USUARIO ativo do mesmo departamento e da mesma área primária.
   2. `ChamadoEscopo.coautorIds`. O escopo acrescenta `coautores some`.
@@ -114,7 +114,7 @@
 ### T-15.7 — Edição e remoção de comentários (15 min)
 - **Depende de:** MVP · **Paralelo com:** T-15.6
 - **Requisitos:** decisão de Fase 2 da §1.2; S99
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{modulos/assentamentos.ts,realtime.ts}`, `apps/api/src/modules/assentamentos/{service.ts,routes.ts,edicao.test.ts}`, `apps/api/src/realtime/handlers.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{modulos/assentamentos.ts,realtime.ts}`, `apps/api/src/modules/assentamentos/{service.ts,routes.ts,edicao.test.ts}`, `apps/api/src/realtime/handlers.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. `Assentamento.editadoEm?`, `removidoEm?` e `removidoPorId?`. Model `AssentamentoEdicao {id, assentamentoId, textoAnterior Text, editadoPorId, editadoEm}`.
   2. Ajustar o CHECK `ck_assentamentos_texto` para aceitar `removido_em IS NOT NULL` (DROP + ADD na migração).

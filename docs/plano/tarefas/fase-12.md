@@ -61,7 +61,7 @@
 ### T-12.4 — Recuperação de senha
 - **Depende de:** T-12.1 · **Paralelo com:** T-12.2, T-12.3
 - **Requisitos:** A11; SEN-10 (`docs/plano/relatorios/seguranca.md`, SEN-10); S10, S20
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/auth.ts`, `apps/api/src/modules/auth/{recuperacao.ts,routes.ts,recuperacao.test.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/auth.ts`, `apps/api/src/modules/auth/{recuperacao.ts,routes.ts,recuperacao.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `TokenSenha {id, usuarioId, tokenHash Char(64) @unique, expiraEm, usadoEm?, ip?, criadoEm}`.
   2. `POST /auth/esqueci-senha {login}` (público, 3/h por IP e por login): a resposta é **sempre** 202 "Se o login existir, enviaremos instruções". Só envia para usuário ativo, com e-mail, origem LOCAL e `email.habilitado`. Token de 32 bytes, sha256 e validade de 30 min.
