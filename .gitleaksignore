@@ -3,3 +3,5 @@
 # da branch não pode ser reescrito, então só esses dois achados são ignorados. Não eram segredos (S4 os recusa).
 d8b39985fd1f1f88c3e81c248aa07376f4415c9a:deploy/api.env.example:generic-api-key:18
 d8b39985fd1f1f88c3e81c248aa07376f4415c9a:deploy/api.env.example:generic-api-key:20
+# T-12.4: senha fictícia de teste no histórico de tarefa/T-12.4 (não é segredo; o CI varre todos os branches).
+6d3fef180d75ba8ab2aafc54345dbc2e35a603cb:apps/api/src/modules/auth/recuperacao.test.ts:generic-api-key:111
