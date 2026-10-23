@@ -5,7 +5,7 @@
 ### T-13.1 — LDAP/AD
 - **Depende de:** MVP · **Paralelo com:** T-13.2
 - **Requisitos:** A12; S125–S131
-- **Arquivos:** `apps/api/src/env.ts`, `apps/api/prisma/schema.prisma` + migração, `apps/api/src/lib/ldap.ts`, `apps/api/src/modules/auth/{service.ts,ldap.test.ts}`, `apps/api/src/modules/config/routes.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts`
+- **Arquivos:** `apps/api/src/env.ts`, `apps/api/prisma/schema.prisma` + migração, `apps/api/src/lib/ldap.ts`, `apps/api/src/modules/auth/{service.ts,ldap.test.ts}`, `apps/api/src/modules/config/routes.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts`, `apps/api/package.json` (ldapts 9.2.0, versão exata do plano)
 - **Passos:**
   1. Instalar `ldapts@9.2.0`.
   2. Env `LDAP_URL`, `LDAP_CA_FILE`, `LDAP_BIND_DN`, `LDAP_BIND_SENHA`, `LDAP_BASE_DN`, `LDAP_ATTR_LOGIN` (padrão `sAMAccountName`), `LDAP_ATTR_EMAIL`, `LDAP_ATTR_NOME`, `LDAP_ATTR_TELEFONE`, `LDAP_GRUPO_ADMIN`, `LDAP_GRUPO_OPERADOR`, `LDAP_AREA_PADRAO_ID`: todas ou nenhuma (`superRefine`); `ldap://` sem StartTLS proibido em production.

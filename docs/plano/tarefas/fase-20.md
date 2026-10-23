@@ -86,7 +86,7 @@
 ### T-20.7 — Escala horizontal
 - **Depende de:** Fase 2 · **Paralelo com:** T-20.6
 - **Requisitos:** Escala (§1.4); S90–S97
-- **Arquivos:** `apps/api/src/realtime/{plugin.ts,presenca.ts,limites.ts}`, `apps/api/src/lib/{config.ts,cache-invalidacao.ts}`, `apps/api/prisma/schema.prisma` + migração, `docs/operacao.md`
+- **Arquivos:** `apps/api/src/realtime/{plugin.ts,presenca.ts,limites.ts}`, `apps/api/src/lib/{config.ts,cache-invalidacao.ts}`, `apps/api/prisma/schema.prisma` + migração, `docs/operacao.md`, `apps/api/package.json` (@socket.io/postgres-adapter 0.5.0, versão exata do plano)
 - **Passos:**
   1. Instalar `@socket.io/postgres-adapter@0.5.0` + `pg`; tabela `socket_io_attachments` por migração, modelada com `@@ignore`. Env `REALTIME_ADAPTER=memoria|postgres`.
   2. Presença com conexões contadas por `fetchSockets()` e manual na tabela.
