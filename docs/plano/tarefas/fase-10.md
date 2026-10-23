@@ -78,7 +78,7 @@
 ### T-10.4 — Shell, parte 2: painéis, abas, guardas e redirecionamentos
 - **Depende de:** T-10.3 · **Paralelo com:** T-10.5
 - **Requisitos:** §6.2, §6.6 (`exigir`)
-- **Arquivos:** `apps/web/src/components/layout/{two-pane.tsx,pane-header.tsx,list-pane-section.tsx,list-pane-nav-item.tsx,route-tabs.tsx}`, `apps/web/src/features/auth/guards.ts`, `apps/web/src/routes/_app/{index.tsx,sem-permissao.tsx}`
+- **Arquivos:** `apps/web/src/components/layout/{two-pane.tsx,pane-header.tsx,list-pane-section.tsx,list-pane-nav-item.tsx,route-tabs.tsx}`, `apps/web/src/features/auth/guards.ts`, `apps/web/src/routes/_app/{index.tsx,sem-permissao.tsx}`, `apps/web/src/features/auth/guards.test.tsx` (testa o redirecionamento de `/`, no lugar de `routes/_app/index.test.tsx`, que o roteador trataria como rota), `apps/web/src/features/auth/components/login.test.tsx` (USUARIO passa a cair em `/chamados`)
 - **Passos:**
   1. `TwoPane` com as props do design. O recolhimento fica em `vinimon:painel-lista:<id>`.
   2. `exigir(p)` no `beforeLoad`.
