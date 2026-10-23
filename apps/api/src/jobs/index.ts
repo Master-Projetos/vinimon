@@ -6,6 +6,7 @@ import { executarEnvioEmailNotificacao } from '../modules/notificacoes/email-not
 import { removerAnexosOrfaos } from './anexos-orfaos'
 import { purgarAuditoria } from './auditoria-purga'
 import { autoAprovar } from './chamados-auto-aprovacao'
+import { autoEncerrarPorInatividade } from './chamados-auto-encerramento-inatividade'
 import { retornarAgendados } from './chamados-retorno-agendados'
 import { enviarResumoDiario } from './email-resumo-diario'
 import { varrerEmails } from './email-varrer'
@@ -94,6 +95,13 @@ export const JOBS: Job[] = [
     cron: '*/5 * * * *',
     executar: async (_dados, agora) => {
       await autoAprovar(agora)
+    },
+  },
+  {
+    fila: 'chamados-auto-encerramento-inatividade',
+    cron: '*/15 * * * *',
+    executar: async (_dados, agora) => {
+      await autoEncerrarPorInatividade(agora)
     },
   },
   {

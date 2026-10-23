@@ -216,6 +216,7 @@ describe('chamadosApi', () => {
       'concluir POST /chamados/:id/concluir',
       'aprovar POST /chamados/:id/aprovar',
       'rejeitar POST /chamados/:id/rejeitar',
+      'solicitarRetorno POST /chamados/:id/solicitar-retorno',
       'reabrir POST /chamados/:id/reabrir',
       'cancelar POST /chamados/:id/cancelar',
       'seguir PUT /chamados/:id/seguir',

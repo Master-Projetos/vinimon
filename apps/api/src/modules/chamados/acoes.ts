@@ -10,6 +10,7 @@ import {
   type PrioridadeChamadoBody,
   type ReabrirChamado,
   type RejeitarChamado,
+  type SolicitarRetorno,
   type StatusChamadoBody,
   type TagsChamado,
   type TipoStatus,
@@ -17,13 +18,16 @@ import {
 } from '@vinimon/shared'
 import { DateTime } from 'luxon'
 import { acoesDoUsuario, type ChamadoParaAcoes, podeVerChamado } from '../../autorizacao/chamados'
+import { env } from '../../env'
 import type { Prisma } from '../../generated/prisma/client'
 import { obterConfig } from '../../lib/config'
 import type { ContextoUsuario } from '../../lib/contexto'
+import { despacharEmail, enfileirarEmail } from '../../lib/email'
 import { conflito, ErroApp, naoEncontrado, regraNegocio, semPermissao } from '../../lib/erros'
 import { prisma, type Tx } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
 import { tempoReal } from '../../lib/tempo-real'
+import { render } from '../modelos-email/render'
 import { adicionarDiasUteis } from '../sla/calendario'
 import { aplicarTransicaoStatus, carregarCalendario, recalcularChamado, snapshotSla } from '../sla/service'
 import { garantirTags } from '../tags/service'
@@ -120,7 +124,14 @@ async function atualizarComVersao(
 
 async function statusDoPapel(
   tx: Tx,
-  papel: 'INICIAL' | 'EM_ATENDIMENTO' | 'ENCAMINHADO' | 'CONCLUIDO' | 'ENCERRADO' | 'CANCELADO',
+  papel:
+    | 'INICIAL'
+    | 'EM_ATENDIMENTO'
+    | 'ENCAMINHADO'
+    | 'AGUARDANDO_SOLICITANTE'
+    | 'CONCLUIDO'
+    | 'ENCERRADO'
+    | 'CANCELADO',
 ): Promise<number> {
   const s = await tx.status.findFirst({ where: { papel, ativo: true }, select: { id: true } })
   if (!s) throw regraNegocio(`Não há status configurado para o papel ${papel}.`)
@@ -1107,4 +1118,180 @@ export async function deixarDeSeguir(id: number, u: UsuarioSessao): Promise<void
     where: { chamadoId: id, usuarioId: u.id, silenciadoEm: null },
     data: { silenciadoEm: new Date() },
   })
+}
+
+// ───────── solicitar retorno e inatividade (C18, C19) ─────────
+
+/**
+ * E-mail de modelo (`solicitacao_retorno` ou `encerramento_automatico`) ao solicitante, gravado na outbox dentro da
+ * transação de quem chama. Só com `email.habilitado`, modelo ativo e solicitante ativo com e-mail. Nunca leva texto
+ * de comentário: só as variáveis fechadas do modelo. Devolve o id da outbox (para `despacharEmail` depois do commit)
+ * ou `null` quando nada foi enfileirado.
+ */
+export async function enfileirarEmailDoModelo(
+  tx: Tx,
+  p: {
+    evento: 'solicitacao_retorno' | 'encerramento_automatico'
+    chamadoId: number
+    chaveIdempotencia: string
+    /** Nome de quem pediu o retorno; sem ele usa o responsável do chamado. */
+    operadorNome?: string
+  },
+): Promise<number | null> {
+  const cfg = await obterConfig()
+  if (!cfg['email.habilitado']) return null
+  const modelo = await tx.modeloEmail.findUnique({
+    where: { evento: p.evento },
+    select: { assunto: true, corpoTexto: true, ativo: true },
+  })
+  if (!modelo?.ativo) return null
+  const c = await tx.chamado.findUnique({
+    where: { id: p.chamadoId },
+    select: {
+      id: true,
+      assunto: true,
+      solicitanteId: true,
+      solicitante: { select: { nome: true, email: true, ativo: true } },
+      area: { select: { nome: true } },
+      operador: { select: { nome: true } },
+      status: { select: { nome: true } },
+    },
+  })
+  if (!c?.solicitante.ativo || !c.solicitante.email) return null
+  const { assunto, texto, html } = render(modelo, {
+    numero: `#${c.id}`,
+    assunto: c.assunto,
+    solicitante: c.solicitante.nome,
+    area: c.area.nome,
+    operador: p.operadorNome ?? c.operador?.nome ?? 'A equipe',
+    status: c.status.nome,
+    link: `${env.APP_ORIGIN}/chamados/${c.id}`,
+    sistema: cfg['sistema.nome'],
+  })
+  return enfileirarEmail(tx, {
+    para: c.solicitante.email,
+    assunto,
+    texto,
+    html,
+    evento: p.evento,
+    chamadoId: c.id,
+    usuarioId: c.solicitanteId,
+    chaveIdempotencia: p.chaveIdempotencia,
+  })
+}
+
+/** Agenda o envio depois do commit; se a fila falhar, o e-mail fica PENDENTE e o job `email-varrer` o reenfileira. */
+export async function despacharEmailSemFalhar(emailId: number | null): Promise<void> {
+  if (emailId === null) return
+  try {
+    await despacharEmail(emailId)
+  } catch {
+    // falha de fila nunca desfaz a ação já confirmada
+  }
+}
+
+/**
+ * Status para onde vai o chamado quando o SOLICITANTE comenta (C19): em status monitorado por inatividade com
+ * `inatividade.statusRetornoId` ativo (tipo ABERTO ou EM_ATENDIMENTO) vai para ele; senão, saindo de
+ * AGUARDANDO_SOLICITANTE (ou de status monitorado sem destino válido) vai para o papel EM_ATENDIMENTO.
+ * `null` = o comentário não muda o status.
+ */
+export async function statusAoResponderSolicitante(
+  tx: Tx,
+  c: { statusId: number; status: { papel: string | null } },
+): Promise<number | null> {
+  const cfg = await obterConfig()
+  const monitorado = cfg['inatividade.statusIds'].includes(c.statusId)
+  if (!monitorado && c.status.papel !== 'AGUARDANDO_SOLICITANTE') return null
+  const retornoId = cfg['inatividade.statusRetornoId']
+  if (monitorado && retornoId !== null) {
+    const destino = await tx.status.findFirst({
+      where: { id: retornoId, ativo: true, tipo: { in: ['ABERTO', 'EM_ATENDIMENTO'] } },
+      select: { id: true },
+    })
+    if (destino) return destino.id
+  }
+  const emAtendimento = await tx.status.findFirst({
+    where: { papel: 'EM_ATENDIMENTO', ativo: true },
+    select: { id: true },
+  })
+  if (!emAtendimento || emAtendimento.id === c.statusId) return null
+  return emAtendimento.id
+}
+
+/**
+ * `solicitar-retorno`: a equipe pede uma resposta ao solicitante. A mensagem vira comentário PÚBLICO, o chamado vai
+ * para o papel AGUARDANDO_SOLICITANTE (tipo PENDENTE), grava o evento SOLICITADO_RETORNO e, com `email.habilitado`,
+ * enfileira o e-mail `solicitacao_retorno` na mesma transação. Mesma permissão da ação `status` (equipe, em curso).
+ */
+export async function solicitarRetorno(
+  id: number,
+  dados: SolicitarRetorno,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado & { emailId: number | null }> => {
+    const c = await exigirAcao(tx, u, id, 'status', agora)
+    if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+    if (c.status.papel === 'AGUARDANDO_SOLICITANTE')
+      throw regraNegocio('O chamado já aguarda o retorno do solicitante.')
+
+    const comentario = await tx.assentamento.create({
+      data: { chamadoId: id, autorId: u.id, tipo: 'COMENTARIO', interno: false, texto: dados.mensagem },
+      select: { id: true },
+    })
+    await aplicarTransicaoStatus(tx, {
+      chamadoId: id,
+      versao: dados.versao,
+      novoStatusId: await statusDoPapel(tx, 'AGUARDANDO_SOLICITANTE'),
+      atorId: u.id,
+      agora,
+      extras: {
+        ultimoAssentamentoId: comentario.id,
+        ultimoAssentamentoPublicoId: comentario.id,
+        ultimaInteracaoEm: agora,
+        ultimaInteracaoAutorId: u.id,
+        ultimaAtividadeEm: agora,
+      },
+    })
+    await marcarPrimeiraResposta(tx, c, u, agora)
+    await recalcularChamado(tx, id, agora)
+
+    const dadosEvento = { de: { id: c.statusId, nome: c.status.nome } }
+    const sistema = await registrarSistema(
+      tx,
+      id,
+      'SOLICITADO_RETORNO',
+      'Retorno solicitado ao solicitante',
+      dadosEvento,
+    )
+    const evento = await registrarEvento(tx, {
+      chamadoId: id,
+      tipo: 'SOLICITADO_RETORNO',
+      atorId: u.id,
+      assentamentoId: sistema,
+      dados: dadosEvento,
+    })
+    const emailId = await enfileirarEmailDoModelo(tx, {
+      evento: 'solicitacao_retorno',
+      chamadoId: id,
+      chaveIdempotencia: `solicitacao_retorno:${id}:${dados.versao}`,
+      operadorNome: u.nome,
+    })
+    return {
+      chamadoId: id,
+      emailId,
+      efeitos: {
+        eventoIds: [evento],
+        assentamentoIds: [comentario.id, sistema],
+        campos: ['status'],
+        acessoMudou: false,
+        fila: 'status',
+      },
+    }
+  })
+  await despacharEmailSemFalhar(r.emailId)
+  return concluirAcao(u, r, agora, log)
 }
