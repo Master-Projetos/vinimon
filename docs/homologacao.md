@@ -58,3 +58,44 @@ Ambiente só para acompanhar o andamento do front e da API com dados de teste. U
 
 - Deploy automático por GitHub Actions (precisa de um cartão no plano; o `protocolo.yml` só aceita mudanças de plano em `docs/` e `scripts/plano/`).
 - Rodar a migração dentro da plataforma: a imagem final não tem o CLI do Prisma de propósito. A migração roda do seu computador (passo 2) ou a partir da imagem `migrar` (`docker build --target migrar`), como em `docs/operacao.md`.
+
+---
+
+# Roteiro grátis: Render + Neon
+
+Específico do plano gratuito. Conferir preços e limites nas páginas de cada serviço antes de criar a conta; eles mudam.
+
+## 1. Neon (banco)
+
+1. Criar um projeto no Neon. Escolher a região mais próxima da do Render (por exemplo, ambas na Virgínia/Ohio, ou ambas em Frankfurt) e a **maior versão do Postgres disponível**. O projeto roda no Postgres 18 em desenvolvimento e no CI; as migrações só usam `pg_trgm` e `unaccent` (extensões confiáveis, que o dono do banco pode criar) e nada exclusivo do 18, mas **não foram testadas em versão menor**: se algo falhar na migração, anote o erro.
+2. Em *Connect*, **desligar a opção "Pooled connection"** e copiar a URL direta (host sem `-pooler`). O pg-boss usa travas e sessões que não funcionam no pooler (PgBouncer em modo transação). Use a URL direta para tudo.
+3. Rodar o script de papéis com o usuário administrador que o Neon criou (o `neondb_owner` é o dono do projeto e pode criar papéis e bancos):
+   ```sh
+   psql "<URL direta do Neon>" -v senha_migrator="$SENHA_MIGRATOR" -v senha_app="$SENHA_APP" -f scripts/papeis-postgres.sql
+   ```
+   O script cria o banco `vinimon`. Daí em diante as URLs usam o banco `vinimon` no lugar de `neondb`:
+   - migrator: `postgresql://vinimon_migrator:<senha>@<host direto>/vinimon?sslmode=require`
+   - app: `postgresql://vinimon_app:<senha>@<host direto>/vinimon?sslmode=require`
+4. Migração e seed, do seu computador, com a URL do **migrator** (passo 2 do roteiro geral acima).
+
+O plano grátis do Neon suspende o banco depois de alguns minutos sem uso; o primeiro acesso depois disso demora um pouco mais. Se a API reclamar de conexão encerrada logo depois de um período ocioso, repita a requisição e anote o erro.
+
+## 2. Render (aplicação)
+
+1. *New → Web Service*, conectar o repositório no GitHub, branch `v2`.
+2. *Language*: **Docker**. *Instance type*: **Free**. *Dockerfile path*: `./Dockerfile`.
+3. *Health check path*: `/api/v1/saude`. *Auto-deploy*: ligado (publica a cada merge no `v2`).
+4. Variáveis de ambiente (as do quadro do roteiro geral), com estas particularidades:
+   - **não definir `PORT`**: o Render injeta a porta e a API a lê;
+   - `HOST=0.0.0.0`;
+   - `DATABASE_URL`: a URL direta do papel `vinimon_app`;
+   - `APP_ORIGIN`: `https://<nome-do-serviço>.onrender.com`. O endereço só é conhecido depois de criar o serviço; crie, copie o endereço, preencha e faça *Manual Deploy*;
+   - `UPLOAD_DIR=/data/anexos` (no plano grátis o disco é efêmero: os anexos somem a cada deploy ou reinício);
+   - `TRUST_PROXY`: o Render não publica uma faixa fixa que eu tenha verificado. Para homologação, use as faixas privadas `10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` (o tráfego de fora entra pelo proxy da plataforma, que chega por rede privada). Não use `true` nem `0.0.0.0/0`. Para produção, descubra a faixa real.
+5. O serviço grátis dorme depois de um tempo sem acessos e acorda no primeiro acesso, em cerca de 1 minuto. Enquanto dorme, o Socket.IO fica desconectado e os jobs (SLA, limpezas, e-mail) não rodam.
+
+## Limitações de uma homologação grátis
+
+- Tempo real, presença e jobs só funcionam enquanto o serviço está acordado.
+- Anexos não persistem.
+- Não use dados reais.
