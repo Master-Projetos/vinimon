@@ -249,7 +249,7 @@
 ### T-10.15 — Notificações: sino, contador e área de trabalho
 - **Depende de:** T-10.13, T-6.9 · **Paralelo com:** T-10.14
 - **Requisitos:** S104, S105; TM7; T69 (unidade)
-- **Arquivos:** `apps/web/src/features/notificacoes/{queries.ts,desktop.ts,desktop.test.ts,components/notification-bell.tsx,components/notification-item.tsx,components/desktop-notifications-prompt.tsx}`, `apps/web/src/components/layout/app-bar.tsx`
+- **Arquivos:** `apps/web/src/features/notificacoes/{queries.ts,desktop.ts,desktop.test.ts,components/notification-bell.tsx,components/notification-item.tsx,components/desktop-notifications-prompt.tsx}`, `apps/web/src/components/layout/{app-bar.tsx,app-shell.tsx,top-bar.tsx}` (contador em Atividade e sino na barra superior), `apps/web/src/hooks/use-contador-no-titulo.ts` (título "(n) … · Vinimon")
 - **Passos:**
   1. `notificacao:nova` e `notificacao:contagem` gravam direto no cache.
   2. Contador na app bar e título "(n) … · Vinimon".
