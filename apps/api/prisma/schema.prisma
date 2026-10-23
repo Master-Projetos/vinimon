@@ -188,6 +188,14 @@ enum StatusEmail {
   @@map("status_email")
 }
 
+enum CanalEmail {
+  NUNCA
+  IMEDIATO
+  RESUMO
+
+  @@map("canal_email")
+}
+
 // ═════════════════════════ ORGANIZAÇÃO ═════════════════════════
 
 model Unidade {
@@ -435,6 +443,8 @@ model PreferenciaNotificacao {
   tipo      TipoNotificacao
   inApp     Boolean         @map("in_app")
   desktop   Boolean
+  /// null = padrão de `canalEmailPadrao` (shared); só as diferenças são gravadas
+  email     CanalEmail?
 
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 

@@ -91,3 +91,7 @@ export type VisibilidadeArtigo = (typeof VISIBILIDADES_ARTIGO)[number]
 
 export const STATUS_EMAIL = ['PENDENTE', 'ENVIADO', 'FALHOU'] as const
 export type StatusEmail = (typeof STATUS_EMAIL)[number]
+
+/** Canal de e-mail por tipo de notificação: nunca, na hora (IMEDIATO) ou no resumo diário (RESUMO). */
+export const CANAIS_EMAIL = ['NUNCA', 'IMEDIATO', 'RESUMO'] as const
+export type CanalEmail = (typeof CANAIS_EMAIL)[number]

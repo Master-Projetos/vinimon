@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { TIPOS_NOTIFICACAO, type TipoNotificacao } from './enums'
+import { type CanalEmail, TIPOS_NOTIFICACAO, type TipoNotificacao } from './enums'
 import { zDataHora } from './http'
 import type { Perfil } from './permissoes'
 
@@ -23,6 +23,30 @@ export function preferenciaPadrao(tipo: TipoNotificacao, _perfil: Perfil): Prefe
     return { inapp: true, desktop: false, fixo: false }
   }
   return { inapp: true, desktop: true, fixo: false }
+}
+
+/**
+ * Canal de e-mail padrão por tipo (§5.6, coluna "E-mail"). Staff = ADMIN/OPERADOR (nível ≤ 2); solicitante = USUARIO
+ * (nível 3). Tipos fora da tabela (AVALIACAO_RECEBIDA, REJEITADO) ficam em NUNCA.
+ */
+export function canalEmailPadrao(tipo: TipoNotificacao, perfil: Perfil): CanalEmail {
+  const solicitante = perfil === 'USUARIO'
+  switch (tipo) {
+    case 'MENCAO':
+      return 'IMEDIATO'
+    case 'ATRIBUIDO':
+    case 'SLA':
+      return solicitante ? 'NUNCA' : 'IMEDIATO'
+    case 'COMENTARIO':
+    case 'STATUS':
+    case 'AVALIACAO_PENDENTE':
+      return solicitante ? 'IMEDIATO' : 'NUNCA'
+    case 'NOVO_NA_FILA':
+    case 'ATUALIZACAO':
+    case 'AVALIACAO_RECEBIDA':
+    case 'REJEITADO':
+      return 'NUNCA'
+  }
 }
 
 /** Aplica a regra "desligar o in-app desliga o desktop"; tipos fixos ficam sempre ligados no in-app. */
