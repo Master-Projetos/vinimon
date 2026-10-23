@@ -25,7 +25,7 @@
 ### T-12.2 — Modelos de e-mail
 - **Depende de:** T-12.1 · **Paralelo com:** T-12.4
 - **Requisitos:** E04
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/modelos-email.ts`, `apps/api/src/modules/modelos-email/{service.ts,routes.ts,render.ts,modelos-email.test.ts}`, `apps/api/prisma/seed.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/modelos-email.ts`, `apps/api/src/modules/modelos-email/{service.ts,routes.ts,render.ts,modelos-email.test.ts}`, `apps/api/prisma/seed.ts`, `apps/api/src/app.ts` e `packages/shared/src/index.ts` (só a linha de registro do módulo)
 - **Passos:**
   1. Model `ModeloEmail {evento String @id, assunto VarChar(200), corpoTexto Text, ativo Boolean, atualizadoEm}`.
   2. Eventos: `abertura`, `comentario`, `encaminhamento`, `agendamento`, `conclusao`, `rejeicao`, `solicitacao_retorno`, `encerramento_automatico`, `lembrete`, `recuperar_senha`.
