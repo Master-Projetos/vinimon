@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { CHAVES_CONFIG_PUBLICAS, CONFIG_PADRAO, type Meta, type SessaoResposta, type UsuarioMe } from '@vinimon/shared'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ApiFalsa } from '@/test/api-falsa'
 import { renderRota } from '@/test/render-rota'
 
@@ -231,5 +231,115 @@ describe('/chamados/novo (formulário)', () => {
     expect(screen.queryByLabelText(/Canal/)).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/Abrir em nome de/)).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/Tags/)).not.toBeInTheDocument()
+  })
+})
+
+/** XMLHttpRequest falso: `enviarArquivo` usa XHR (com progresso), não `fetch`. */
+class XhrFalso {
+  static enviados: { url: string; arquivos: File[] }[] = []
+  static statusPorChamada: number[] = []
+  withCredentials = false
+  status = 201
+  responseText = '[]'
+  upload = { onprogress: null as ((e: { lengthComputable: boolean; loaded: number; total: number }) => void) | null }
+  onload: (() => void) | null = null
+  onerror: (() => void) | null = null
+  onabort: (() => void) | null = null
+  private url = ''
+  open(_metodo: string, url: string) {
+    this.url = url
+  }
+  setRequestHeader() {}
+  getResponseHeader() {
+    return null
+  }
+  abort() {}
+  send(formulario: FormData) {
+    XhrFalso.enviados.push({ url: this.url, arquivos: formulario.getAll('arquivos') as File[] })
+    this.status = XhrFalso.statusPorChamada.shift() ?? 201
+    if (this.status >= 400) this.responseText = JSON.stringify({ erro: { codigo: 'INTERNO', mensagem: 'Falhou.' } })
+    queueMicrotask(() => {
+      this.upload.onprogress?.({ lengthComputable: true, loaded: 5, total: 10 })
+      this.onload?.()
+    })
+  }
+}
+
+describe('/chamados/novo (sugestões, rascunho e anexos)', () => {
+  beforeEach(() => {
+    vi.stubGlobal('XMLHttpRequest', XhrFalso)
+    XhrFalso.enviados = []
+    XhrFalso.statusPorChamada = []
+    window.localStorage.clear()
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    window.localStorage.clear()
+  })
+
+  it('digitar "impressora" mostra o artigo sugerido', async () => {
+    montar('USUARIO', '/chamados/novo?problema=4', {
+      'GET /artigos/sugestoes': [{ id: 1, titulo: 'Como reiniciar a impressora', resumo: null }],
+    })
+    fireEvent.change(await screen.findByLabelText(/Assunto/), { target: { value: 'impressora' } })
+    expect(await screen.findByText('Como reiniciar a impressora')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Isso resolveu' })).toBeInTheDocument()
+  })
+
+  it('restaura o rascunho de vinimon:u7:rascunho:novo-chamado e permite descartar', async () => {
+    window.localStorage.setItem(
+      'vinimon:u7:rascunho:novo-chamado',
+      JSON.stringify({ assunto: 'Rascunho salvo', descricao: 'Texto antigo', problemaId: 4, prioridadeId: 2 }),
+    )
+    montar('USUARIO', '/chamados/novo')
+    expect(await screen.findByDisplayValue('Rascunho salvo')).toBeInTheDocument()
+    expect(screen.getByText('Rascunho restaurado')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
+    await waitFor(() => expect(screen.queryByDisplayValue('Rascunho salvo')).not.toBeInTheDocument())
+    expect(window.localStorage.getItem('vinimon:u7:rascunho:novo-chamado')).toBeNull()
+  })
+
+  function anexar(nomes: string[]) {
+    const entrada = screen.getByLabelText('Anexar arquivos')
+    const arquivos = nomes.map((n) => new File(['conteudo'], n, { type: 'text/plain' }))
+    fireEvent.change(entrada, { target: { files: arquivos } })
+  }
+
+  it('depois de criar, envia os anexos em sequência com o chamadoId devolvido', async () => {
+    const { router } = montar('USUARIO', '/chamados/novo?problema=4', {
+      'POST /chamados': detalhe(),
+      'GET /chamados/42': detalhe(),
+    })
+    await screen.findByLabelText(/Assunto/)
+    preencherAssuntoEDescricao()
+    anexar(['a.txt', 'b.txt'])
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir chamado' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/chamados/42'))
+    expect(XhrFalso.enviados.map((e) => [e.url, e.arquivos.map((a) => a.name)])).toEqual([
+      ['/api/v1/chamados/42/anexos', ['a.txt']],
+      ['/api/v1/chamados/42/anexos', ['b.txt']],
+    ])
+  })
+
+  it('falha de upload mostra o toast e o chamado continua criado', async () => {
+    XhrFalso.statusPorChamada = [500]
+    const { router } = montar('USUARIO', '/chamados/novo?problema=4', {
+      'POST /chamados': detalhe(),
+      'GET /chamados/42': detalhe(),
+    })
+    await screen.findByLabelText(/Assunto/)
+    preencherAssuntoEDescricao()
+    anexar(['a.txt'])
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir chamado' }))
+    expect(await screen.findByText('1 anexo não foi enviado — reenvie na aba Anexos')).toBeInTheDocument()
+    await waitFor(() => expect(router.state.location.pathname).toBe('/chamados/42'))
+  })
+
+  it('sem anexos.habilitados o dropzone some', async () => {
+    montar('USUARIO', '/chamados/novo', {
+      'GET /meta': { ...META, config: { ...META.config, 'anexos.habilitados': false } },
+    })
+    await screen.findByLabelText(/Assunto/)
+    expect(screen.queryByLabelText('Anexar arquivos')).not.toBeInTheDocument()
   })
 })
