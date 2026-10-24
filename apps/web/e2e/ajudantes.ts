@@ -1,8 +1,12 @@
 import { expect } from '@playwright/test'
 import { totp } from './totp'
 
+/** Porta da API nos E2E. Mude com `E2E_PORTA` (e `E2E_BANCO`) para rodar dois conjuntos de specs ao mesmo tempo. */
+export const PORTA_E2E = process.env.E2E_PORTA ?? '3100'
+/** Banco do E2E; o preparo só aceita nomes terminados em `_e2e`. */
+export const BANCO_E2E = process.env.E2E_BANCO ?? 'vinimon_e2e'
 /** Origem do build servido pela API nos testes E2E (ver playwright.config.ts). */
-export const ORIGEM_E2E = 'http://localhost:3100'
+export const ORIGEM_E2E = `http://localhost:${PORTA_E2E}`
 /** Senha do primeiro acesso do admin, semeada por apps/api/scripts/e2e-preparar.ts. */
 export const SENHA_ADMIN_E2E = process.env.SEED_ADMIN_PASSWORD ?? 'Girafa-Satelite-Pinhao-7731'
 /** Senha nova que o admin define no primeiro acesso (T68). */
