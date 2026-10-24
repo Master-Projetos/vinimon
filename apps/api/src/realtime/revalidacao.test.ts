@@ -72,7 +72,7 @@ describe('revogação e revalidação de sockets (S20, S53, S94, T55, T56)', () 
   }
 
   describe('T55: queda em menos de 1 s', () => {
-    it('logout derruba o socket com sessao:encerrada', async () => {
+    it('T55: logout derruba o socket com sessao:encerrada', async () => {
       const x = await cenario()
       const { s, h } = await ligar(x.sol.id)
       const aviso = esperarEvento<{ motivo: string }>(s, 'sessao:encerrada')
@@ -164,7 +164,7 @@ describe('revogação e revalidação de sockets (S20, S53, S94, T55, T56)', () 
   })
 
   describe('T56: encaminhar tira o acesso de quem saiu da área', () => {
-    it('o operador antigo recebe chamado:acessoRevogado e deixa de receber eventos; o solicitante continua', async () => {
+    it('T56: o operador antigo recebe chamado:acessoRevogado e deixa de receber eventos; o solicitante continua', async () => {
       const x = await cenario()
       const antigo = await ligar(x.opA.id)
       const solicitante = await ligar(x.sol.id)

@@ -72,7 +72,7 @@ describe('módulos meta e me (T-3.15)', () => {
     expect(res.json().tags).toEqual([expect.objectContaining({ nome: 'Rede' })])
   })
 
-  it('PATCH /me: 400 para perfil e para body vazio, com detalhes por campo', async () => {
+  it('T37: PATCH /me: 400 para perfil e para body vazio, com detalhes por campo', async () => {
     const usuario = await criarUsuario({ perfil: 'USUARIO' })
     const headers = await headersDe(usuario.id)
 

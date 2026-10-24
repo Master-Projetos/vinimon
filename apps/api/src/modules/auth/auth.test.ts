@@ -197,7 +197,7 @@ describe('T17: cookie em https', () => {
     vi.resetModules()
   })
 
-  it('usa __Host-vinimon_sid com Secure, HttpOnly, SameSite=Strict, Path=/ e sem Domain', async () => {
+  it('T17: usa __Host-vinimon_sid com Secure, HttpOnly, SameSite=Strict, Path=/ e sem Domain', async () => {
     await limparBanco()
     const u = await criarUsuario({ perfil: 'USUARIO' })
     vi.stubEnv('APP_ORIGIN', 'https://vinimon.test')
