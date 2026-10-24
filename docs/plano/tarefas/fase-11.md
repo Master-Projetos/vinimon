@@ -111,7 +111,7 @@
 ### T-11.5 — E2E: fluxo principal do chamado
 - **Depende de:** T-11.4, T-10.23, T-10.25, T-10.27, T-10.28, T-10.29, T-10.31 · **Paralelo com:** T-11.6, T-11.7
 - **Requisitos:** T71; §3.5
-- **Arquivos:** `apps/web/e2e/chamado-fluxo.spec.ts`
+- **Arquivos:** `apps/web/e2e/{chamado-fluxo.spec.ts,auth.setup.ts}`, `apps/api/scripts/e2e-preparar.ts`, `apps/api/src/app.ts`, `apps/api/src/plugins/{spa.ts,spa.test.ts}`, `apps/api/src/modules/sla/service.ts`, `apps/api/src/modules/chamados/acoes-conclusao.test.ts`
 - **Passos:**
   1. USUARIO abre o chamado com anexo PNG.
   2. OPERADOR assume, comenta mencionando o USUARIO e conclui.
