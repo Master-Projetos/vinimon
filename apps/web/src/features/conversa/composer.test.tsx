@@ -276,8 +276,14 @@ describe('compositor da conversa', () => {
       'POST /chamados/5/assentamentos': (req: Request) => ecoComentario(req),
     })
     const campo = await escrever('@Br')
-    const lista = await screen.findByRole('list', { name: 'Pessoas para mencionar' })
-    expect(await within(lista).findByRole('button', { name: 'Bruno Lima' })).toBeInTheDocument()
+    // A lista é recriada quando os resultados chegam: consulta de novo a cada tentativa, sem guardar o elemento.
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('list', { name: 'Pessoas para mencionar' })).getByRole('button', {
+          name: 'Bruno Lima',
+        }),
+      ).toBeInTheDocument(),
+    )
     fireEvent.keyDown(campo, { key: 'Enter' })
     await waitFor(() => expect(campo).toHaveValue('@Bruno Lima '))
     expect(screen.queryByRole('list', { name: 'Pessoas para mencionar' })).not.toBeInTheDocument()
