@@ -15,3 +15,6 @@ data/
 .env
 .env.*
 !.env.example
+
+# worktrees de agentes (cada um tem biome.json próprio)
+.claude/worktrees/

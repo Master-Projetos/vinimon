@@ -505,7 +505,7 @@
 ### T-10.30 — Painel
 - **Depende de:** T-10.4, T-8.1 · **Paralelo com:** T-10.31–T-10.37
 - **Requisitos:** G03; §6.3 (8)
-- **Arquivos:** `apps/web/src/routes/_app/painel.tsx`, `apps/web/src/features/painel/{queries.ts,components/kpi-grid.tsx,components/graficos.tsx,components/sla-proximos-table.tsx}`, `apps/web/src/components/display/chart-card.tsx`
+- **Arquivos:** `apps/web/src/routes/_app/painel.tsx`, `apps/web/src/features/painel/{queries.ts,painel.test.tsx,components/kpi-grid.tsx,components/graficos.tsx,components/sla-proximos-table.tsx}`, `apps/web/src/components/display/chart-card.tsx`
 - **Passos:**
   1. `StatCard`s clicáveis levam a `/chamados?visao=…`.
   2. Gráficos Recharts do shadcn, com `corDeGrafico` e "Ver como tabela".
@@ -612,7 +612,7 @@
 ### T-10.37 — Perfil: segurança e sessões
 - **Depende de:** T-10.36, T-2.9 · **Paralelo com:** T-10.30–T-10.35
 - **Requisitos:** S24, S29, S30
-- **Arquivos:** `apps/web/src/routes/_app/perfil/{seguranca.tsx,sessoes.tsx}`, `apps/web/src/features/perfil/components/{trocar-senha-card.tsx,dois-fatores-card.tsx,sessoes-table.tsx}`, `apps/web/src/features/perfil/sessoes.test.tsx`, `apps/web/src/features/perfil/seguranca.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
+- **Arquivos:** `apps/web/src/routes/_app/perfil/{route.tsx,seguranca.tsx,sessoes.tsx}` (route.tsx ganha as abas Segurança e Sessões), `apps/web/src/features/perfil/queries.ts`, `apps/web/src/features/perfil/components/{trocar-senha-card.tsx,dois-fatores-card.tsx,sessoes-table.tsx}`, `apps/web/src/features/perfil/sessoes.test.tsx`, `apps/web/src/features/perfil/seguranca.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Trocar senha. O toast avisa que as outras sessões foram encerradas.
   2. 2FA: "Gerar novos códigos" pede a senha; "Desativar" só para USUARIO.
