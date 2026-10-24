@@ -1,5 +1,14 @@
 import { defineConfig, devices } from '@playwright/test'
-import { BANCO_E2E, E2E_SENHA, E2E_TOTP_SECRET, ORIGEM_E2E, PORTA_E2E, SENHA_ADMIN_E2E } from './e2e/ajudantes'
+import {
+  BANCO_E2E,
+  CSRF_SECRET_E2E,
+  E2E_SENHA,
+  E2E_TOTP_SECRET,
+  ENCRYPTION_KEY_E2E,
+  ORIGEM_E2E,
+  PORTA_E2E,
+  SENHA_ADMIN_E2E,
+} from './e2e/ajudantes'
 
 // A API serve o build do web (WEB_DIST_DIR) no banco E2E_BANCO (padrão vinimon_e2e), em E2E_PORTA (padrão 3100).
 export default defineConfig({
@@ -44,8 +53,8 @@ export default defineConfig({
       LOG_LEVEL: 'warn',
       JOBS_HABILITADOS: 'false',
       SOCKET_REVALIDAR_MS: '1000',
-      CSRF_SECRET: 'ZGV2LWFwZW5hcy10cm9xdWUtZW0tcHJvZHVjYW8tMDAwMQ==',
-      ENCRYPTION_KEY: 'ZGV2LWFwZW5hcy10cm9xdWUtZW0tcHJvZHVjYW8tMDE=',
+      CSRF_SECRET: CSRF_SECRET_E2E,
+      ENCRYPTION_KEY: ENCRYPTION_KEY_E2E,
       SEED_ADMIN_PASSWORD: SENHA_ADMIN_E2E,
       E2E_SENHA,
       E2E_TOTP_SECRET,

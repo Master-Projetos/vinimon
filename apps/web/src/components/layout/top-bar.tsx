@@ -16,7 +16,6 @@ export function TopBar({ usuario, aoAbrirBusca = () => undefined, aoAbrirAtalhos
     <header className="flex h-(--topbar-h) items-center gap-3 bg-frame px-3 text-frame-foreground md:col-span-2">
       <Link
         to="/"
-        aria-label="Vinimon, início"
         className="flex shrink-0 items-center gap-2 rounded-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <span
@@ -25,7 +24,10 @@ export function TopBar({ usuario, aoAbrirBusca = () => undefined, aoAbrirAtalhos
         >
           V
         </span>
-        <span className="hidden text-sm font-semibold text-foreground lg:inline">Vinimon</span>
+        <span aria-hidden="true" className="hidden text-sm font-semibold text-foreground lg:inline">
+          Vinimon
+        </span>
+        <span className="sr-only">Vinimon, início</span>
       </Link>
 
       <BuscaGlobalTrigger aoAbrir={aoAbrirBusca} />

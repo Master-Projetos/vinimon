@@ -46,7 +46,11 @@ function ImprimirChamado() {
   ]
 
   return createPortal(
-    <div data-print="expandir" data-print-area className="fixed inset-0 z-50 overflow-y-auto bg-white text-black">
+    <div
+      data-print="expandir"
+      data-print-area
+      className="fixed inset-0 z-50 overflow-y-auto bg-white text-black [--muted-foreground:oklch(0.45_0.016_268)]"
+    >
       <style>{CSS_IMPRESSAO}</style>
       <div data-print="ocultar" className="sticky top-0 flex justify-between gap-2 border-b bg-white p-3">
         <Button asChild variant="outline">
