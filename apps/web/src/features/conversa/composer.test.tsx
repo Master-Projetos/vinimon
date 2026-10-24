@@ -277,7 +277,7 @@ describe('compositor da conversa', () => {
     })
     const campo = await escrever('@Br')
     const lista = await screen.findByRole('list', { name: 'Pessoas para mencionar' })
-    expect(within(lista).getByRole('button', { name: 'Bruno Lima' })).toBeInTheDocument()
+    expect(await within(lista).findByRole('button', { name: 'Bruno Lima' })).toBeInTheDocument()
     fireEvent.keyDown(campo, { key: 'Enter' })
     await waitFor(() => expect(campo).toHaveValue('@Bruno Lima '))
     expect(screen.queryByRole('list', { name: 'Pessoas para mencionar' })).not.toBeInTheDocument()
