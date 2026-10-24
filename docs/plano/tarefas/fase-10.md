@@ -442,7 +442,7 @@
 ### T-10.26 — Conversa em tempo real: sala, digitação e "Visto por"
 - **Depende de:** T-10.25, T-10.13, T-7.3 · **Paralelo com:** T-10.27
 - **Requisitos:** TM1, TM3, TM4; S93, S98
-- **Arquivos:** `apps/web/src/features/conversa/{hooks.ts,hooks.test.ts,components/typing-indicator.tsx,components/read-receipt.tsx}`, `apps/web/src/features/conversa/components/conversa-view.tsx`
+- **Arquivos:** `apps/web/src/features/conversa/{hooks.ts,hooks.test.tsx,components/typing-indicator.tsx,components/read-receipt.tsx}`, `apps/web/src/features/conversa/components/{conversa-view.tsx,composer.tsx}` (o composer avisa quando a pessoa digita, para e envia)
 - **Passos:**
   1. `useSalaDoChamado(id)`: `chamado:entrar` ao montar e em cada `connect`; `acessoRevogado` leva ao toast "Você não tem mais acesso" e à lista.
   2. `assentamento:novo` faz `mesclarAssentamento`. Mensagem nova só rola sozinha a até 120 px do fim; senão, aparece a pílula.
