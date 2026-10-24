@@ -612,7 +612,7 @@
 ### T-10.37 — Perfil: segurança e sessões
 - **Depende de:** T-10.36, T-2.9 · **Paralelo com:** T-10.30–T-10.35
 - **Requisitos:** S24, S29, S30
-- **Arquivos:** `apps/web/src/routes/_app/perfil/{seguranca.tsx,sessoes.tsx}`, `apps/web/src/features/perfil/components/{trocar-senha-card.tsx,dois-fatores-card.tsx,sessoes-table.tsx}`, `apps/web/src/features/perfil/sessoes.test.tsx`, `apps/web/src/features/perfil/seguranca.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
+- **Arquivos:** `apps/web/src/routes/_app/perfil/{route.tsx,seguranca.tsx,sessoes.tsx}` (route.tsx ganha as abas Segurança e Sessões), `apps/web/src/features/perfil/queries.ts`, `apps/web/src/features/perfil/components/{trocar-senha-card.tsx,dois-fatores-card.tsx,sessoes-table.tsx}`, `apps/web/src/features/perfil/sessoes.test.tsx`, `apps/web/src/features/perfil/seguranca.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Trocar senha. O toast avisa que as outras sessões foram encerradas.
   2. 2FA: "Gerar novos códigos" pede a senha; "Desativar" só para USUARIO.
