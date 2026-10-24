@@ -535,7 +535,7 @@
 ### T-10.32 — Conhecimento: lista e artigo
 - **Depende de:** T-10.4, T-8.4 · **Paralelo com:** T-10.30, T-10.31, T-10.33–T-10.37
 - **Requisitos:** F01, S108
-- **Arquivos:** `apps/web/src/routes/_app/conhecimento/{route.tsx,index.tsx,$artigoId/index.tsx}`, `apps/web/src/features/conhecimento/{queries.ts,components/categorias-pane.tsx,components/artigo-view.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/conhecimento/{route.tsx,index.tsx,$artigoId/index.tsx}`, `apps/web/src/features/conhecimento/{queries.ts,conhecimento.test.tsx,components/categorias-pane.tsx,components/artigo-view.tsx}`
 - **Passos:**
   1. Painel de categorias e busca.
   2. Artigo em `.markdown-artigo`, com "Foi útil?" e "Abrir chamado" (`/chamados/novo?problema=`).
