@@ -1,0 +1,18 @@
+# Mantém o Vinimon acordado no Render gratuito, que dorme após ~15 min sem requisições.
+# Roda a cada 10 min (o GitHub pode atrasar alguns minutos). Só faz um GET na rota de saúde.
+name: manter-acordado
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Acordar o serviço
+        run: curl --retry 3 --retry-delay 20 --retry-all-errors -fsS -m 120 -o /dev/null https://vinimon.onrender.com/api/v1/saude/pronto
