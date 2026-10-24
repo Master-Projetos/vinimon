@@ -172,6 +172,24 @@ describe('/chamados (tabela)', () => {
     await waitFor(() => expect(ultimaConsulta(falsa).getAll('statusIds')).toEqual(['2']))
   })
 
+  it('SLA é escolha única e "Mais filtros" mostra Problema, Canal e Departamento', async () => {
+    const { falsa, router } = montar('/chamados')
+    await screen.findByRole('link', { name: 'Impressora parada' })
+    expect(screen.queryByRole('button', { name: /^Canal/ })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Mais filtros/ }))
+    expect(await screen.findByRole('button', { name: /^Canal/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Problema/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Departamento/ })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /^SLA/ }))
+    const opcoes = await screen.findAllByRole('option')
+    const primeira = opcoes[0]
+    if (!primeira) throw new Error('sem opções de SLA')
+    fireEvent.click(primeira)
+    await waitFor(() => expect(router.state.location.search).toHaveProperty('sla'))
+    await waitFor(() => expect(ultimaConsulta(falsa).get('sla')).not.toBeNull())
+  })
+
   it('ordenar por # entra na URL e na consulta', async () => {
     const { falsa, router } = montar('/chamados')
     await screen.findByRole('link', { name: 'Impressora parada' })
@@ -204,7 +222,7 @@ describe('/chamados (tabela)', () => {
     expect(q.get('direcao')).toBe('asc')
     expect(q.get('pagina')).toBe('2')
     expect(q.get('de')).toBe('2026-10-01')
-    expect(screen.getByLabelText('De')).toHaveValue('2026-10-01')
+    expect(screen.getByRole('button', { name: /A partir de 01\/10\/2026/ })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: /Prioridade/ })).toHaveAttribute('aria-sort', 'ascending')
     expect(screen.getByText('Página 2 de 3')).toBeInTheDocument()
   })
