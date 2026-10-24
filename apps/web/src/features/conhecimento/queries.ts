@@ -1,5 +1,5 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
-import { artigosApi, categoriasArtigoApi, type ListarArtigosQuery } from '@vinimon/shared'
+import { artigosApi, type CriarArtigo, categoriasArtigoApi, type ListarArtigosQuery } from '@vinimon/shared'
 import { chamar } from '@/lib/api'
 
 export const artigoChaves = {
@@ -33,5 +33,28 @@ export function useVotarArtigo(id: number) {
   return useMutation({
     mutationFn: (util: boolean) => chamar(artigosApi.votar, { params: { id }, body: { util } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: artigoChaves.detalhe(id) }),
+  })
+}
+
+export function useSalvarArtigo(id: number | null) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (dados: CriarArtigo) =>
+      id === null
+        ? chamar(artigosApi.criar, { body: dados })
+        : chamar(artigosApi.atualizar, { params: { id }, body: dados }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: artigoChaves.todos }),
+    meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
+  })
+}
+
+export function useExcluirArtigo(id: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => chamar(artigosApi.excluir, { params: { id } }),
+    onSuccess: async () => {
+      qc.removeQueries({ queryKey: artigoChaves.detalhe(id) })
+      await qc.invalidateQueries({ queryKey: artigoChaves.todos })
+    },
   })
 }

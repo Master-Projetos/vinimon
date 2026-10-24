@@ -43,6 +43,7 @@ import { Route as AppChamadosIndexRouteImport } from './routes/_app/chamados/ind
 import { Route as AppChamadosChamadoIdRouteRouteImport } from './routes/_app/chamados/$chamadoId/route'
 import { Route as AppChamadosNovoRouteImport } from './routes/_app/chamados/novo'
 import { Route as AppConhecimentoIndexRouteImport } from './routes/_app/conhecimento/index'
+import { Route as AppConhecimentoNovoRouteImport } from './routes/_app/conhecimento/novo'
 import { Route as AppInventarioIndexRouteImport } from './routes/_app/inventario/index'
 import { Route as AppInventarioAtivoIdRouteImport } from './routes/_app/inventario/$ativoId'
 import { Route as AppPerfilIndexRouteImport } from './routes/_app/perfil/index'
@@ -58,6 +59,7 @@ import { Route as AppChamadosChamadoIdDetalhesRouteImport } from './routes/_app/
 import { Route as AppChamadosChamadoIdHistoricoRouteImport } from './routes/_app/chamados/$chamadoId/historico'
 import { Route as AppChamadosChamadoIdImprimirRouteImport } from './routes/_app/chamados/$chamadoId/imprimir'
 import { Route as AppConhecimentoArtigoIdIndexRouteImport } from './routes/_app/conhecimento/$artigoId/index'
+import { Route as AppConhecimentoArtigoIdEditarRouteImport } from './routes/_app/conhecimento/$artigoId/editar'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -230,6 +232,11 @@ const AppConhecimentoIndexRoute = AppConhecimentoIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppConhecimentoRouteRoute,
 } as any)
+const AppConhecimentoNovoRoute = AppConhecimentoNovoRouteImport.update({
+  id: '/novo',
+  path: '/novo',
+  getParentRoute: () => AppConhecimentoRouteRoute,
+} as any)
 const AppInventarioIndexRoute = AppInventarioIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -311,6 +318,12 @@ const AppConhecimentoArtigoIdIndexRoute =
     path: '/$artigoId/',
     getParentRoute: () => AppConhecimentoRouteRoute,
   } as any)
+const AppConhecimentoArtigoIdEditarRoute =
+  AppConhecimentoArtigoIdEditarRouteImport.update({
+    id: '/$artigoId/editar',
+    path: '/$artigoId/editar',
+    getParentRoute: () => AppConhecimentoRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -343,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/admin/unidades': typeof AppAdminUnidadesRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
   '/chamados/novo': typeof AppChamadosNovoRoute
+  '/conhecimento/novo': typeof AppConhecimentoNovoRoute
   '/inventario/$ativoId': typeof AppInventarioAtivoIdRoute
   '/perfil/aparencia': typeof AppPerfilAparenciaRoute
   '/perfil/notificacoes': typeof AppPerfilNotificacoesRoute
@@ -359,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
   '/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
   '/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
+  '/conhecimento/$artigoId/editar': typeof AppConhecimentoArtigoIdEditarRoute
   '/chamados/$chamadoId/': typeof AppChamadosChamadoIdIndexRoute
   '/conhecimento/$artigoId/': typeof AppConhecimentoArtigoIdIndexRoute
 }
@@ -386,6 +401,7 @@ export interface FileRoutesByTo {
   '/admin/unidades': typeof AppAdminUnidadesRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
   '/chamados/novo': typeof AppChamadosNovoRoute
+  '/conhecimento/novo': typeof AppConhecimentoNovoRoute
   '/inventario/$ativoId': typeof AppInventarioAtivoIdRoute
   '/perfil/aparencia': typeof AppPerfilAparenciaRoute
   '/perfil/notificacoes': typeof AppPerfilNotificacoesRoute
@@ -402,6 +418,7 @@ export interface FileRoutesByTo {
   '/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
   '/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
   '/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
+  '/conhecimento/$artigoId/editar': typeof AppConhecimentoArtigoIdEditarRoute
   '/chamados/$chamadoId': typeof AppChamadosChamadoIdIndexRoute
   '/conhecimento/$artigoId': typeof AppConhecimentoArtigoIdIndexRoute
 }
@@ -438,6 +455,7 @@ export interface FileRoutesById {
   '/_app/admin/unidades': typeof AppAdminUnidadesRoute
   '/_app/admin/usuarios': typeof AppAdminUsuariosRoute
   '/_app/chamados/novo': typeof AppChamadosNovoRoute
+  '/_app/conhecimento/novo': typeof AppConhecimentoNovoRoute
   '/_app/inventario/$ativoId': typeof AppInventarioAtivoIdRoute
   '/_app/perfil/aparencia': typeof AppPerfilAparenciaRoute
   '/_app/perfil/notificacoes': typeof AppPerfilNotificacoesRoute
@@ -454,6 +472,7 @@ export interface FileRoutesById {
   '/_app/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
   '/_app/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
   '/_app/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
+  '/_app/conhecimento/$artigoId/editar': typeof AppConhecimentoArtigoIdEditarRoute
   '/_app/chamados/$chamadoId/': typeof AppChamadosChamadoIdIndexRoute
   '/_app/conhecimento/$artigoId/': typeof AppConhecimentoArtigoIdIndexRoute
 }
@@ -490,6 +509,7 @@ export interface FileRouteTypes {
     | '/admin/unidades'
     | '/admin/usuarios'
     | '/chamados/novo'
+    | '/conhecimento/novo'
     | '/inventario/$ativoId'
     | '/perfil/aparencia'
     | '/perfil/notificacoes'
@@ -506,6 +526,7 @@ export interface FileRouteTypes {
     | '/chamados/$chamadoId/detalhes'
     | '/chamados/$chamadoId/historico'
     | '/chamados/$chamadoId/imprimir'
+    | '/conhecimento/$artigoId/editar'
     | '/chamados/$chamadoId/'
     | '/conhecimento/$artigoId/'
   fileRoutesByTo: FileRoutesByTo
@@ -533,6 +554,7 @@ export interface FileRouteTypes {
     | '/admin/unidades'
     | '/admin/usuarios'
     | '/chamados/novo'
+    | '/conhecimento/novo'
     | '/inventario/$ativoId'
     | '/perfil/aparencia'
     | '/perfil/notificacoes'
@@ -549,6 +571,7 @@ export interface FileRouteTypes {
     | '/chamados/$chamadoId/detalhes'
     | '/chamados/$chamadoId/historico'
     | '/chamados/$chamadoId/imprimir'
+    | '/conhecimento/$artigoId/editar'
     | '/chamados/$chamadoId'
     | '/conhecimento/$artigoId'
   id:
@@ -584,6 +607,7 @@ export interface FileRouteTypes {
     | '/_app/admin/unidades'
     | '/_app/admin/usuarios'
     | '/_app/chamados/novo'
+    | '/_app/conhecimento/novo'
     | '/_app/inventario/$ativoId'
     | '/_app/perfil/aparencia'
     | '/_app/perfil/notificacoes'
@@ -600,6 +624,7 @@ export interface FileRouteTypes {
     | '/_app/chamados/$chamadoId/detalhes'
     | '/_app/chamados/$chamadoId/historico'
     | '/_app/chamados/$chamadoId/imprimir'
+    | '/_app/conhecimento/$artigoId/editar'
     | '/_app/chamados/$chamadoId/'
     | '/_app/conhecimento/$artigoId/'
   fileRoutesById: FileRoutesById
@@ -851,6 +876,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConhecimentoIndexRouteImport
       parentRoute: typeof AppConhecimentoRouteRoute
     }
+    '/_app/conhecimento/novo': {
+      id: '/_app/conhecimento/novo'
+      path: '/novo'
+      fullPath: '/conhecimento/novo'
+      preLoaderRoute: typeof AppConhecimentoNovoRouteImport
+      parentRoute: typeof AppConhecimentoRouteRoute
+    }
     '/_app/inventario/': {
       id: '/_app/inventario/'
       path: '/'
@@ -956,6 +988,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConhecimentoArtigoIdIndexRouteImport
       parentRoute: typeof AppConhecimentoRouteRoute
     }
+    '/_app/conhecimento/$artigoId/editar': {
+      id: '/_app/conhecimento/$artigoId/editar'
+      path: '/$artigoId/editar'
+      fullPath: '/conhecimento/$artigoId/editar'
+      preLoaderRoute: typeof AppConhecimentoArtigoIdEditarRouteImport
+      parentRoute: typeof AppConhecimentoRouteRoute
+    }
   }
 }
 
@@ -1039,12 +1078,16 @@ const AppChamadosRouteRouteWithChildren =
   AppChamadosRouteRoute._addFileChildren(AppChamadosRouteRouteChildren)
 
 interface AppConhecimentoRouteRouteChildren {
+  AppConhecimentoNovoRoute: typeof AppConhecimentoNovoRoute
   AppConhecimentoIndexRoute: typeof AppConhecimentoIndexRoute
+  AppConhecimentoArtigoIdEditarRoute: typeof AppConhecimentoArtigoIdEditarRoute
   AppConhecimentoArtigoIdIndexRoute: typeof AppConhecimentoArtigoIdIndexRoute
 }
 
 const AppConhecimentoRouteRouteChildren: AppConhecimentoRouteRouteChildren = {
+  AppConhecimentoNovoRoute: AppConhecimentoNovoRoute,
   AppConhecimentoIndexRoute: AppConhecimentoIndexRoute,
+  AppConhecimentoArtigoIdEditarRoute: AppConhecimentoArtigoIdEditarRoute,
   AppConhecimentoArtigoIdIndexRoute: AppConhecimentoArtigoIdIndexRoute,
 }
 

@@ -1,7 +1,8 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router'
-import { BookOpen, Search } from 'lucide-react'
+import { createFileRoute, getRouteApi, Link, useRouteContext } from '@tanstack/react-router'
+import { BookOpen, Plus, Search } from 'lucide-react'
 import { Fragment, useEffect, useState } from 'react'
+import { Pode } from '@/components/display/pode'
 import { EmptyState } from '@/components/feedback/empty-state'
 import { PaneHeader } from '@/components/layout/pane-header'
 import { Badge } from '@/components/ui/badge'
@@ -42,6 +43,8 @@ function Destacar({ texto, termo }: { texto: string; termo: string | undefined }
 function ListaPagina() {
   const search = layout.useSearch()
   const navigate = Route.useNavigate()
+  const { sessao } = useRouteContext({ from: '/_app' })
+  const perfil = sessao.usuario?.perfil
   const pagina = search.pagina ?? 1
   const { data } = useSuspenseQuery(
     artigosConsultas.lista({ pagina, busca: search.busca, categoriaId: search.categoriaId, porPagina: POR_PAGINA }),
@@ -59,7 +62,20 @@ function ListaPagina() {
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
-      <PaneHeader titulo="Base de conhecimento" />
+      <PaneHeader
+        titulo="Base de conhecimento"
+        acoes={
+          perfil ? (
+            <Pode perfil={perfil} permissao="conhecimento.gerenciar">
+              <Button asChild size="sm">
+                <Link to="/conhecimento/novo">
+                  <Plus aria-hidden="true" /> Novo artigo
+                </Link>
+              </Button>
+            </Pode>
+          ) : null
+        }
+      />
       <div className="space-y-4 overflow-y-auto p-(--pane-px)">
         <div className="relative max-w-md">
           <Search aria-hidden="true" className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
