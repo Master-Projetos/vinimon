@@ -505,7 +505,7 @@
 ### T-10.30 — Painel
 - **Depende de:** T-10.4, T-8.1 · **Paralelo com:** T-10.31–T-10.37
 - **Requisitos:** G03; §6.3 (8)
-- **Arquivos:** `apps/web/src/routes/_app/painel.tsx`, `apps/web/src/features/painel/{queries.ts,components/kpi-grid.tsx,components/graficos.tsx,components/sla-proximos-table.tsx}`, `apps/web/src/components/display/chart-card.tsx`
+- **Arquivos:** `apps/web/src/routes/_app/painel.tsx`, `apps/web/src/features/painel/{queries.ts,painel.test.tsx,components/kpi-grid.tsx,components/graficos.tsx,components/sla-proximos-table.tsx}`, `apps/web/src/components/display/chart-card.tsx`
 - **Passos:**
   1. `StatCard`s clicáveis levam a `/chamados?visao=…`.
   2. Gráficos Recharts do shadcn, com `corDeGrafico` e "Ver como tabela".
