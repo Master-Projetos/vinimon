@@ -550,7 +550,7 @@
 ### T-10.33 — Conhecimento: editor
 - **Depende de:** T-10.32 · **Paralelo com:** T-10.34–T-10.37
 - **Requisitos:** F01
-- **Arquivos:** `apps/web/src/routes/_app/conhecimento/{novo.tsx,$artigoId/editar.tsx}`, `apps/web/src/features/conhecimento/components/artigo-form.tsx`, `apps/web/src/features/conhecimento/novo.test.tsx`, `apps/web/src/features/conhecimento/editar.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
+- **Arquivos:** `apps/web/src/routes/_app/conhecimento/{novo.tsx,index.tsx,$artigoId/editar.tsx}`, `apps/web/src/features/conhecimento/{queries.ts,components/artigo-view.tsx}` (links Novo/Editar e mutações), `apps/web/src/features/conhecimento/components/artigo-form.tsx`, `apps/web/src/features/conhecimento/novo.test.tsx`, `apps/web/src/features/conhecimento/editar.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Campos: título, resumo, categoria, tipos de problema (multi), visibilidade, situação e conteúdo (`MarkdownEditor`).
   2. `useAlteracoesNaoSalvas`. Excluir com confirmação.
