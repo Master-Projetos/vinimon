@@ -20,6 +20,8 @@ function PerfilLayout() {
             { to: '/perfil', rotulo: 'Conta', exact: true },
             { to: '/perfil/aparencia', rotulo: 'Aparência' },
             { to: '/perfil/notificacoes', rotulo: 'Notificações' },
+            { to: '/perfil/seguranca', rotulo: 'Segurança' },
+            { to: '/perfil/sessoes', rotulo: 'Sessões' },
           ]}
         />
       </div>
