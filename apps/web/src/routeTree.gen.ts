@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppAtividadeRouteImport } from './routes/_app/atividade'
 import { Route as AppChamadosRouteRouteImport } from './routes/_app/chamados/route'
+import { Route as AppConhecimentoRouteRouteImport } from './routes/_app/conhecimento/route'
 import { Route as AppInventarioRouteRouteImport } from './routes/_app/inventario/route'
 import { Route as AppPainelRouteImport } from './routes/_app/painel'
 import { Route as AppPerfilRouteRouteImport } from './routes/_app/perfil/route'
@@ -55,6 +56,7 @@ import { Route as AppChamadosChamadoIdAnexosRouteImport } from './routes/_app/ch
 import { Route as AppChamadosChamadoIdDetalhesRouteImport } from './routes/_app/chamados/$chamadoId/detalhes'
 import { Route as AppChamadosChamadoIdHistoricoRouteImport } from './routes/_app/chamados/$chamadoId/historico'
 import { Route as AppChamadosChamadoIdImprimirRouteImport } from './routes/_app/chamados/$chamadoId/imprimir'
+import { Route as AppConhecimentoArtigoIdIndexRouteImport } from './routes/_app/conhecimento/$artigoId/index'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -93,6 +95,11 @@ const AppAtividadeRoute = AppAtividadeRouteImport.update({
 const AppChamadosRouteRoute = AppChamadosRouteRouteImport.update({
   id: '/chamados',
   path: '/chamados',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConhecimentoRouteRoute = AppConhecimentoRouteRouteImport.update({
+  id: '/conhecimento',
+  path: '/conhecimento',
   getParentRoute: () => AppRoute,
 } as any)
 const AppInventarioRouteRoute = AppInventarioRouteRouteImport.update({
@@ -218,9 +225,9 @@ const AppChamadosNovoRoute = AppChamadosNovoRouteImport.update({
   getParentRoute: () => AppChamadosRouteRoute,
 } as any)
 const AppConhecimentoIndexRoute = AppConhecimentoIndexRouteImport.update({
-  id: '/conhecimento/',
-  path: '/conhecimento/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppConhecimentoRouteRoute,
 } as any)
 const AppInventarioIndexRoute = AppInventarioIndexRouteImport.update({
   id: '/',
@@ -292,6 +299,12 @@ const AppChamadosChamadoIdImprimirRoute =
     path: '/imprimir',
     getParentRoute: () => AppChamadosChamadoIdRouteRoute,
   } as any)
+const AppConhecimentoArtigoIdIndexRoute =
+  AppConhecimentoArtigoIdIndexRouteImport.update({
+    id: '/$artigoId/',
+    path: '/$artigoId/',
+    getParentRoute: () => AppConhecimentoRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -300,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/trocar-senha': typeof TrocarSenhaRoute
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/chamados': typeof AppChamadosRouteRouteWithChildren
+  '/conhecimento': typeof AppConhecimentoRouteRouteWithChildren
   '/inventario': typeof AppInventarioRouteRouteWithChildren
   '/perfil': typeof AppPerfilRouteRouteWithChildren
   '/relatorios': typeof AppRelatoriosRouteRouteWithChildren
@@ -339,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
   '/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
   '/chamados/$chamadoId/': typeof AppChamadosChamadoIdIndexRoute
+  '/conhecimento/$artigoId/': typeof AppConhecimentoArtigoIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/configurar-2fa': typeof Configurar2faRoute
@@ -380,6 +395,7 @@ export interface FileRoutesByTo {
   '/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
   '/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
   '/chamados/$chamadoId': typeof AppChamadosChamadoIdIndexRoute
+  '/conhecimento/$artigoId': typeof AppConhecimentoArtigoIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -389,6 +405,7 @@ export interface FileRoutesById {
   '/trocar-senha': typeof TrocarSenhaRoute
   '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/chamados': typeof AppChamadosRouteRouteWithChildren
+  '/_app/conhecimento': typeof AppConhecimentoRouteRouteWithChildren
   '/_app/inventario': typeof AppInventarioRouteRouteWithChildren
   '/_app/perfil': typeof AppPerfilRouteRouteWithChildren
   '/_app/relatorios': typeof AppRelatoriosRouteRouteWithChildren
@@ -429,6 +446,7 @@ export interface FileRoutesById {
   '/_app/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
   '/_app/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
   '/_app/chamados/$chamadoId/': typeof AppChamadosChamadoIdIndexRoute
+  '/_app/conhecimento/$artigoId/': typeof AppConhecimentoArtigoIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -439,6 +457,7 @@ export interface FileRouteTypes {
     | '/trocar-senha'
     | '/admin'
     | '/chamados'
+    | '/conhecimento'
     | '/inventario'
     | '/perfil'
     | '/relatorios'
@@ -478,6 +497,7 @@ export interface FileRouteTypes {
     | '/chamados/$chamadoId/historico'
     | '/chamados/$chamadoId/imprimir'
     | '/chamados/$chamadoId/'
+    | '/conhecimento/$artigoId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/configurar-2fa'
@@ -519,6 +539,7 @@ export interface FileRouteTypes {
     | '/chamados/$chamadoId/historico'
     | '/chamados/$chamadoId/imprimir'
     | '/chamados/$chamadoId'
+    | '/conhecimento/$artigoId'
   id:
     | '__root__'
     | '/_app'
@@ -527,6 +548,7 @@ export interface FileRouteTypes {
     | '/trocar-senha'
     | '/_app/admin'
     | '/_app/chamados'
+    | '/_app/conhecimento'
     | '/_app/inventario'
     | '/_app/perfil'
     | '/_app/relatorios'
@@ -567,6 +589,7 @@ export interface FileRouteTypes {
     | '/_app/chamados/$chamadoId/historico'
     | '/_app/chamados/$chamadoId/imprimir'
     | '/_app/chamados/$chamadoId/'
+    | '/_app/conhecimento/$artigoId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -632,6 +655,13 @@ declare module '@tanstack/react-router' {
       path: '/chamados'
       fullPath: '/chamados'
       preLoaderRoute: typeof AppChamadosRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/conhecimento': {
+      id: '/_app/conhecimento'
+      path: '/conhecimento'
+      fullPath: '/conhecimento'
+      preLoaderRoute: typeof AppConhecimentoRouteRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/inventario': {
@@ -804,10 +834,10 @@ declare module '@tanstack/react-router' {
     }
     '/_app/conhecimento/': {
       id: '/_app/conhecimento/'
-      path: '/conhecimento'
+      path: '/'
       fullPath: '/conhecimento/'
       preLoaderRoute: typeof AppConhecimentoIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppConhecimentoRouteRoute
     }
     '/_app/inventario/': {
       id: '/_app/inventario/'
@@ -900,6 +930,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChamadosChamadoIdImprimirRouteImport
       parentRoute: typeof AppChamadosChamadoIdRouteRoute
     }
+    '/_app/conhecimento/$artigoId/': {
+      id: '/_app/conhecimento/$artigoId/'
+      path: '/$artigoId'
+      fullPath: '/conhecimento/$artigoId/'
+      preLoaderRoute: typeof AppConhecimentoArtigoIdIndexRouteImport
+      parentRoute: typeof AppConhecimentoRouteRoute
+    }
   }
 }
 
@@ -982,6 +1019,19 @@ const AppChamadosRouteRouteChildren: AppChamadosRouteRouteChildren = {
 const AppChamadosRouteRouteWithChildren =
   AppChamadosRouteRoute._addFileChildren(AppChamadosRouteRouteChildren)
 
+interface AppConhecimentoRouteRouteChildren {
+  AppConhecimentoIndexRoute: typeof AppConhecimentoIndexRoute
+  AppConhecimentoArtigoIdIndexRoute: typeof AppConhecimentoArtigoIdIndexRoute
+}
+
+const AppConhecimentoRouteRouteChildren: AppConhecimentoRouteRouteChildren = {
+  AppConhecimentoIndexRoute: AppConhecimentoIndexRoute,
+  AppConhecimentoArtigoIdIndexRoute: AppConhecimentoArtigoIdIndexRoute,
+}
+
+const AppConhecimentoRouteRouteWithChildren =
+  AppConhecimentoRouteRoute._addFileChildren(AppConhecimentoRouteRouteChildren)
+
 interface AppInventarioRouteRouteChildren {
   AppInventarioIndexRoute: typeof AppInventarioIndexRoute
 }
@@ -1029,6 +1079,7 @@ const AppRelatoriosRouteRouteWithChildren =
 interface AppRouteChildren {
   AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
   AppChamadosRouteRoute: typeof AppChamadosRouteRouteWithChildren
+  AppConhecimentoRouteRoute: typeof AppConhecimentoRouteRouteWithChildren
   AppInventarioRouteRoute: typeof AppInventarioRouteRouteWithChildren
   AppPerfilRouteRoute: typeof AppPerfilRouteRouteWithChildren
   AppRelatoriosRouteRoute: typeof AppRelatoriosRouteRouteWithChildren
@@ -1036,12 +1087,12 @@ interface AppRouteChildren {
   AppPainelRoute: typeof AppPainelRoute
   AppSemPermissaoRoute: typeof AppSemPermissaoRoute
   AppIndexRoute: typeof AppIndexRoute
-  AppConhecimentoIndexRoute: typeof AppConhecimentoIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
   AppChamadosRouteRoute: AppChamadosRouteRouteWithChildren,
+  AppConhecimentoRouteRoute: AppConhecimentoRouteRouteWithChildren,
   AppInventarioRouteRoute: AppInventarioRouteRouteWithChildren,
   AppPerfilRouteRoute: AppPerfilRouteRouteWithChildren,
   AppRelatoriosRouteRoute: AppRelatoriosRouteRouteWithChildren,
@@ -1049,7 +1100,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppPainelRoute: AppPainelRoute,
   AppSemPermissaoRoute: AppSemPermissaoRoute,
   AppIndexRoute: AppIndexRoute,
-  AppConhecimentoIndexRoute: AppConhecimentoIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
