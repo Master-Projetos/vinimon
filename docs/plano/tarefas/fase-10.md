@@ -473,7 +473,7 @@
 ### T-10.28 — Aba Anexos
 - **Depende de:** T-10.21, T-10.22, T-6.6 · **Paralelo com:** T-10.27, T-10.29
 - **Requisitos:** S70, S71
-- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/anexos.tsx`, `apps/web/src/features/anexos/{queries.ts,components/anexos-view.tsx,components/anexo-card.tsx,components/anexo-preview-dialog.tsx}`, `apps/web/src/features/anexos/anexos.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
+- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/anexos.tsx`, `apps/web/src/routes/_app/chamados/$chamadoId/route.tsx` (a aba "Anexos"), `apps/web/src/features/anexos/{queries.ts,components/anexos-view.tsx,components/anexo-card.tsx,components/anexo-preview-dialog.tsx}`, `apps/web/src/features/anexos/anexos.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Grade de cards e dropzone; o toggle "Interno" aparece só para a equipe.
   2. Prévia só para imagens (png, jpeg, gif, webp): `<img src="/api/v1/anexos/:id" loading="lazy">` no `AnexoPreviewDialog`. PDF e demais tipos não têm prévia, só o botão "Baixar". Não usar iframe, embed nem object.
