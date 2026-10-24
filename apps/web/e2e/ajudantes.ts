@@ -27,3 +27,7 @@ export async function codigoNovoPasso(segredo: string, passoUsado: number): Prom
   await expect.poll(passoAtual, { timeout: 31_000 }).toBeGreaterThan(passoUsado)
   return { codigo: totp(segredo), passo: passoAtual() }
 }
+
+/** Chaves fixas só dos testes (não são segredos reais); a API do webServer e o preparo do banco usam as mesmas. */
+export const CSRF_SECRET_E2E = 'ZGV2LWFwZW5hcy10cm9xdWUtZW0tcHJvZHVjYW8tMDAwMQ=='
+export const ENCRYPTION_KEY_E2E = 'ZGV2LWFwZW5hcy10cm9xdWUtZW0tcHJvZHVjYW8tMDE='

@@ -85,14 +85,14 @@ export function UserMenu({ usuario, aoAbrirAtalhos }: UserMenuProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label={`Menu de ${usuario.nome}`}
-        className="relative rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-      >
-        <UserAvatar usuario={usuario} tamanho="sm" />
-        <span className="absolute -right-1 -bottom-1 rounded-full bg-background text-[10px] leading-none">
-          <PresenceIndicator status={estado} />
+      <DropdownMenuTrigger className="relative rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+        <span aria-hidden="true">
+          <UserAvatar usuario={usuario} tamanho="sm" />
+          <span className="absolute -right-1 -bottom-1 rounded-full bg-background text-[10px] leading-none">
+            <PresenceIndicator status={estado} />
+          </span>
         </span>
+        <span className="sr-only">Menu de {usuario.nome}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuLabel className="flex items-center justify-between gap-2">
