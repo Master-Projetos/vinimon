@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import type { Ativo, SituacaoAtivo } from '@vinimon/shared'
 import { Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -54,7 +55,11 @@ export function AtivosTable({ ativos, aoEditar }: AtivosTableProps) {
       <TableBody>
         {ativos.map((a) => (
           <TableRow key={a.id} className="h-(--row-h)">
-            <TableCell className="font-medium">{a.etiqueta}</TableCell>
+            <TableCell className="font-medium">
+              <Link to="/inventario/$ativoId" params={{ ativoId: a.id }} className="underline-offset-2 hover:underline">
+                {a.etiqueta}
+              </Link>
+            </TableCell>
             <TableCell>{a.tipo}</TableCell>
             <TableCell>{a.modelo ?? '—'}</TableCell>
             <TableCell>{a.serie ?? '—'}</TableCell>
