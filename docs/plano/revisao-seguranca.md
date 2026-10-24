@@ -8,26 +8,20 @@ Os testes citados como `arquivo › "título"` foram lidos. Esta revisão não r
 
 | Status | Quantidade |
 |---|---|
-| OK | 120 |
-| Pendente (alta) | 1 (S111) |
-| Pendente (média) | 2 (S2, S81) |
+| OK | 122 (S111 e S81 corrigidos nesta tarefa) |
+| Pendente (alta) | 0 |
+| Pendente (média) | 1 (S2: decisão humana sobre o histórico) |
 | Fase 2 | 1 (S124), e mais as partes de Fase 2 de S20 e S51, anotadas na linha |
 
-### Pendências de severidade alta (precisam de correção antes de concluir a T-11.11)
+### Pendências de severidade alta
 
-1. **S111 / T04: `pnpm audit --prod --audit-level=high` falha hoje e derruba o passo do CI.**
-   - `undici@7.29.1` tem o aviso GHSA-xjj6-f33q-929c (alto, DoS por excesso de content-encodings).
-   - Também tem GHSA-4qv8-2p9j-2685 e GHSA-f72v-6w45-q472 (moderados).
-   - Caminho: `apps/api > @scalar/fastify-api-reference > @scalar/json-magic > undici`.
-   - O risco real em produção é baixo: o pacote só é usado pelo `docsPlugin`, e `API_DOCS=false` é obrigatório em produção (S4). Mesmo assim, o CI fica vermelho e o S111 deixa de ser cumprido.
-   - **Proposta:** abrir uma tarefa para subir `@scalar/fastify-api-reference` para uma versão exata que já dependa de `undici >= 7.30.1`. Se essa versão não existir, fixar `undici: 7.30.1` em `overrides` no `pnpm-workspace.yaml`. A troca de versão é decisão de plano (regra 1 do CLAUDE.md), por isso não foi feita aqui.
+Nenhuma. As duas que o preparo encontrou foram corrigidas nesta tarefa:
+
+- **S111 / T04 (era alta):** `undici@7.29.1` (GHSA-xjj6-f33q-929c e dois moderados) vinha só de `@scalar/fastify-api-reference > @scalar/json-magic`. Corrigido com `overrides: { undici: 7.30.1 }` em `pnpm-workspace.yaml`; `pnpm audit --prod --audit-level=high` agora sai com "No known vulnerabilities found".
+- **S81 (era média):** `GET /assets/*.js.map` respondia 200. O `spaPlugin` agora recusa qualquer `*.map` (`allowedPath`) e o `notFoundHandler` responde 404 em vez do `index.html`. Teste: `apps/api/src/plugins/spa.test.ts` ("S81: mapas de código não são servidos"). O `sourcemap: 'hidden'` da S81 continua, para depuração interna.
 
 ### Pendências de severidade média
 
-- **S81: os source maps estão publicados em produção.**
-  - `build.sourcemap: 'hidden'` (`apps/web/vite.config.ts:21`) só tira o comentário `sourceMappingURL`. Os `.map` continuam em `dist/assets` e o `@fastify/static` os serve.
-  - Exemplo: `GET https://vinimon.onrender.com/assets/index-DpwhaQ6B.js.map` responde 200 com um source map v3.
-  - **Proposta:** apagar `dist/**/*.map` depois do `vite build`, no script de build/release, ou fazer o `spaPlugin` responder 404 para `*.map`.
 - **S2: a decisão humana sobre o histórico está em aberto.**
   - O passo de CI existe e o índice está limpo. Porém `data/VINIMON.db` e `data/ocomon.db` continuam no histórico (commit `770aec1`), e o `SECURITY.md` registra "Decisão: _pendente_".
   - **Proposta:** o responsável decide entre rodar `git filter-repo --path data --invert-paths` ou aceitar o risco, e registra a decisão e a data no `SECURITY.md`. As senhas padrão da v1 já são tratadas como vazadas (S12).
@@ -196,7 +190,7 @@ Caminhos de `apps/api` estão abreviados (`src/…`, `test/…`).
 | S78 | `components/display/markdown.tsx:15-42`; `markdown.test.tsx`; `ci.yml:29` (grep de `dangerouslySetInnerHTML`/`innerHTML`); sem iframe/embed/object (grep) | OK |
 | S79 | `apps/web/src/routes/login.tsx:12` (schema do `redirect`); `login.test.tsx` › "…com redirect externo vai para /" | OK |
 | S80 | `apps/web/src/lib/storage.ts` (único ponto, `limparDadosDoUsuario`); `features/auth/queries.ts:116-117` | OK |
-| S81 | `apps/web/vite.config.ts:21` (`sourcemap: 'hidden'`) | Pendente (média): `.map` servidos publicamente em produção |
+| S81 | `apps/web/vite.config.ts:21` (`sourcemap: 'hidden'`) | OK: `spa.ts` (`ehSourceMap` + `allowedPath`) e `spa.test.ts` ('S81: mapas de código não são servidos') |
 | S82 | `packages/shared/src/csv.ts:8` | OK |
 
 ### Logs e auditoria
@@ -246,7 +240,7 @@ Caminhos de `apps/api` estão abreviados (`src/…`, `test/…`).
 |---|---|---|
 | S109 | `pnpm-workspace.yaml` (`savePrefix: ''`); `pnpm-lock.yaml` versionado; `ci.yml:34` (`--frozen-lockfile`) | OK |
 | S110 | `apps/api/package.json:31,32,59` (7.10.1); `ci.yml:40-41` (T04) | OK |
-| S111 | `ci.yml:35` | **Pendente (alta)**: o passo falha hoje (undici 7.29.1, GHSA-xjj6-f33q-929c) |
+| S111 | `ci.yml:35` | OK: `overrides: undici 7.30.1` em `pnpm-workspace.yaml`; `pnpm audit --prod --audit-level=high` limpo |
 | S112 | `renovate.json` (`minimumReleaseAge: 3 days`, sem `automerge`) | OK |
 | S113 | `pnpm-workspace.yaml` (`minimumReleaseAge: 1440`, `allowBuilds` esbuild/prisma/@prisma/engines) | OK |
 | S114 | `.nvmrc` = 24; `deploy/vinimon.service` (`User=vinimon`, `ProtectSystem=strict`) | OK |
@@ -297,7 +291,7 @@ Outras checagens:
 | `POST /api/v1/auth/login` com `Origin: https://evil.test` | 403 `ORIGEM_INVALIDA` |
 | `OPTIONS` com Origin externo | 404, sem cabeçalhos CORS |
 | `/docs` e `/api/v1/openapi.json` | 404 (`API_DOCS` desligado) |
-| `/assets/index-DpwhaQ6B.js.map` | **200** (pendência S81) |
+| `/assets/index-DpwhaQ6B.js.map` | 200 antes da correção; 404 depois dela (S81) |
 
 ### `pnpm audit --prod`
 `3 vulnerabilities found — Severity: 2 moderate | 1 high`. Todas são de `undici@7.29.1` (corrigido em 7.30.1), via `@scalar/fastify-api-reference > @scalar/json-magic`:
@@ -308,7 +302,7 @@ Outras checagens:
 | Moderada | GHSA-4qv8-2p9j-2685 | DoS no parser de EventSource |
 | Moderada | GHSA-f72v-6w45-q472 | Bypass de SRI |
 
-Ver pendência S111.
+S111 corrigido: ver o resumo no topo.
 
 ### Segredos no histórico
 - **gitleaks:** não está instalado neste ambiente, então `gitleaks detect` não foi executado aqui. Ele roda no CI a cada push/PR (`ci.yml:21-24`).

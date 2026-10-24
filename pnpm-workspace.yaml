@@ -3,6 +3,9 @@ packages:
   - packages/*
 savePrefix: ''
 minimumReleaseAge: 1440
+# S111: undici < 7.30.1 tem aviso alto (DoS por content-encoding). Vem só do plugin de docs da API (@scalar).
+overrides:
+  undici: 7.30.1
 allowBuilds:
   esbuild: true
   prisma: true
