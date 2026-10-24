@@ -579,7 +579,7 @@
 ### T-10.35 — Inventário: detalhe e etiqueta QR
 - **Depende de:** T-10.34 · **Paralelo com:** T-10.30–T-10.33, T-10.36, T-10.37
 - **Requisitos:** I02
-- **Arquivos:** `apps/web/src/routes/_app/inventario/$ativoId.tsx`, `apps/web/src/features/inventario/components/{etiqueta-qr-dialog.tsx,ativo-chamados.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/inventario/$ativoId.tsx`, `apps/web/src/features/inventario/components/{etiqueta-qr-dialog.tsx,ativo-chamados.tsx}`, `apps/web/src/features/inventario/{queries.ts,etiqueta-qr.test.tsx}`, `apps/web/src/features/inventario/components/ativos-table.tsx` (etiqueta vira link para o detalhe)
 - **Passos:**
   1. Abas Dados e Chamados.
   2. QR com `QRCodeSVG` para `${location.origin}/chamados/novo?equipamento=<etiqueta>`.
