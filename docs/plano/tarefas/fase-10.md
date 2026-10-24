@@ -194,7 +194,7 @@
 ### T-10.12 — Admin: configurações e auditoria
 - **Depende de:** T-10.5, T-3.13, T-3.14 · **Paralelo com:** T-10.6–T-10.11
 - **Requisitos:** S89; §6.3 (12)
-- **Arquivos:** `apps/web/src/routes/_app/admin/{configuracoes.tsx,auditoria.tsx}`, `apps/web/src/features/{config,auditoria}/queries.ts`, `apps/web/src/features/admin/components/configuracoes-secao.tsx`, `apps/web/src/features/config/configuracoes.test.tsx`, `apps/web/src/features/auditoria/auditoria.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
+- **Arquivos:** `apps/web/src/routes/_app/admin/{configuracoes.tsx,auditoria.tsx}`, `apps/web/src/features/{config,auditoria}/queries.ts`, `apps/web/src/features/admin/components/configuracoes-secao.tsx`, `apps/web/src/lib/api.ts` (query serializa `Date` em ISO), `apps/web/src/features/config/configuracoes.test.tsx`, `apps/web/src/features/auditoria/auditoria.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Configurações: seções Geral, Sessão, Chamados, Anexos e SLA, cada uma com um formulário e um PATCH próprios (só as chaves da seção). Salvar invalida `['meta']`.
   2. Auditoria: filtros (período, ator, ação, entidade), paginação e linha expansível com `<pre>{JSON.stringify(dados, null, 2)}</pre>`.
@@ -505,7 +505,7 @@
 ### T-10.30 — Painel
 - **Depende de:** T-10.4, T-8.1 · **Paralelo com:** T-10.31–T-10.37
 - **Requisitos:** G03; §6.3 (8)
-- **Arquivos:** `apps/web/src/routes/_app/painel.tsx`, `apps/web/src/features/painel/{queries.ts,components/kpi-grid.tsx,components/graficos.tsx,components/sla-proximos-table.tsx}`, `apps/web/src/components/display/chart-card.tsx`
+- **Arquivos:** `apps/web/src/routes/_app/painel.tsx`, `apps/web/src/features/painel/{queries.ts,painel.test.tsx,components/kpi-grid.tsx,components/graficos.tsx,components/sla-proximos-table.tsx}`, `apps/web/src/components/display/chart-card.tsx`
 - **Passos:**
   1. `StatCard`s clicáveis levam a `/chamados?visao=…`.
   2. Gráficos Recharts do shadcn, com `corDeGrafico` e "Ver como tabela".
@@ -612,7 +612,7 @@
 ### T-10.37 — Perfil: segurança e sessões
 - **Depende de:** T-10.36, T-2.9 · **Paralelo com:** T-10.30–T-10.35
 - **Requisitos:** S24, S29, S30
-- **Arquivos:** `apps/web/src/routes/_app/perfil/{seguranca.tsx,sessoes.tsx}`, `apps/web/src/features/perfil/components/{trocar-senha-card.tsx,dois-fatores-card.tsx,sessoes-table.tsx}`, `apps/web/src/features/perfil/sessoes.test.tsx`, `apps/web/src/features/perfil/seguranca.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
+- **Arquivos:** `apps/web/src/routes/_app/perfil/{route.tsx,seguranca.tsx,sessoes.tsx}` (route.tsx ganha as abas Segurança e Sessões), `apps/web/src/features/perfil/queries.ts`, `apps/web/src/features/perfil/components/{trocar-senha-card.tsx,dois-fatores-card.tsx,sessoes-table.tsx}`, `apps/web/src/features/perfil/sessoes.test.tsx`, `apps/web/src/features/perfil/seguranca.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Trocar senha. O toast avisa que as outras sessões foram encerradas.
   2. 2FA: "Gerar novos códigos" pede a senha; "Desativar" só para USUARIO.
