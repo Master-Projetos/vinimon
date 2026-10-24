@@ -1,8 +1,9 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useRouteContext } from '@tanstack/react-router'
 import type { Artigo } from '@vinimon/shared'
-import { ThumbsDown, ThumbsUp } from 'lucide-react'
+import { Pencil, ThumbsDown, ThumbsUp } from 'lucide-react'
 import { useState } from 'react'
 import { Markdown } from '@/components/display/markdown'
+import { Pode } from '@/components/display/pode'
 import { PaneHeader } from '@/components/layout/pane-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,13 +17,29 @@ export interface ArtigoViewProps {
 
 /** Artigo em `.markdown-artigo`, com "Foi útil?" e "Abrir chamado" já apontando para o problema do artigo. */
 export function ArtigoView({ artigo }: ArtigoViewProps) {
+  const { sessao } = useRouteContext({ from: '/_app' })
+  const perfil = sessao.usuario?.perfil
   const votar = useVotarArtigo(artigo.id)
   const [votou, setVotou] = useState(false)
   const problemaId = artigo.problemaIds[0]
 
   return (
     <article className="flex min-h-0 flex-1 flex-col">
-      <PaneHeader titulo={artigo.titulo} voltarPara={{ to: '/conhecimento' }} />
+      <PaneHeader
+        titulo={artigo.titulo}
+        voltarPara={{ to: '/conhecimento' }}
+        acoes={
+          perfil ? (
+            <Pode perfil={perfil} permissao="conhecimento.gerenciar">
+              <Button asChild variant="outline" size="sm">
+                <Link to="/conhecimento/$artigoId/editar" params={{ artigoId: artigo.id }}>
+                  <Pencil aria-hidden="true" /> Editar
+                </Link>
+              </Button>
+            </Pode>
+          ) : null
+        }
+      />
       <div className="mx-auto w-full max-w-3xl space-y-4 overflow-y-auto p-(--pane-px)">
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           {artigo.visibilidade === 'INTERNO' ? <Badge variant="secondary">Interno</Badge> : null}
