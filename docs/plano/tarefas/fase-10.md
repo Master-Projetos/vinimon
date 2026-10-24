@@ -194,7 +194,7 @@
 ### T-10.12 — Admin: configurações e auditoria
 - **Depende de:** T-10.5, T-3.13, T-3.14 · **Paralelo com:** T-10.6–T-10.11
 - **Requisitos:** S89; §6.3 (12)
-- **Arquivos:** `apps/web/src/routes/_app/admin/{configuracoes.tsx,auditoria.tsx}`, `apps/web/src/features/{config,auditoria}/queries.ts`, `apps/web/src/features/admin/components/configuracoes-secao.tsx`, `apps/web/src/features/config/configuracoes.test.tsx`, `apps/web/src/features/auditoria/auditoria.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
+- **Arquivos:** `apps/web/src/routes/_app/admin/{configuracoes.tsx,auditoria.tsx}`, `apps/web/src/features/{config,auditoria}/queries.ts`, `apps/web/src/features/admin/components/configuracoes-secao.tsx`, `apps/web/src/lib/api.ts` (query serializa `Date` em ISO), `apps/web/src/features/config/configuracoes.test.tsx`, `apps/web/src/features/auditoria/auditoria.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Configurações: seções Geral, Sessão, Chamados, Anexos e SLA, cada uma com um formulário e um PATCH próprios (só as chaves da seção). Salvar invalida `['meta']`.
   2. Auditoria: filtros (período, ator, ação, entidade), paginação e linha expansível com `<pre>{JSON.stringify(dados, null, 2)}</pre>`.
