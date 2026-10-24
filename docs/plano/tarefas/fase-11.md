@@ -144,7 +144,7 @@
 ### T-11.7 — E2E: segurança e acessibilidade
 - **Depende de:** T-11.4 e todas as T-10.x · **Paralelo com:** T-11.5, T-11.6
 - **Requisitos:** T66, T67, T72; §6.2 (axe)
-- **Arquivos:** `apps/web/e2e/{seguranca.spec.ts,a11y.spec.ts}`, `apps/api/scripts/e2e-preparar.ts`
+- **Arquivos:** `apps/web/e2e/{seguranca.spec.ts,a11y.spec.ts,rotas.ts,ajudantes.ts}`, `apps/web/playwright.config.ts`, `apps/web/package.json` (`@axe-core/playwright` 4.14.0), `apps/api/scripts/e2e-preparar.ts`
 - **Passos:**
   1. T66: `addInitScript` com `document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective))`; percorre todas as rotas da §6.6 e diálogos Radix e confere `[]`.
   2. T67: XSS no assunto, no comentário e em link `javascript:`.
