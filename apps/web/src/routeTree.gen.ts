@@ -43,6 +43,7 @@ import { Route as AppChamadosChamadoIdRouteRouteImport } from './routes/_app/cha
 import { Route as AppChamadosNovoRouteImport } from './routes/_app/chamados/novo'
 import { Route as AppConhecimentoIndexRouteImport } from './routes/_app/conhecimento/index'
 import { Route as AppInventarioIndexRouteImport } from './routes/_app/inventario/index'
+import { Route as AppInventarioAtivoIdRouteImport } from './routes/_app/inventario/$ativoId'
 import { Route as AppPerfilIndexRouteImport } from './routes/_app/perfil/index'
 import { Route as AppPerfilAparenciaRouteImport } from './routes/_app/perfil/aparencia'
 import { Route as AppPerfilNotificacoesRouteImport } from './routes/_app/perfil/notificacoes'
@@ -227,6 +228,11 @@ const AppInventarioIndexRoute = AppInventarioIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppInventarioRouteRoute,
 } as any)
+const AppInventarioAtivoIdRoute = AppInventarioAtivoIdRouteImport.update({
+  id: '/$ativoId',
+  path: '/$ativoId',
+  getParentRoute: () => AppInventarioRouteRoute,
+} as any)
 const AppPerfilIndexRoute = AppPerfilIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -323,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/admin/unidades': typeof AppAdminUnidadesRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
   '/chamados/novo': typeof AppChamadosNovoRoute
+  '/inventario/$ativoId': typeof AppInventarioAtivoIdRoute
   '/perfil/aparencia': typeof AppPerfilAparenciaRoute
   '/perfil/notificacoes': typeof AppPerfilNotificacoesRoute
   '/perfil/seguranca': typeof AppPerfilSegurancaRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/admin/unidades': typeof AppAdminUnidadesRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
   '/chamados/novo': typeof AppChamadosNovoRoute
+  '/inventario/$ativoId': typeof AppInventarioAtivoIdRoute
   '/perfil/aparencia': typeof AppPerfilAparenciaRoute
   '/perfil/notificacoes': typeof AppPerfilNotificacoesRoute
   '/perfil/seguranca': typeof AppPerfilSegurancaRoute
@@ -413,6 +421,7 @@ export interface FileRoutesById {
   '/_app/admin/unidades': typeof AppAdminUnidadesRoute
   '/_app/admin/usuarios': typeof AppAdminUsuariosRoute
   '/_app/chamados/novo': typeof AppChamadosNovoRoute
+  '/_app/inventario/$ativoId': typeof AppInventarioAtivoIdRoute
   '/_app/perfil/aparencia': typeof AppPerfilAparenciaRoute
   '/_app/perfil/notificacoes': typeof AppPerfilNotificacoesRoute
   '/_app/perfil/seguranca': typeof AppPerfilSegurancaRoute
@@ -462,6 +471,7 @@ export interface FileRouteTypes {
     | '/admin/unidades'
     | '/admin/usuarios'
     | '/chamados/novo'
+    | '/inventario/$ativoId'
     | '/perfil/aparencia'
     | '/perfil/notificacoes'
     | '/perfil/seguranca'
@@ -503,6 +513,7 @@ export interface FileRouteTypes {
     | '/admin/unidades'
     | '/admin/usuarios'
     | '/chamados/novo'
+    | '/inventario/$ativoId'
     | '/perfil/aparencia'
     | '/perfil/notificacoes'
     | '/perfil/seguranca'
@@ -551,6 +562,7 @@ export interface FileRouteTypes {
     | '/_app/admin/unidades'
     | '/_app/admin/usuarios'
     | '/_app/chamados/novo'
+    | '/_app/inventario/$ativoId'
     | '/_app/perfil/aparencia'
     | '/_app/perfil/notificacoes'
     | '/_app/perfil/seguranca'
@@ -816,6 +828,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInventarioIndexRouteImport
       parentRoute: typeof AppInventarioRouteRoute
     }
+    '/_app/inventario/$ativoId': {
+      id: '/_app/inventario/$ativoId'
+      path: '/$ativoId'
+      fullPath: '/inventario/$ativoId'
+      preLoaderRoute: typeof AppInventarioAtivoIdRouteImport
+      parentRoute: typeof AppInventarioRouteRoute
+    }
     '/_app/perfil/': {
       id: '/_app/perfil/'
       path: '/'
@@ -983,10 +1002,12 @@ const AppChamadosRouteRouteWithChildren =
   AppChamadosRouteRoute._addFileChildren(AppChamadosRouteRouteChildren)
 
 interface AppInventarioRouteRouteChildren {
+  AppInventarioAtivoIdRoute: typeof AppInventarioAtivoIdRoute
   AppInventarioIndexRoute: typeof AppInventarioIndexRoute
 }
 
 const AppInventarioRouteRouteChildren: AppInventarioRouteRouteChildren = {
+  AppInventarioAtivoIdRoute: AppInventarioAtivoIdRoute,
   AppInventarioIndexRoute: AppInventarioIndexRoute,
 }
 
