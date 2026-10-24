@@ -6,7 +6,7 @@ import { E2E_SENHA, E2E_TOTP_SECRET } from './ajudantes'
 import { totp } from './totp'
 
 /** Um login por usuário de teste; a sessão vai para e2e/.auth/<login>.json e os specs a reutilizam (sem refazer login). */
-const USUARIOS = ['operador', 'usuario', 'usuario-t72'] as const
+const USUARIOS = ['operador', 'usuario', 'usuario-t72', 'admin-e2e'] as const
 
 for (const login of USUARIOS) {
   setup(`sessão de ${login}`, async ({ page, context }) => {

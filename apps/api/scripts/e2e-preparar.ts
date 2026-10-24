@@ -51,6 +51,7 @@ async function main(): Promise<void> {
         data: { login: 'operador', nome: 'Operador E2E', perfil: 'OPERADOR', areaId: ti.id, ...equipe },
       })
       await tx.usuario.create({ data: { login: 'usuario', nome: 'Usuário E2E', perfil: 'USUARIO', ...equipe } })
+      await tx.usuario.create({ data: { login: 'admin-e2e', nome: 'Admin E2E', perfil: 'ADMIN', ...equipe } })
       await tx.usuario.create({ data: { login: 'usuario-t72', nome: 'Usuário T72', perfil: 'USUARIO', ...equipe } })
 
       const problema = await tx.problema.create({
