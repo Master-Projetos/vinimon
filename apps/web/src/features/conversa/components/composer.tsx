@@ -19,6 +19,10 @@ export interface ComposerProps {
   anexos: File[]
   aoMudarAnexos: (arquivos: File[]) => void
   aoEnviar: (envio: { texto: string; interno: boolean; arquivos: File[] }) => void
+  /** A pessoa está digitando (a cada tecla; quem chama faz o throttle). */
+  aoDigitar?: (interno: boolean) => void
+  /** Blur ou envio: parou de digitar. */
+  aoParar?: () => void
 }
 
 /** Texto logo antes do cursor que começa com `@` e ainda não tem espaço: é a busca de menção em andamento. */
@@ -37,6 +41,8 @@ export function Composer({
   anexos,
   aoMudarAnexos,
   aoEnviar,
+  aoDigitar,
+  aoParar,
 }: ComposerProps) {
   const [texto, setTexto] = useState('')
   const [interno, setInterno] = useState(false)
@@ -87,6 +93,7 @@ export function Composer({
     if (visivel === '' && anexos.length === 0) return
     const final = visivel === '' ? 'Anexos enviados.' : serializarComposer(visivel, selecionadas)
     aoEnviar({ texto: final, interno, arquivos: anexos })
+    aoParar?.()
     setTexto('')
     setSelecionadas([])
     setBusca(null)
@@ -180,10 +187,12 @@ export function Composer({
           maxLength={20_000}
           onChange={(e) => {
             setTexto(e.target.value)
+            if (e.target.value !== '') aoDigitar?.(interno)
             atualizarBusca(e.target.value, e.target.selectionStart)
           }}
           onClick={(e) => atualizarBusca(texto, e.currentTarget.selectionStart)}
           onKeyDown={aoTeclar}
+          onBlur={() => aoParar?.()}
           onPaste={aoColar}
         />
       </div>
