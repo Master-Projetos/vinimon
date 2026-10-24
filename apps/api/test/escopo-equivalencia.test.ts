@@ -106,7 +106,7 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
     'operadorOutraArea',
     'responsavelOutraArea',
     'admin',
-  ] as const)('ator %s: mesmo conjunto no Prisma e em memória', async (nome) => {
+  ] as const)('T33: ator %s: mesmo conjunto no Prisma e em memória', async (nome) => {
     const u = atores[nome]
     const noBanco = ids(await prisma.chamado.findMany({ where: escopoChamados(u), select: { id: true } }))
     const emMemoria = ids(chamados.filter((c) => podeVerChamado(u, c)))

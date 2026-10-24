@@ -25,7 +25,7 @@ const contagens = async () => ({
 describe('seed (T09)', () => {
   beforeEach(limparBanco)
 
-  it('é idempotente e cria o admin com troca de senha obrigatória', async () => {
+  it('T09: é idempotente e cria o admin com troca de senha obrigatória', async () => {
     const senha = await semear()
     const primeira = await contagens()
     expect(await semear()).toBeNull()

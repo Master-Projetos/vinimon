@@ -42,7 +42,7 @@ describe('handshake do Socket.IO (T52)', () => {
     expect(salas.get(SALA_ADMINS)?.size).toBe(1)
   })
 
-  it('recusa sem cookie', async () => {
+  it('T52: recusa sem cookie', async () => {
     const s = await novo(app, undefined)
     const erro = await esperarErroConexao(s)
     expect(erro.data?.codigo).toBe('NAO_AUTENTICADO')

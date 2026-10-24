@@ -6,7 +6,7 @@ import { hashSenha } from './senha'
 const e = { login: 'maria.souza', nome: 'Maria Souza', email: 'maria@exemplo.com', organizacao: 'Minha Empresa' }
 
 describe('avaliarSenha (T08)', () => {
-  it('recusa 11 e 129 caracteres', async () => {
+  it('T08: recusa 11 e 129 caracteres', async () => {
     expect((await avaliarSenha('Abc!9xYz@Q1', e)).ok).toBe(false)
     expect((await avaliarSenha(`${'aB3$'.repeat(32)}x`, e)).ok).toBe(false)
   })

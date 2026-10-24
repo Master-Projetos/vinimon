@@ -115,7 +115,7 @@ describe('handlers do Socket.IO: salas, digitação e emissões (S92, S93, S95, 
   })
 
   describe('T54: o interno nunca chega ao solicitante, nem quando ele é OPERADOR', () => {
-    it('assentamento interno só na sala interna; o público chega a todos', async () => {
+    it('T54: assentamento interno só na sala interna; o público chega a todos', async () => {
       const x = await cenario()
       const sol = await ligar(x.solOp.id)
       const equipe = await ligar(x.op.id)

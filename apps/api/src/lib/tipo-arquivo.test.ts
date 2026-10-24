@@ -28,7 +28,7 @@ describe('detectarTipo (T43)', () => {
     await rm(dir, { recursive: true, force: true })
   })
 
-  it('PNG renomeado para .pdf é tratado como image/png, inline', async () => {
+  it('T43: PNG renomeado para .pdf é tratado como image/png, inline', async () => {
     expect(await detectarTipo(await grava('a.bin', PNG), 'relatorio.pdf')).toEqual({ mime: 'image/png', inline: true })
   })
 
