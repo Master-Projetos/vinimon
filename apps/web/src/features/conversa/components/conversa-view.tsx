@@ -4,13 +4,16 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { chamadosConsultas } from '@/features/chamados/queries'
 import { metaConsultas } from '@/features/meta/queries'
 import type { ItemConversa } from '../cache'
+import { useDigitando, useLeituras, useSalaDoChamado } from '../hooks'
 import { conversaConsultas, useEnviarComentario } from '../queries'
 import { Composer } from './composer'
 import { DescricaoInicialCard } from './descricao-inicial-card'
 import { EncerradoBar } from './encerrado-bar'
 import { MessageList } from './message-list'
 import { NewMessagesPill } from './new-messages-pill'
+import { ReadReceipt } from './read-receipt'
 import { SolucaoCard } from './solucao-card'
+import { TypingIndicator } from './typing-indicator'
 import { ValidacaoCard } from './validacao-card'
 
 export interface ConversaViewProps {
@@ -50,6 +53,10 @@ export function ConversaView({ chamadoId, usuarioId, descricao, foco, aoConsumir
   // Páginas vêm da mais recente para a mais antiga; cada uma já está em ordem crescente.
   const itens = useMemo(() => [...data.pages].reverse().flatMap((p) => p.itens), [data.pages])
   const raiz = useRef<HTMLDivElement>(null)
+  useSalaDoChamado(chamadoId)
+  const digitando = useDigitando(chamadoId, usuarioId)
+  const ultimoConfirmado = itens.findLast((i) => i.estado === undefined && i.id > 0)?.id ?? null
+  const { leituras, refSentinela } = useLeituras(chamadoId, ultimoConfirmado)
   const area = useRef<HTMLDivElement>(null)
   const [novas, setNovas] = useState(0)
   const [focadoId, setFocadoId] = useState<number | null>(null)
@@ -181,6 +188,9 @@ export function ConversaView({ chamadoId, usuarioId, descricao, foco, aoConsumir
           aoTentarNovamente={reenviar}
           aoDescartar={envio.descartar}
         />
+        <ReadReceipt leituras={leituras} usuarioId={usuarioId} ultimoId={ultimoConfirmado} />
+        <TypingIndicator nomes={digitando.nomes} />
+        <div ref={refSentinela} aria-hidden="true" className="h-px" />
         <NewMessagesPill quantidade={novas} aoClicar={irParaOFim} />
       </div>
       {detalhe.status.tipo === 'CONCLUIDO' || detalhe.status.tipo === 'ENCERRADO' ? (
@@ -200,6 +210,8 @@ export function ConversaView({ chamadoId, usuarioId, descricao, foco, aoConsumir
             anexos={anexos}
             aoMudarAnexos={setAnexos}
             aoEnviar={(e) => void envio.enviar(e)}
+            aoDigitar={digitando.aoDigitar}
+            aoParar={digitando.aoParar}
           />
         </div>
       ) : null}
