@@ -215,7 +215,7 @@
 ### T-11.11 — Revisão final de segurança
 - **Depende de:** todas as T-1.x a T-11.10 · **Paralelo com:** T-11.12
 - **Requisitos:** S1–S123 (S124 e os demais S# fora do MVP constam com a fase da §5.1); T01–T72
-- **Arquivos:** `docs/plano/revisao-seguranca.md`, `apps/api/test/rastreabilidade.test.ts`
+- **Arquivos:** `docs/plano/revisao-seguranca.md`, `apps/api/test/rastreabilidade.test.ts`, `pnpm-lock.yaml` e, pelas correções da revisão (S111: `overrides` da undici; S81: não servir `.map`; títulos de teste que passam a citar o T##): `apps/api/src/lib/forca-senha.test.ts`, `apps/api/src/lib/tipo-arquivo.test.ts`, `apps/api/src/modules/auth/auth.test.ts`, `apps/api/src/modules/auth/tempo-constante.test.ts`, `apps/api/src/plugins/spa.test.ts`, `apps/api/src/plugins/spa.ts`, `apps/api/src/realtime/handlers.test.ts`, `apps/api/src/realtime/handshake.test.ts`, `apps/api/src/realtime/revalidacao.test.ts`, `apps/api/test/bloqueio.test.ts`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/test/logs.test.ts`, `apps/api/test/meta-me.test.ts`, `apps/api/test/seed.test.ts`, `apps/api/test/vazamento-segredos.test.ts`, `pnpm-workspace.yaml`
 - **Passos:**
   1. Tabela S# → evidência (teste, arquivo ou passo de CI) → status. Toda linha "pendente" vira issue ou tarefa nova; nada é marcado "OK" sem evidência. S124 entra com status 'Fase 2 (T-17.8)', que não conta como pendência. Qualquer outro S# fora do MVP precisa de linha explícita na §5.1 com a fase.
   2. `rastreabilidade.test.ts` confere que cada um de T05–T62 (incluindo T40, de `vazamento-segredos.test.ts`) aparece em algum `it(...)`, por grep dos arquivos `*.test.ts`.
