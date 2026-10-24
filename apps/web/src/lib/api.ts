@@ -55,7 +55,7 @@ function montarUrl(c: Contrato, params?: Record<string, unknown>, query?: Record
   for (const [k, v] of Object.entries(query ?? {})) {
     if (v === undefined || v === null || v === '') continue
     if (Array.isArray(v)) for (const item of v) busca.append(k, String(item))
-    else busca.set(k, String(v))
+    else busca.set(k, v instanceof Date ? v.toISOString() : String(v))
   }
   const qs = busca.toString()
   return `/api/v1${caminho}${qs ? `?${qs}` : ''}`
