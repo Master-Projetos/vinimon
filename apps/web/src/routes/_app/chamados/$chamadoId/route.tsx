@@ -44,6 +44,7 @@ function ChamadoLayout() {
       itens={[
         { to: '/chamados/$chamadoId', params: { chamadoId }, rotulo: 'Conversa', exact: true },
         { to: '/chamados/$chamadoId/detalhes', params: { chamadoId }, rotulo: 'Detalhes' },
+        { to: '/chamados/$chamadoId/anexos', params: { chamadoId }, rotulo: 'Anexos' },
       ]}
     />
   )
