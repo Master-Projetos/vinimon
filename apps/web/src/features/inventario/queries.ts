@@ -16,6 +16,20 @@ export const ativosConsultas = {
     }),
 }
 
+export const ativoDetalheConsultas = {
+  detalhe: (id: number) =>
+    queryOptions({
+      queryKey: ['ativos', 'detalhe', id] as const,
+      queryFn: ({ signal }) => chamar(ativosApi.obter, { params: { id } }, signal),
+    }),
+  chamados: (id: number, pagina: number) =>
+    queryOptions({
+      queryKey: ['ativos', 'chamados', id, pagina] as const,
+      queryFn: ({ signal }) => chamar(ativosApi.chamados, { params: { id }, query: { pagina } }, signal),
+      placeholderData: keepPreviousData,
+    }),
+}
+
 export function useSalvarAtivo(id: number | null) {
   const qc = useQueryClient()
   return useMutation({
