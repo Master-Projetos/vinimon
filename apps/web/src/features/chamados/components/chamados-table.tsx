@@ -1,17 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { type Perfil, SLAS_FILTRO, temPermissao } from '@vinimon/shared'
-import { Download, Inbox, Plus, SearchX } from 'lucide-react'
+import { Download, Inbox, Plus, SearchX, SlidersHorizontal } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DataTable } from '@/components/data/data-table'
 import { DataTableFacetedFilter, type FacetOpcao } from '@/components/data/data-table-faceted-filter'
 import { DataTableToolbar } from '@/components/data/data-table-toolbar'
 import { EmptyState } from '@/components/feedback/empty-state'
 import { ErrorState } from '@/components/feedback/error-state'
+import { camposNoFuso, instanteNoFuso } from '@/components/form/date-picker'
+import { DateRangePicker } from '@/components/form/date-range-picker'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { metaConsultas } from '@/features/meta/queries'
 import { useAgora } from '@/hooks/use-agora'
 import { useDebounce } from '@/hooks/use-debounce'
@@ -22,7 +22,6 @@ import { type ChamadoBusca, limparFiltros, visaoEfetiva } from '../filtros'
 import { chamadosConsultas } from '../queries'
 import { ChamadoListItem } from './chamado-list-item'
 
-const TODOS = 'todos'
 const POR_PAGINA = [25, 50, 100] as const
 type PorPagina = (typeof POR_PAGINA)[number]
 
@@ -46,6 +45,24 @@ const CHAVES_FILTRO = [
   'concluidoDe',
   'concluidoAte',
 ] as const
+
+/** Filtros menos usados, atrás de "Mais filtros" (abre sozinho quando algum já está ativo na URL). */
+const FILTROS_SECUNDARIOS = ['problemaIds', 'canalIds', 'departamentoIds'] as const
+
+/** `AAAA-MM-DD` da URL como instante do início do dia no fuso do sistema. */
+function diaDaUrl(texto: string | undefined): Date | undefined {
+  if (!texto) return undefined
+  const [ano, mes, dia] = texto.split('-').map(Number)
+  if (!ano || !mes || !dia) return undefined
+  return instanteNoFuso({ ano, mes, dia, hora: 0, minuto: 0 })
+}
+
+/** Instante escolhido no calendário de volta para `AAAA-MM-DD` (dia no fuso do sistema). */
+function diaParaUrl(d: Date | undefined): string | undefined {
+  if (!d) return undefined
+  const c = camposNoFuso(d)
+  return `${c.ano}-${String(c.mes).padStart(2, '0')}-${String(c.dia).padStart(2, '0')}`
+}
 
 /** Query do CSV: os mesmos filtros da tela, sem paginação (cada valor de lista vira um parâmetro repetido). */
 export function queryDoCsv(busca: ChamadoBusca): string {
@@ -72,6 +89,8 @@ export function ChamadosTable({ busca, perfil }: ChamadosTableProps) {
   const meta = useQuery(metaConsultas.tudo())
 
   const [termo, setTermo] = useState(busca.busca ?? '')
+  const secundariosAtivos = FILTROS_SECUNDARIOS.filter((k) => busca[k] !== undefined).length
+  const [maisFiltros, setMaisFiltros] = useState(secundariosAtivos > 0)
   const termoAtrasado = useDebounce(termo, 300)
 
   /** Troca parte da URL e volta para a página 1 (a menos que o parcial traga `pagina`). */
@@ -169,44 +188,41 @@ export function ChamadosTable({ busca, perfil }: ChamadosTableProps) {
       {faceta('Status', meta.data?.status, 'statusIds')}
       {faceta('Prioridade', meta.data?.prioridades, 'prioridadeIds')}
       {faceta('Área', meta.data?.areas, 'areaIds')}
-      {faceta('Problema', meta.data?.problemas, 'problemaIds')}
-      {faceta('Canal', meta.data?.canais, 'canalIds')}
-      {faceta('Departamento', meta.data?.departamentos, 'departamentoIds')}
-      <div className="flex items-center gap-1">
-        <Label htmlFor="filtro-de" className="text-xs text-muted-foreground">
-          De
-        </Label>
-        <Input
-          id="filtro-de"
-          type="date"
-          className="w-36"
-          value={busca.de ?? ''}
-          onChange={(e) => mudar({ de: e.target.value || undefined })}
-        />
-        <Label htmlFor="filtro-ate" className="text-xs text-muted-foreground">
-          Até
-        </Label>
-        <Input
-          id="filtro-ate"
-          type="date"
-          className="w-36"
-          value={busca.ate ?? ''}
-          onChange={(e) => mudar({ ate: e.target.value || undefined })}
-        />
-      </div>
-      <Select value={busca.sla ?? TODOS} onValueChange={(v) => mudar({ sla: SLAS_FILTRO.find((s) => s === v) })}>
-        <SelectTrigger aria-label="SLA" className="w-36">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={TODOS}>Todo SLA</SelectItem>
-          {SLAS_FILTRO.map((s) => (
-            <SelectItem key={s} value={s}>
-              {ROTULOS_SITUACAO_SLA[s]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <DataTableFacetedFilter
+        titulo="SLA"
+        unico
+        opcoes={SLAS_FILTRO.map((s) => ({ valor: s, rotulo: ROTULOS_SITUACAO_SLA[s] }))}
+        selecionados={busca.sla ? [busca.sla] : []}
+        aoMudar={(v) => mudar({ sla: SLAS_FILTRO.find((s) => s === v[0]) })}
+      />
+      <DateRangePicker
+        filtro
+        placeholder="Período"
+        valor={{ de: diaDaUrl(busca.de), ate: diaDaUrl(busca.ate) }}
+        aoMudar={(i) => mudar({ de: diaParaUrl(i.de), ate: diaParaUrl(i.ate) })}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        aria-expanded={maisFiltros}
+        onClick={() => setMaisFiltros((v) => !v)}
+      >
+        <SlidersHorizontal aria-hidden="true" />
+        Mais filtros
+        {secundariosAtivos > 0 ? (
+          <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+            {secundariosAtivos}
+          </Badge>
+        ) : null}
+      </Button>
+      {maisFiltros ? (
+        <>
+          {faceta('Problema', meta.data?.problemas, 'problemaIds')}
+          {faceta('Canal', meta.data?.canais, 'canalIds')}
+          {faceta('Departamento', meta.data?.departamentos, 'departamentoIds')}
+        </>
+      ) : null}
       {temFiltro ? (
         <Button type="button" variant="ghost" size="sm" onClick={limpar}>
           Limpar filtros

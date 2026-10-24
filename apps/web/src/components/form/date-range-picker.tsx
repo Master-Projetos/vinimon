@@ -17,6 +17,10 @@ export interface DateRangePickerProps {
   aoMudar: (v: IntervaloDatas) => void
   atalhos?: boolean
   id?: string
+  /** Texto do botão sem período escolhido. */
+  placeholder?: string
+  /** Estilo de filtro de barra de ferramentas: botão pequeno e tracejado, do tamanho do texto. */
+  filtro?: boolean
 }
 
 type Atalho = 'hoje' | 'sete' | 'trinta' | 'mesAtual' | 'mesPassado'
@@ -72,14 +76,21 @@ export function intervaloDoAtalho(atalho: Atalho, agora: Date, fuso: string = FU
   }
 }
 
-function rotuloIntervalo({ de, ate }: IntervaloDatas): string {
+function rotuloIntervalo({ de, ate }: IntervaloDatas, placeholder: string): string {
   if (de && ate) return `${formatarData(de)} – ${formatarData(ate)}`
   if (de) return `A partir de ${formatarData(de)}`
   if (ate) return `Até ${formatarData(ate)}`
-  return 'Selecione o período'
+  return placeholder
 }
 
-export function DateRangePicker({ valor, aoMudar, atalhos = true, id }: DateRangePickerProps) {
+export function DateRangePicker({
+  valor,
+  aoMudar,
+  atalhos = true,
+  id,
+  placeholder = 'Selecione o período',
+  filtro = false,
+}: DateRangePickerProps) {
   const [aberto, setAberto] = useState(false)
   const vazio = !valor.de && !valor.ate
   return (
@@ -89,12 +100,16 @@ export function DateRangePicker({ valor, aoMudar, atalhos = true, id }: DateRang
           id={id}
           type="button"
           variant="outline"
+          size={filtro ? 'sm' : 'default'}
           aria-haspopup="dialog"
           aria-expanded={aberto}
-          className={cn('w-full justify-start font-normal', vazio && 'text-muted-foreground')}
+          className={cn(
+            filtro ? 'border-dashed' : 'w-full justify-start font-normal',
+            vazio && !filtro && 'text-muted-foreground',
+          )}
         >
           <CalendarIcon aria-hidden="true" />
-          {rotuloIntervalo(valor)}
+          {rotuloIntervalo(valor, placeholder)}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="flex w-auto flex-col gap-3 p-3 sm:flex-row" align="start">
@@ -115,20 +130,27 @@ export function DateRangePicker({ valor, aoMudar, atalhos = true, id }: DateRang
             ))}
           </fieldset>
         )}
-        <Calendar
-          mode="range"
-          numberOfMonths={1}
-          selected={{
-            from: valor.de ? diaDoCalendario(valor.de) : undefined,
-            to: valor.ate ? diaDoCalendario(valor.ate) : undefined,
-          }}
-          onSelect={(intervalo) => {
-            aoMudar({
-              de: intervalo?.from ? inicioDoDia(calendarioParaCampos(intervalo.from)) : undefined,
-              ate: intervalo?.to ? fimDoDia(calendarioParaCampos(intervalo.to)) : undefined,
-            })
-          }}
-        />
+        <div className="flex flex-col gap-2">
+          <Calendar
+            mode="range"
+            numberOfMonths={1}
+            selected={{
+              from: valor.de ? diaDoCalendario(valor.de) : undefined,
+              to: valor.ate ? diaDoCalendario(valor.ate) : undefined,
+            }}
+            onSelect={(intervalo) => {
+              aoMudar({
+                de: intervalo?.from ? inicioDoDia(calendarioParaCampos(intervalo.from)) : undefined,
+                ate: intervalo?.to ? fimDoDia(calendarioParaCampos(intervalo.to)) : undefined,
+              })
+            }}
+          />
+          {!vazio ? (
+            <Button type="button" variant="ghost" size="sm" onClick={() => aoMudar({})}>
+              Limpar período
+            </Button>
+          ) : null}
+        </div>
       </PopoverContent>
     </Popover>
   )
