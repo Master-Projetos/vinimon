@@ -213,6 +213,7 @@ export async function aplicarTransicaoStatus(
   else if (novo.tipo === 'ENCERRADO') {
     data.concluidoEm = chamado.concluidoEm ?? p.agora
     data.encerradoEm = chamado.encerradoEm ?? p.agora
+    data.validacaoLimiteEm = null // o CHECK ck_chamados_validacao só admite prazo de validação em CONCLUIDO
   } else {
     data.concluidoEm = null
     data.encerradoEm = null

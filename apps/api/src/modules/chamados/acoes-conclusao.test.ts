@@ -174,6 +174,18 @@ describe('ações de conclusão: concluir, aprovar e rejeitar (C13, C14)', () =>
       expect(await prisma.chamadoEvento.count({ where: { chamadoId: c.id, tipo: 'APROVADO' } })).toBe(1)
     })
 
+    it('aprovar com prazo de validação em curso encerra e zera o prazo (CHECK ck_chamados_validacao)', async () => {
+      const x = await cenario()
+      const c = await x.novo('CONCLUIDO', x.o1.id)
+      await prisma.chamado.update({
+        where: { id: c.id },
+        data: { validacaoLimiteEm: new Date(Date.now() + 5 * 24 * 3_600_000) },
+      })
+      const res = await post(c.id, 'aprovar', x.hU1, { versao: 0, nota: 'BOM' })
+      expect(res.statusCode).toBe(200)
+      expect(await estado(c.id)).toMatchObject({ statusTipo: 'ENCERRADO', validacaoLimiteEm: null })
+    })
+
     it('não solicitante aprovando dá 403; chamado fora de CONCLUIDO também', async () => {
       const x = await cenario()
       const c = await x.novo('CONCLUIDO', x.o1.id)

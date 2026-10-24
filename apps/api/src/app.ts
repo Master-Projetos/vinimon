@@ -51,7 +51,7 @@ import { autenticacaoPlugin } from './plugins/autenticacao'
 import { docsPlugin } from './plugins/docs'
 import { errosPlugin } from './plugins/erros'
 import { segurancaPlugin } from './plugins/seguranca'
-import { spaPlugin } from './plugins/spa'
+import { ehAssetEstatico, spaPlugin } from './plugins/spa'
 import { tempoRealPlugin } from './realtime/plugin'
 
 configurarZod()
@@ -162,6 +162,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
     max: 300,
     timeWindow: '1 minute',
     hook: 'preHandler',
+    allowList: (req) => ehAssetEstatico(req.method, req.url),
     keyGenerator: (req) => (req.usuario ? `u:${req.usuario.id}` : `ip:${req.ip}`),
   })
   await app.register(multipart, {

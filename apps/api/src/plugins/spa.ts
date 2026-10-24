@@ -3,6 +3,15 @@ import fastifyStatic from '@fastify/static'
 import fp from 'fastify-plugin'
 import { responderRotaInexistente } from '../lib/erros'
 
+/**
+ * Arquivos versionados do build (`/assets/<nome>-<hash>.js`): públicos, imutáveis e sem dados.
+ * Ficam fora do rate limit por IP, porque uma única carga fria da tela já pede dezenas deles
+ * e consumiria o limite das chamadas à API (300 por minuto).
+ */
+export function ehAssetEstatico(metodo: string, url: string): boolean {
+  return (metodo === 'GET' || metodo === 'HEAD') && url.startsWith('/assets/')
+}
+
 export const spaPlugin = fp<{ raiz: string }>(
   async (app, { raiz }) => {
     await app.register(fastifyStatic, {
