@@ -32,8 +32,23 @@ async function esvaziar(tx: Tx): Promise<void> {
   }
 }
 
+/** T72: recua o último uso das sessões do usuário em 16 min, sem migrar, esvaziar nem semear. */
+async function recuarSessao(login: string | undefined): Promise<void> {
+  if (!login) throw new Error('Informe o login: --recuar-sessao <login>.')
+  const { count } = await prisma.sessao.updateMany({
+    where: { usuario: { login } },
+    data: { ultimoUsoEm: new Date(Date.now() - 16 * 60_000) },
+  })
+  await prisma.$disconnect()
+  process.stdout.write(`Sessões recuadas: ${count}.\n`)
+}
+
 async function main(): Promise<void> {
   exigirBancoE2e()
+  const args = process.argv.slice(2)
+  if (args[0] === '--') args.shift()
+  const posicao = args.indexOf('--recuar-sessao')
+  if (posicao >= 0) return recuarSessao(args[posicao + 1])
   const { senha, segredo } = exigirVariaveis()
   execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], { stdio: 'inherit' })
   const hash = await hashSenha(senha)

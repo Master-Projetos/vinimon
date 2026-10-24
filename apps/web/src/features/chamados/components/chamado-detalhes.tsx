@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { type ChamadoDetalhe, type DadosSla, type SituacaoSla, situacaoSla } from '@vinimon/shared'
 import { KeyValueGrid, type KeyValueItem } from '@/components/display/key-value-grid'
 import { SlaBadge } from '@/components/display/sla-badge'
@@ -150,6 +151,13 @@ export function ChamadoDetalhes({ detalhe }: ChamadoDetalhesProps) {
         </h2>
         <KeyValueGrid itens={avaliacao} />
       </section>
+      <Link
+        to="/chamados/$chamadoId/imprimir"
+        params={{ chamadoId: detalhe.id }}
+        className="w-fit rounded-sm text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      >
+        Abrir versão para impressão
+      </Link>
     </div>
   )
 }

@@ -62,18 +62,16 @@ export function AppBarItem({ item, ativo }: AppBarItemProps) {
   const rotuloCompleto =
     item.contador && item.contador > 0 ? `${item.rotuloAcessivel} (${item.contador})` : item.rotuloAcessivel
   return (
-    <Link
-      to={item.to}
-      aria-label={rotuloCompleto}
-      aria-current={ativo ? 'page' : undefined}
-      className={classesDoItem(ativo)}
-    >
+    <Link to={item.to} aria-current={ativo ? 'page' : undefined} className={classesDoItem(ativo)}>
       <IndicadorAtivo ativo={ativo} />
       <span className="relative">
         <Icone aria-hidden="true" className="size-6" />
         <Contador valor={item.contador} />
       </span>
-      <span className="text-appbar">{item.rotulo}</span>
+      <span aria-hidden="true" className="text-appbar">
+        {item.rotulo}
+      </span>
+      <span className="sr-only">{rotuloCompleto}</span>
     </Link>
   )
 }

@@ -21,15 +21,29 @@ export interface DataTableFacetedFilterProps {
   opcoes: FacetOpcao[]
   selecionados: string[]
   aoMudar: (v: string[]) => void
+  /** Escolha única: marcar uma opção desmarca a anterior (marca redonda, como rádio). */
+  unico?: boolean
 }
 
-/** Filtro facetado de múltipla escolha: Popover com Command. */
-export function DataTableFacetedFilter({ titulo, opcoes, selecionados, aoMudar }: DataTableFacetedFilterProps) {
+/** Filtro facetado (múltipla escolha, ou única com `unico`): Popover com Command. */
+export function DataTableFacetedFilter({
+  titulo,
+  opcoes,
+  selecionados,
+  aoMudar,
+  unico = false,
+}: DataTableFacetedFilterProps) {
   const [aberto, setAberto] = React.useState(false)
 
   function alternar(valor: string) {
+    if (unico) {
+      aoMudar(selecionados.includes(valor) ? [] : [valor])
+      setAberto(false)
+      return
+    }
     aoMudar(selecionados.includes(valor) ? selecionados.filter((v) => v !== valor) : [...selecionados, valor])
   }
+  const rotuloUnico = unico ? opcoes.find((o) => o.valor === selecionados[0])?.rotulo : undefined
 
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
@@ -41,7 +55,7 @@ export function DataTableFacetedFilter({ titulo, opcoes, selecionados, aoMudar }
             <>
               <Separator orientation="vertical" className="mx-1 h-4" />
               <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                {selecionados.length}
+                {rotuloUnico ?? selecionados.length}
               </Badge>
             </>
           ) : null}
@@ -61,7 +75,8 @@ export function DataTableFacetedFilter({ titulo, opcoes, selecionados, aoMudar }
                     <span
                       aria-hidden="true"
                       className={cn(
-                        'flex size-4 items-center justify-center rounded-[4px] border',
+                        'flex size-4 items-center justify-center border',
+                        unico ? 'rounded-full' : 'rounded-[4px]',
                         marcado ? 'border-primary bg-primary text-primary-foreground' : 'border-input',
                       )}
                     >

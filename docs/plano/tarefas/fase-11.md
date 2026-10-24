@@ -144,7 +144,7 @@
 ### T-11.7 — E2E: segurança e acessibilidade
 - **Depende de:** T-11.4 e todas as T-10.x · **Paralelo com:** T-11.5, T-11.6
 - **Requisitos:** T66, T67, T72; §6.2 (axe)
-- **Arquivos:** `apps/web/e2e/{seguranca.spec.ts,a11y.spec.ts}`, `apps/api/scripts/e2e-preparar.ts`
+- **Arquivos:** `apps/web/e2e/{seguranca.spec.ts,a11y.spec.ts,rotas.ts,ajudantes.ts}`, `apps/web/playwright.config.ts`, `apps/web/package.json` (`@axe-core/playwright` 4.14.0), `apps/api/scripts/e2e-preparar.ts`, correções de a11y/CSP: `apps/web/public/theme-init.js`, `apps/web/vite.config.ts`, `apps/web/src/components/layout/{app-bar-item,busca-global-trigger,top-bar}.tsx`, `apps/web/src/features/chamados/components/chamado-detalhes.tsx`, `apps/web/src/features/presenca/components/user-menu.tsx`, `apps/web/src/routes/_app/chamados/$chamadoId/imprimir.tsx`
 - **Passos:**
   1. T66: `addInitScript` com `document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective))`; percorre todas as rotas da §6.6 e diálogos Radix e confere `[]`.
   2. T67: XSS no assunto, no comentário e em link `javascript:`.
@@ -234,7 +234,7 @@
 - **Tamanho:** M
 
 ### T-11.12 — Revisão de performance
-- **Depende de:** T-11.3, T-11.7 · **Paralelo com:** T-11.11
+- **Depende de:** T-11.3 · **Paralelo com:** T-11.11, T-11.5–T-11.7
 - **Requisitos:** §4 (índices), orçamento de `docs/plano/relatorios/design.md` §4.8
 - **Arquivos:** `apps/api/scripts/carga.ts`, `docs/plano/revisao-performance.md`
 - **Passos:**
