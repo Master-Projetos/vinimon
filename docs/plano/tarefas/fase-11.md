@@ -234,7 +234,7 @@
 - **Tamanho:** M
 
 ### T-11.12 — Revisão de performance
-- **Depende de:** T-11.3, T-11.7 · **Paralelo com:** T-11.11
+- **Depende de:** T-11.3 · **Paralelo com:** T-11.11, T-11.5–T-11.7
 - **Requisitos:** §4 (índices), orçamento de `docs/plano/relatorios/design.md` §4.8
 - **Arquivos:** `apps/api/scripts/carga.ts`, `docs/plano/revisao-performance.md`
 - **Passos:**
