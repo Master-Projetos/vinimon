@@ -274,9 +274,27 @@ model Area {
   problemas           ProblemaArea[]
   problemasPadrao     Problema[]
   chamados            Chamado[]
+  /// áreas para onde quem é desta área pode abrir chamado (vazio = todas)
+  destinos            AreaDestino[] @relation("AreaOrigem")
+  comoDestino         AreaDestino[] @relation("AreaDestino")
 
   @@index([jornadaId], map: "ix_areas_jornada")
   @@map("areas")
+}
+
+/// Áreas destino por área solicitante (A05). No máximo uma padrão por origem
+model AreaDestino {
+  areaOrigemId  Int     @map("area_origem_id")
+  areaDestinoId Int     @map("area_destino_id")
+  padrao        Boolean @default(false)
+
+  origem  Area @relation("AreaOrigem", fields: [areaOrigemId], references: [id], onDelete: Cascade)
+  destino Area @relation("AreaDestino", fields: [areaDestinoId], references: [id], onDelete: Restrict)
+
+  @@id([areaOrigemId, areaDestinoId])
+  @@unique([areaOrigemId], map: "ux_area_destinos_padrao", where: raw("padrao"))
+  @@index([areaDestinoId], map: "ix_area_destinos_destino")
+  @@map("area_destinos")
 }
 
 // ═════════════════════════ ACESSO ═════════════════════════

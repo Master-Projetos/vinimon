@@ -15,6 +15,7 @@ import type { ContextoUsuario } from '../../lib/contexto'
 import { ErroApp, regraNegocio, semPermissao } from '../../lib/erros'
 import { prisma, type Tx } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
+import { destinosDaArea } from '../areas/service'
 import { recalcularChamado, snapshotSla } from '../sla/service'
 import { garantirTags } from '../tags/service'
 import { aposCommitChamado, type LogErro, registrarEvento, registrarSistema } from './eventos'
@@ -174,7 +175,7 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
   }
   if (!ehEquipe && dados.tags !== undefined) throw invalido('tags', 'Só a equipe informa tags.')
 
-  const areaId = ehUsuario ? problema.areaPadraoId : (dados.areaId ?? problema.areaPadraoId)
+  let areaId = ehUsuario ? problema.areaPadraoId : (dados.areaId ?? problema.areaPadraoId)
   if (areaId === null) throw regraNegocio('O problema escolhido não tem área de atendimento. Fale com o administrador.')
   if (!ehUsuario && !problema.areas.some((a) => a.areaId === areaId))
     throw invalido('areaId', 'A área não atende esse problema.')
@@ -183,7 +184,7 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
   const emNomeDeOutro = solicitanteId !== u.id
   const solicitante = await prisma.usuario.findFirst({
     where: { id: solicitanteId, ...(emNomeDeOutro ? {} : { ativo: true }) },
-    select: { id: true, nome: true, email: true, telefone: true, perfil: true, ativo: true },
+    select: { id: true, nome: true, email: true, telefone: true, perfil: true, ativo: true, areaId: true },
   })
   if (emNomeDeOutro) {
     if (!temPermissao(u.perfil, 'chamado.abrirEmNome')) throw semPermissao()
@@ -192,6 +193,26 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
       throw semPermissao('Você não pode abrir chamado em nome de um administrador.')
   }
   if (!solicitante) throw invalido('solicitanteId', 'Usuário inexistente ou inativo.')
+
+  // A05: se a área do solicitante tem destinos, só eles servem; sem destinos, todas as áreas valem
+  const destinos = await destinosDaArea(prisma, solicitante.areaId)
+  if (destinos.length > 0) {
+    const permitidas = new Set(destinos.map((d) => d.areaDestinoId))
+    if (!ehUsuario && dados.areaId !== undefined) {
+      if (!permitidas.has(dados.areaId))
+        throw regraNegocio('A área de destino não é permitida para a área do solicitante.')
+    } else {
+      const doProblema = problema.areas.map((a) => a.areaId).filter((id) => permitidas.has(id))
+      const padrao = destinos.find((d) => d.padrao && doProblema.includes(d.areaDestinoId))?.areaDestinoId
+      const escolhida =
+        problema.areaPadraoId !== null && doProblema.includes(problema.areaPadraoId)
+          ? problema.areaPadraoId
+          : (padrao ?? doProblema[0])
+      if (escolhida === undefined)
+        throw regraNegocio('Nenhuma área que atende esse problema é destino permitido para o solicitante.')
+      areaId = escolhida
+    }
+  }
 
   const agora = new Date()
   const canalNome = emNomeDeOutro ? 'Telefone' : 'Sistema Web'
