@@ -1,10 +1,18 @@
 import { ativosApi as c } from '@vinimon/shared'
+import type { FastifyRequest } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { contextoDe } from '../../lib/contexto'
-import { naoAutenticado } from '../../lib/erros'
+import { naoAutenticado, semPermissao } from '../../lib/erros'
 import * as service from './service'
 
 const tags = ['Ativos']
+
+/** A17: OPERADOR sem nenhuma área com o módulo de inventário recebe 403; ADMIN e demais perfis não são afetados. */
+async function exigirInventario(req: FastifyRequest): Promise<void> {
+  if (req.usuario?.perfil === 'OPERADOR' && req.usuario.inventarioHabilitado === false) {
+    throw semPermissao('O módulo de inventário não está habilitado para as suas áreas.')
+  }
+}
 
 export const rotasAtivos: FastifyPluginAsyncZod = async (app) => {
   app.route({
@@ -25,6 +33,7 @@ export const rotasAtivos: FastifyPluginAsyncZod = async (app) => {
     url: c.listar.caminho,
     schema: { tags, summary: 'Lista ativos', querystring: c.listar.query, response: { 200: c.listar.resposta } },
     config: { acesso: 'inventario.ver' },
+    preValidation: exigirInventario,
     handler: (req) => service.listarAtivos(req.query),
   })
 
@@ -33,6 +42,7 @@ export const rotasAtivos: FastifyPluginAsyncZod = async (app) => {
     url: c.obter.caminho,
     schema: { tags, summary: 'Obtém ativo', params: c.obter.params, response: { 200: c.obter.resposta } },
     config: { acesso: 'inventario.ver' },
+    preValidation: exigirInventario,
     handler: (req) => service.obterAtivo(req.params.id),
   })
 
@@ -47,6 +57,7 @@ export const rotasAtivos: FastifyPluginAsyncZod = async (app) => {
       response: { 200: c.chamados.resposta },
     },
     config: { acesso: 'inventario.ver' },
+    preValidation: exigirInventario,
     handler: (req) => {
       if (!req.usuario) throw naoAutenticado()
       return service.chamadosDoAtivo(req.params.id, req.query, req.usuario)
@@ -58,6 +69,7 @@ export const rotasAtivos: FastifyPluginAsyncZod = async (app) => {
     url: c.criar.caminho,
     schema: { tags, summary: 'Cria ativo', body: c.criar.body, response: { 201: c.criar.resposta } },
     config: { acesso: 'inventario.gerenciar' },
+    preValidation: exigirInventario,
     handler: async (req, reply) => reply.code(201).send(await service.criarAtivo(req.body, contextoDe(req))),
   })
 
@@ -72,6 +84,7 @@ export const rotasAtivos: FastifyPluginAsyncZod = async (app) => {
       response: { 200: c.atualizar.resposta },
     },
     config: { acesso: 'inventario.gerenciar' },
+    preValidation: exigirInventario,
     handler: (req) => service.atualizarAtivo(req.params.id, req.body, contextoDe(req)),
   })
 

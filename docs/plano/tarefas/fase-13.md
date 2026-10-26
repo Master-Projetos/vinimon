@@ -85,7 +85,7 @@
 ### T-13.5 — Módulo de inventário por área, A19 e B03
 - **Depende de:** T-13.2 · **Paralelo com:** T-13.4
 - **Requisitos:** A17, A19, B03
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/chamados.ts`, `apps/api/src/modules/{ativos/routes.ts,chamados/service.ts,usuarios/routes.ts}`, `apps/api/test/regras-f2.test.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/chamados.ts`, `apps/api/src/modules/{ativos/routes.ts,chamados/service.ts,usuarios/routes.ts}`, `apps/api/test/regras-f2.test.ts`, `packages/shared/src/modulos/{areas.ts,usuarios.ts}`, `apps/api/src/modules/areas/{schemas.ts,service.ts}` (campo `moduloInventario` no cadastro de área), `apps/api/src/modules/usuarios/service.ts` (busca do mesmo departamento)
 - **Passos:**
   1. `Area.moduloInventario Boolean @default(true)`. OPERADOR sem nenhuma área com o módulo recebe 403 nas rotas `inventario.*` (`UsuarioSessao.inventarioHabilitado`); ADMIN sempre acessa.
   2. Config `chamado.operadorTrataProprio` (padrão `true`): com `false`, `podeAtender` é `false` quando o operador é o solicitante.
@@ -115,7 +115,7 @@
 ### T-13.7 — Telas: áreas geridas
 - **Depende de:** T-13.3 · **Paralelo com:** T-13.6
 - **Requisitos:** A04
-- **Arquivos:** `apps/web/src/routes/_app/areas-geridas.tsx`, `apps/web/src/features/areas-geridas/{queries.ts,components/usuarios-area-table.tsx}`, `apps/web/src/features/chamados/components/visoes-pane.tsx`, `apps/web/src/routes/_app/admin/usuarios.tsx`, `apps/web/src/routes/_app/areas-geridas.test.tsx`
+- **Arquivos:** `apps/web/src/routes/_app/areas-geridas.tsx`, `apps/web/src/features/areas-geridas/{queries.ts,components/usuarios-area-table.tsx}`, `apps/web/src/features/chamados/components/visoes-pane.tsx`, `apps/web/src/features/usuarios/components/usuario-sheet.tsx`, `apps/web/src/routes/_app/areas-geridas.test.tsx`
 - **Passos:**
   1. Visão "Áreas geridas".
   2. Página com os usuários da área e edição de telefone, departamento e ativo.
