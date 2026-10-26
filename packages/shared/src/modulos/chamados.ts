@@ -278,8 +278,9 @@ export const ChamadoContagensSchema = z.object({
   agendados: z.int(),
   'abertos-por-mim': z.int(),
   'aguardando-validacao': z.int(),
-  encerrados: z.int(),
-  todos: z.int(),
+  // ausentes para quem vê tudo (`chamado.verTodos`): contar a tabela inteira é caro e o selo só importa nas filas abertas
+  encerrados: z.int().optional(),
+  todos: z.int().optional(),
 })
 export type ChamadoContagens = z.output<typeof ChamadoContagensSchema>
 
