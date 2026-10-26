@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { CriarDepartamentoSchema, type Departamento } from '@vinimon/shared'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { departamentosConsultas, useSalvarDepartamento } from '@/features/departamentos/queries'
+import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
+import { departamentosConsultas, useExcluirDepartamento, useSalvarDepartamento } from '@/features/departamentos/queries'
 import { metaConsultas } from '@/features/meta/queries'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
 
@@ -46,6 +47,8 @@ function DepartamentosPagina() {
   )
   const { data: meta } = useSuspenseQuery(metaConsultas.tudo())
   const [editando, setEditando] = useState<Departamento | 'novo' | null>(null)
+  const [excluindo, setExcluindo] = useState<Departamento | null>(null)
+  const excluir = useExcluirDepartamento()
   const totalPaginas = Math.max(1, Math.ceil(data.total / data.porPagina))
 
   return (
@@ -100,14 +103,24 @@ function DepartamentosPagina() {
                 </Badge>
               </TableCell>
               <TableCell>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label={`Editar ${departamento.nome}`}
-                  onClick={() => setEditando(departamento)}
-                >
-                  <Pencil aria-hidden="true" />
-                </Button>
+                <div className="flex justify-end gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Editar ${departamento.nome}`}
+                    onClick={() => setEditando(departamento)}
+                  >
+                    <Pencil aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Excluir ${departamento.nome}`}
+                    onClick={() => setExcluindo(departamento)}
+                  >
+                    <Trash2 aria-hidden="true" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -137,6 +150,14 @@ function DepartamentosPagina() {
       </nav>
 
       <DepartamentoSheet departamento={editando} aoFechar={() => setEditando(null)} />
+      <ExcluirCadastroDialog
+        alvo={excluindo}
+        tipo="o departamento"
+        sucesso="Departamento excluído"
+        aviso="Departamentos que têm usuários, chamados ou ativos não podem ser excluídos."
+        excluir={(id) => excluir.mutateAsync(id)}
+        aoFechar={() => setExcluindo(null)}
+      />
     </section>
   )
 }

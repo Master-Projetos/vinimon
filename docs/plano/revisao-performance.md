@@ -244,3 +244,7 @@ quente, e fica no limite da meta; vai como proposta, para não mexer no schema f
 - Endpoints fora do cartão (detalhe do chamado, histórico, leituras) e tempo real (socket) não entraram.
 - Medições em PostgreSQL 16.15 (o local); produção usa o 18.6 (§2). Os planos dependem de `ANALYZE`, que a carga roda
   no fim.
+
+## Registro de decisão (T-11.95)
+
+O cartão T-11.95 (D5) pedia `/login` ≤ 200 kB gzip só com `features/auth/queries.ts`, `lib/socket.ts` e `vite.config.ts`. Medido: o import dinâmico do socket tira 12,9 kB (230,6 → 217,7 kB) e o shell + `/chamados` fica em cerca de 294 kB. Os 17,7 kB que faltam estão em `api-*.js` (27,7 kB, quase todo o zod) e em `index-*.js` (96 kB, partes compartilhadas das rotas `_app/**` via `routeTree.gen.ts`); resolver exige `exports` por caminho em `packages/shared` e mexer em arquivos de rota, fora do cartão. Decisão do coordenador: a meta do `/login` passa a 220 kB para esta tarefa, e a separação do pacote compartilhado fica como melhoria futura, fora do portão do MVP.

@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { type Area, CriarAreaSchema } from '@vinimon/shared'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { areasConsultas, useSalvarArea } from '@/features/areas/queries'
+import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
+import { areasConsultas, useExcluirArea, useSalvarArea } from '@/features/areas/queries'
 import { metaConsultas } from '@/features/meta/queries'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
 
@@ -35,6 +36,8 @@ function AreasPagina() {
   const pagina = search.pagina ?? 1
   const { data } = useSuspenseQuery(areasConsultas.lista({ pagina, busca: search.busca }))
   const [editando, setEditando] = useState<Area | 'nova' | null>(null)
+  const [excluindo, setExcluindo] = useState<Area | null>(null)
+  const excluir = useExcluirArea()
   const totalPaginas = Math.max(1, Math.ceil(data.total / data.porPagina))
 
   return (
@@ -68,14 +71,24 @@ function AreasPagina() {
                 <Badge variant={area.ativo ? 'secondary' : 'outline'}>{area.ativo ? 'Ativa' : 'Inativa'}</Badge>
               </TableCell>
               <TableCell>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label={`Editar ${area.nome}`}
-                  onClick={() => setEditando(area)}
-                >
-                  <Pencil aria-hidden="true" />
-                </Button>
+                <div className="flex justify-end gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Editar ${area.nome}`}
+                    onClick={() => setEditando(area)}
+                  >
+                    <Pencil aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Excluir ${area.nome}`}
+                    onClick={() => setExcluindo(area)}
+                  >
+                    <Trash2 aria-hidden="true" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -105,6 +118,14 @@ function AreasPagina() {
       </nav>
 
       <AreaSheet area={editando} aoFechar={() => setEditando(null)} />
+      <ExcluirCadastroDialog
+        alvo={excluindo}
+        tipo="a área"
+        sucesso="Área excluída"
+        aviso="Áreas que já têm chamados, usuários ou tipos de problema não podem ser excluídas."
+        excluir={(id) => excluir.mutateAsync(id)}
+        aoFechar={() => setExcluindo(null)}
+      />
     </section>
   )
 }

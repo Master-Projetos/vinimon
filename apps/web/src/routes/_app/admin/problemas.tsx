@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { CriarProblemaSchema, type Problema } from '@vinimon/shared'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -15,8 +15,9 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
+import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
 import { metaConsultas } from '@/features/meta/queries'
-import { problemasConsultas, useSalvarProblema } from '@/features/problemas/queries'
+import { problemasConsultas, useExcluirProblema, useSalvarProblema } from '@/features/problemas/queries'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
 
 const BuscaSchema = z.object({
@@ -50,6 +51,8 @@ function ProblemasPagina() {
   const pagina = search.pagina ?? 1
   const { data } = useSuspenseQuery(problemasConsultas.lista({ pagina, busca: search.busca }))
   const [editando, setEditando] = useState<Problema | 'novo' | null>(null)
+  const [excluindo, setExcluindo] = useState<Problema | null>(null)
+  const excluir = useExcluirProblema()
   const totalPaginas = Math.max(1, Math.ceil(data.total / data.porPagina))
 
   return (
@@ -87,9 +90,14 @@ function ProblemasPagina() {
                 <Badge variant={p.ativo ? 'secondary' : 'outline'}>{p.ativo ? 'Ativo' : 'Inativo'}</Badge>
               </TableCell>
               <TableCell>
-                <Button size="icon" variant="ghost" aria-label={`Editar ${p.nome}`} onClick={() => setEditando(p)}>
-                  <Pencil aria-hidden="true" />
-                </Button>
+                <div className="flex justify-end gap-1">
+                  <Button size="icon" variant="ghost" aria-label={`Editar ${p.nome}`} onClick={() => setEditando(p)}>
+                    <Pencil aria-hidden="true" />
+                  </Button>
+                  <Button size="icon" variant="ghost" aria-label={`Excluir ${p.nome}`} onClick={() => setExcluindo(p)}>
+                    <Trash2 aria-hidden="true" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -119,6 +127,14 @@ function ProblemasPagina() {
       </nav>
 
       <ProblemaSheet problema={editando} aoFechar={() => setEditando(null)} />
+      <ExcluirCadastroDialog
+        alvo={excluindo}
+        tipo="o tipo de problema"
+        sucesso="Tipo de problema excluído"
+        aviso="Tipos de problema usados em chamados não podem ser excluídos."
+        excluir={(id) => excluir.mutateAsync(id)}
+        aoFechar={() => setExcluindo(null)}
+      />
     </section>
   )
 }

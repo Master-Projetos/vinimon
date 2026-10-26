@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { areasApi, type CriarArea, type ListarAreasQuery } from '@vinimon/shared'
+import { useExcluirCadastro } from '@/features/admin/excluir'
 import { chamar } from '@/lib/api'
 
 export const areaChaves = {
@@ -28,4 +29,8 @@ export function useSalvarArea(id: number | null) {
     },
     meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
   })
+}
+
+export function useExcluirArea() {
+  return useExcluirCadastro((id) => chamar(areasApi.excluir, { params: { id } }), [areaChaves.todas])
 }

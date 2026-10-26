@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute, Link, notFound } from '@tanstack/react-router'
-import { ArrowLeft, QrCode } from 'lucide-react'
+import { createFileRoute, Link, notFound, useNavigate, useRouteContext } from '@tanstack/react-router'
+import { temPermissao } from '@vinimon/shared'
+import { ArrowLeft, QrCode, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { z } from 'zod'
 import { KeyValueGrid } from '@/components/display/key-value-grid'
@@ -8,10 +9,11 @@ import { ErrorState } from '@/components/feedback/error-state'
 import { NotFoundState } from '@/components/feedback/not-found-state'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
 import { AtivoChamados } from '@/features/inventario/components/ativo-chamados'
-import { SituacaoAtivoBadge } from '@/features/inventario/components/ativos-table'
+import { MOTIVO_COM_CHAMADOS, SituacaoAtivoBadge } from '@/features/inventario/components/ativos-table'
 import { EtiquetaQrDialog } from '@/features/inventario/components/etiqueta-qr-dialog'
-import { ativoDetalheConsultas } from '@/features/inventario/queries'
+import { ativoDetalheConsultas, useExcluirAtivo } from '@/features/inventario/queries'
 import { metaConsultas } from '@/features/meta/queries'
 import { formatarDataHora } from '@/lib/datas'
 
@@ -40,6 +42,12 @@ function AtivoDetalhe() {
   const { ativoId } = Route.useParams()
   const { data: ativo } = useSuspenseQuery(ativoDetalheConsultas.detalhe(ativoId))
   const [qrAberto, setQrAberto] = useState(false)
+  const [excluindo, setExcluindo] = useState(false)
+  const { sessao } = useRouteContext({ from: '/_app' })
+  const navigate = useNavigate()
+  const excluir = useExcluirAtivo()
+  const perfil = sessao.usuario?.perfil
+  const podeExcluir = perfil !== undefined && temPermissao(perfil, 'cadastro.gerenciar')
 
   return (
     <section className="space-y-4 p-(--pane-px)">
@@ -55,9 +63,18 @@ function AtivoDetalhe() {
           </h1>
           <SituacaoAtivoBadge situacao={ativo.situacao} />
         </div>
-        <Button variant="outline" onClick={() => setQrAberto(true)}>
-          <QrCode aria-hidden="true" /> Etiqueta QR
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setQrAberto(true)}>
+            <QrCode aria-hidden="true" /> Etiqueta QR
+          </Button>
+          {podeExcluir ? (
+            <span title={ativo.qtdChamados > 0 ? MOTIVO_COM_CHAMADOS : undefined}>
+              <Button variant="outline" disabled={ativo.qtdChamados > 0} onClick={() => setExcluindo(true)}>
+                <Trash2 aria-hidden="true" /> Excluir
+              </Button>
+            </span>
+          ) : null}
+        </div>
       </header>
 
       <Tabs defaultValue="dados">
@@ -84,6 +101,17 @@ function AtivoDetalhe() {
         </TabsContent>
       </Tabs>
 
+      <ExcluirCadastroDialog
+        alvo={excluindo ? { id: ativo.id, nome: ativo.etiqueta } : null}
+        tipo="o ativo"
+        sucesso="Ativo excluído"
+        aviso="Ativos que já têm chamados não podem ser excluídos: use a situação Baixado."
+        excluir={async (id) => {
+          await excluir.mutateAsync(id)
+          await navigate({ to: '/inventario' })
+        }}
+        aoFechar={() => setExcluindo(false)}
+      />
       <EtiquetaQrDialog etiqueta={ativo.etiqueta} aberto={qrAberto} aoMudarAberto={setQrAberto} />
     </section>
   )

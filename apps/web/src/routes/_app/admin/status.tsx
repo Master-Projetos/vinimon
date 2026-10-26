@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { CriarStatusSchema, PAPEIS_STATUS, type Status, TIPO_POR_PAPEL, TIPOS_STATUS } from '@vinimon/shared'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -15,7 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { statusConsultas, useSalvarStatus } from '@/features/status/queries'
+import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
+import { statusConsultas, useExcluirStatus, useSalvarStatus } from '@/features/status/queries'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
 import { ROTULOS_PAPEL_STATUS, ROTULOS_TIPO_STATUS } from '@/lib/rotulos'
 
@@ -39,6 +40,8 @@ function StatusPagina() {
   const pagina = search.pagina ?? 1
   const { data } = useSuspenseQuery(statusConsultas.lista({ pagina, busca: search.busca }))
   const [editando, setEditando] = useState<Status | 'novo' | null>(null)
+  const [excluindo, setExcluindo] = useState<Status | null>(null)
+  const excluir = useExcluirStatus()
   const totalPaginas = Math.max(1, Math.ceil(data.total / data.porPagina))
 
   return (
@@ -80,9 +83,21 @@ function StatusPagina() {
                 <Badge variant={s.ativo ? 'secondary' : 'outline'}>{s.ativo ? 'Ativo' : 'Inativo'}</Badge>
               </TableCell>
               <TableCell>
-                <Button size="icon" variant="ghost" aria-label={`Editar ${s.nome}`} onClick={() => setEditando(s)}>
-                  <Pencil aria-hidden="true" />
-                </Button>
+                <div className="flex justify-end gap-1">
+                  <Button size="icon" variant="ghost" aria-label={`Editar ${s.nome}`} onClick={() => setEditando(s)}>
+                    <Pencil aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Excluir ${s.nome}`}
+                    disabled={s.papel !== null}
+                    title={s.papel !== null ? 'Status com papel no fluxo não pode ser excluído.' : undefined}
+                    onClick={() => setExcluindo(s)}
+                  >
+                    <Trash2 aria-hidden="true" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -112,6 +127,14 @@ function StatusPagina() {
       </nav>
 
       <StatusSheet status={editando} aoFechar={() => setEditando(null)} />
+      <ExcluirCadastroDialog
+        alvo={excluindo}
+        tipo="o status"
+        sucesso="Status excluído"
+        aviso="Status com papel no fluxo e status usados em chamados não podem ser excluídos."
+        excluir={(id) => excluir.mutateAsync(id)}
+        aoFechar={() => setExcluindo(null)}
+      />
     </section>
   )
 }

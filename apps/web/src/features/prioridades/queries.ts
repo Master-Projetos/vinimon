@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { type CriarPrioridade, type ListarPrioridadesQuery, prioridadesApi } from '@vinimon/shared'
+import { useExcluirCadastro } from '@/features/admin/excluir'
 import { chamar } from '@/lib/api'
 
 export const prioridadeChaves = {
@@ -28,4 +29,8 @@ export function useSalvarPrioridade(id: number | null) {
     },
     meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
   })
+}
+
+export function useExcluirPrioridade() {
+  return useExcluirCadastro((id) => chamar(prioridadesApi.excluir, { params: { id } }), [prioridadeChaves.todas])
 }

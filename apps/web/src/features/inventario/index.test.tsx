@@ -162,6 +162,68 @@ describe('/inventario', () => {
     })
   })
 
+  const listaExcluir = pagina([ativo(1, 'PAT-001'), ativo(9, 'PAT-009', { qtdChamados: 0 })])
+
+  it('(b) excluir ativo sem chamados confirma e faz DELETE /ativos/:id', async () => {
+    const { falsa } = montar({
+      'GET /ativos': listaExcluir,
+      'GET /meta': meta,
+      'DELETE /ativos/9': () => new Response(null, { status: 204 }),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir PAT-009' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/ativos/9', corpo: null }),
+    )
+    expect(await screen.findByText('Ativo excluído')).toBeInTheDocument()
+  })
+
+  it('(c) 409 ao excluir mostra a mensagem do servidor', async () => {
+    montar({
+      'GET /ativos': listaExcluir,
+      'GET /meta': meta,
+      'DELETE /ativos/9': () => json({ erro: { codigo: 'CONFLITO', mensagem: 'Use a situação Baixado.' } }, 409),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir PAT-009' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    expect(await screen.findByText('Use a situação Baixado.')).toBeInTheDocument()
+  })
+
+  it('ativo com chamados tem o botão de excluir desabilitado', async () => {
+    montar({ 'GET /ativos': listaExcluir, 'GET /meta': meta })
+    expect(await screen.findByRole('button', { name: 'Excluir PAT-001' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Excluir PAT-009' })).toBeEnabled()
+  })
+
+  it('OPERADOR não vê o botão de excluir', async () => {
+    montar({ 'GET /ativos': listaExcluir, 'GET /meta': meta }, 'OPERADOR')
+    await screen.findByText('PAT-009')
+    expect(screen.queryByRole('button', { name: 'Excluir PAT-009' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Editar PAT-009' })).toBeInTheDocument()
+  })
+
+  it('no detalhe, excluir faz DELETE e volta ao inventário', async () => {
+    const r = renderRota('/inventario/9', {
+      sessao: sessaoDe('ADMIN'),
+      respostas: {
+        'GET /ativos/9': () => json(ativo(9, 'PAT-009', { qtdChamados: 0 })),
+        'GET /ativos/9/chamados': pagina([]),
+        'GET /ativos': listaExcluir,
+        'GET /meta': meta,
+        'DELETE /ativos/9': () => new Response(null, { status: 204 }),
+      },
+    })
+    falsaAtual = r.falsa
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    const botoes = await screen.findAllByRole('button', { name: 'Excluir' })
+    const confirmar = botoes[botoes.length - 1]
+    if (confirmar) fireEvent.click(confirmar)
+    await waitFor(() =>
+      expect(r.falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/ativos/9', corpo: null }),
+    )
+    await waitFor(() => expect(r.router.state.location.pathname).toBe('/inventario'))
+  })
+
   it('(c) 400 com detalhes aparece no campo', async () => {
     montar({
       'GET /ativos': lista,

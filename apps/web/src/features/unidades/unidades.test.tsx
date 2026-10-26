@@ -146,4 +146,27 @@ describe('/admin/unidades', () => {
     })
     expect(await screen.findByText(titulo)).toBeInTheDocument()
   })
+  it('excluir confirma e faz DELETE /unidades/1', async () => {
+    const { falsa } = montar('/admin/unidades', {
+      ...lista,
+      'DELETE /unidades/1': () => new Response(null, { status: 204 }),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Matriz' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/unidades/1', corpo: null }),
+    )
+    expect(await screen.findByText('Unidade excluída')).toBeInTheDocument()
+  })
+
+  it('409 ao excluir mostra a mensagem do servidor', async () => {
+    montar('/admin/unidades', {
+      ...lista,
+      'DELETE /unidades/1': () =>
+        json({ erro: { codigo: 'REGISTRO_EM_USO', mensagem: 'A unidade está em uso e não pode ser excluída.' } }, 409),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Matriz' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    expect(await screen.findByText('A unidade está em uso e não pode ser excluída.')).toBeInTheDocument()
+  })
 })

@@ -129,6 +129,12 @@ describe('GET /chamados e /chamados/contagens (T34, T42)', () => {
     const u1 = (await get('/api/v1/chamados/contagens', x.hU1)).json()
     expect(u1).toMatchObject({ todos: 4, 'abertos-por-mim': 4, 'aguardando-validacao': 1, 'fila-aberta': 0 })
 
+    // quem vê tudo não recebe as contagens caras (D3)
+    const adm = (await get('/api/v1/chamados/contagens', x.hAdmin)).json()
+    expect(adm).not.toHaveProperty('todos')
+    expect(adm).not.toHaveProperty('encerrados')
+    expect(adm).toMatchObject({ 'fila-aberta': 2 })
+
     const ignorado = await prisma.status.create({
       data: { nome: 'Ignorado de teste', tipo: 'EM_ATENDIMENTO', ignorado: true },
     })
