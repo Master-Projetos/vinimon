@@ -17,6 +17,7 @@ import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as TrocarSenhaRouteImport } from './routes/trocar-senha'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
+import { Route as AppAreasGeridasRouteImport } from './routes/_app/areas-geridas'
 import { Route as AppAtividadeRouteImport } from './routes/_app/atividade'
 import { Route as AppChamadosRouteRouteImport } from './routes/_app/chamados/route'
 import { Route as AppConhecimentoRouteRouteImport } from './routes/_app/conhecimento/route'
@@ -101,6 +102,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAreasGeridasRoute = AppAreasGeridasRouteImport.update({
+  id: '/areas-geridas',
+  path: '/areas-geridas',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAtividadeRoute = AppAtividadeRouteImport.update({
@@ -356,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/inventario': typeof AppInventarioRouteRouteWithChildren
   '/perfil': typeof AppPerfilRouteRouteWithChildren
   '/relatorios': typeof AppRelatoriosRouteRouteWithChildren
+  '/areas-geridas': typeof AppAreasGeridasRoute
   '/atividade': typeof AppAtividadeRoute
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
@@ -404,6 +411,7 @@ export interface FileRoutesByTo {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/trocar-senha': typeof TrocarSenhaRoute
+  '/areas-geridas': typeof AppAreasGeridasRoute
   '/atividade': typeof AppAtividadeRoute
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
@@ -460,6 +468,7 @@ export interface FileRoutesById {
   '/_app/inventario': typeof AppInventarioRouteRouteWithChildren
   '/_app/perfil': typeof AppPerfilRouteRouteWithChildren
   '/_app/relatorios': typeof AppRelatoriosRouteRouteWithChildren
+  '/_app/areas-geridas': typeof AppAreasGeridasRoute
   '/_app/atividade': typeof AppAtividadeRoute
   '/_app/painel': typeof AppPainelRoute
   '/_app/sem-permissao': typeof AppSemPermissaoRoute
@@ -518,6 +527,7 @@ export interface FileRouteTypes {
     | '/inventario'
     | '/perfil'
     | '/relatorios'
+    | '/areas-geridas'
     | '/atividade'
     | '/painel'
     | '/sem-permissao'
@@ -566,6 +576,7 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/redefinir-senha'
     | '/trocar-senha'
+    | '/areas-geridas'
     | '/atividade'
     | '/painel'
     | '/sem-permissao'
@@ -621,6 +632,7 @@ export interface FileRouteTypes {
     | '/_app/inventario'
     | '/_app/perfil'
     | '/_app/relatorios'
+    | '/_app/areas-geridas'
     | '/_app/atividade'
     | '/_app/painel'
     | '/_app/sem-permissao'
@@ -730,6 +742,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AppAdminRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/areas-geridas': {
+      id: '/_app/areas-geridas'
+      path: '/areas-geridas'
+      fullPath: '/areas-geridas'
+      preLoaderRoute: typeof AppAreasGeridasRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/atividade': {
@@ -1208,6 +1227,7 @@ interface AppRouteChildren {
   AppInventarioRouteRoute: typeof AppInventarioRouteRouteWithChildren
   AppPerfilRouteRoute: typeof AppPerfilRouteRouteWithChildren
   AppRelatoriosRouteRoute: typeof AppRelatoriosRouteRouteWithChildren
+  AppAreasGeridasRoute: typeof AppAreasGeridasRoute
   AppAtividadeRoute: typeof AppAtividadeRoute
   AppPainelRoute: typeof AppPainelRoute
   AppSemPermissaoRoute: typeof AppSemPermissaoRoute
@@ -1221,6 +1241,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInventarioRouteRoute: AppInventarioRouteRouteWithChildren,
   AppPerfilRouteRoute: AppPerfilRouteRouteWithChildren,
   AppRelatoriosRouteRoute: AppRelatoriosRouteRouteWithChildren,
+  AppAreasGeridasRoute: AppAreasGeridasRoute,
   AppAtividadeRoute: AppAtividadeRoute,
   AppPainelRoute: AppPainelRoute,
   AppSemPermissaoRoute: AppSemPermissaoRoute,
