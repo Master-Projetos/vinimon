@@ -115,7 +115,7 @@
 ### T-13.7 — Telas: áreas geridas
 - **Depende de:** T-13.3 · **Paralelo com:** T-13.6
 - **Requisitos:** A04
-- **Arquivos:** `apps/web/src/routes/_app/areas-geridas.tsx`, `apps/web/src/features/areas-geridas/{queries.ts,components/usuarios-area-table.tsx}`, `apps/web/src/features/chamados/components/visoes-pane.tsx`, `apps/web/src/routes/_app/admin/usuarios.tsx`, `apps/web/src/routes/_app/areas-geridas.test.tsx`
+- **Arquivos:** `apps/web/src/routes/_app/areas-geridas.tsx`, `apps/web/src/features/areas-geridas/{queries.ts,components/usuarios-area-table.tsx}`, `apps/web/src/features/chamados/components/visoes-pane.tsx`, `apps/web/src/features/usuarios/components/usuario-sheet.tsx`, `apps/web/src/routes/_app/areas-geridas.test.tsx`
 - **Passos:**
   1. Visão "Áreas geridas".
   2. Página com os usuários da área e edição de telefone, departamento e ativo.
