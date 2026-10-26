@@ -108,9 +108,7 @@ describe('/admin/tags', () => {
     const { falsa } = montar({ ...listaPadrao, 'DELETE /tags/1': () => new Response(null, { status: 204 }) })
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir urgente' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
-    await waitFor(() =>
-      expect(falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/tags/1', corpo: null }),
-    )
+    await waitFor(() => expect(falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/tags/1', corpo: null }))
     expect(await screen.findByText('Tag excluída')).toBeInTheDocument()
   })
 

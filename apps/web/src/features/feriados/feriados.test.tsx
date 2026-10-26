@@ -141,7 +141,10 @@ describe('/admin/feriados', () => {
   })
 
   it('(b) excluir confirma e faz DELETE /feriados/:id', async () => {
-    const { falsa } = montar('/admin/feriados', { ...lista, 'DELETE /feriados/1': () => new Response(null, { status: 204 }) })
+    const { falsa } = montar('/admin/feriados', {
+      ...lista,
+      'DELETE /feriados/1': () => new Response(null, { status: 204 }),
+    })
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir Natal' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
     await waitFor(() =>

@@ -107,7 +107,10 @@ describe('/admin/categorias-artigo', () => {
   })
 
   it('(b) excluir confirma e faz DELETE /categorias-artigo/:id', async () => {
-    const { falsa } = montar({ ...listaPadrao, 'DELETE /categorias-artigo/1': () => new Response(null, { status: 204 }) })
+    const { falsa } = montar({
+      ...listaPadrao,
+      'DELETE /categorias-artigo/1': () => new Response(null, { status: 204 }),
+    })
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir Tutoriais' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
     await waitFor(() =>
