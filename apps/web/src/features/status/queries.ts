@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { type CriarStatus, type ListarStatusQuery, statusApi } from '@vinimon/shared'
+import { useExcluirCadastro } from '@/features/admin/excluir'
 import { chamar } from '@/lib/api'
 
 export const statusChaves = {
@@ -28,4 +29,8 @@ export function useSalvarStatus(id: number | null) {
     },
     meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
   })
+}
+
+export function useExcluirStatus() {
+  return useExcluirCadastro((id) => chamar(statusApi.excluir, { params: { id } }), [statusChaves.todos])
 }

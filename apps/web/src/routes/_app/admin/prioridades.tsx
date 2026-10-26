@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { CriarPrioridadeSchema, type Prioridade } from '@vinimon/shared'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -14,7 +14,8 @@ import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { prioridadesConsultas, useSalvarPrioridade } from '@/features/prioridades/queries'
+import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
+import { prioridadesConsultas, useExcluirPrioridade, useSalvarPrioridade } from '@/features/prioridades/queries'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
 
 const BuscaSchema = z.object({
@@ -39,6 +40,8 @@ function PrioridadesPagina() {
   const pagina = search.pagina ?? 1
   const { data } = useSuspenseQuery(prioridadesConsultas.lista({ pagina, busca: search.busca }))
   const [editando, setEditando] = useState<Prioridade | 'nova' | null>(null)
+  const [excluindo, setExcluindo] = useState<Prioridade | null>(null)
+  const excluir = useExcluirPrioridade()
   const totalPaginas = Math.max(1, Math.ceil(data.total / data.porPagina))
 
   return (
@@ -83,9 +86,21 @@ function PrioridadesPagina() {
                 <Badge variant={p.ativo ? 'secondary' : 'outline'}>{p.ativo ? 'Ativa' : 'Inativa'}</Badge>
               </TableCell>
               <TableCell>
-                <Button size="icon" variant="ghost" aria-label={`Editar ${p.nome}`} onClick={() => setEditando(p)}>
-                  <Pencil aria-hidden="true" />
-                </Button>
+                <div className="flex justify-end gap-1">
+                  <Button size="icon" variant="ghost" aria-label={`Editar ${p.nome}`} onClick={() => setEditando(p)}>
+                    <Pencil aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Excluir ${p.nome}`}
+                    disabled={p.padrao}
+                    title={p.padrao ? 'A prioridade padrão não pode ser excluída.' : undefined}
+                    onClick={() => setExcluindo(p)}
+                  >
+                    <Trash2 aria-hidden="true" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -115,6 +130,14 @@ function PrioridadesPagina() {
       </nav>
 
       <PrioridadeSheet prioridade={editando} aoFechar={() => setEditando(null)} />
+      <ExcluirCadastroDialog
+        alvo={excluindo}
+        tipo="a prioridade"
+        sucesso="Prioridade excluída"
+        aviso="A prioridade padrão e as prioridades usadas em chamados não podem ser excluídas."
+        excluir={(id) => excluir.mutateAsync(id)}
+        aoFechar={() => setExcluindo(null)}
+      />
     </section>
   )
 }
