@@ -1,6 +1,6 @@
 import type { MotivoSessaoEncerrada } from '@vinimon/shared'
 import type { FastifyBaseLogger } from 'fastify'
-import { comAuxiliarIds, podeVerChamado, podeVerInterno, selectEscopo } from '../autorizacao/chamados'
+import { comEscopo, podeVerChamado, podeVerInterno, selectEscopo } from '../autorizacao/chamados'
 import { obterConfig } from '../lib/config'
 import { prisma } from '../lib/prisma'
 import { type UsuarioSessao, verTodasAreas } from '../lib/sessao'
@@ -39,6 +39,7 @@ async function carregarUsuarios(ids: number[]) {
       perfil: true,
       areaId: true,
       areasSecundarias: { select: { areaId: true } },
+      areasGeridas: { select: { areaId: true } },
     },
   })
   return new Map(
@@ -52,6 +53,7 @@ async function carregarUsuarios(ids: number[]) {
         areaId: u.areaId,
         areaIds: u.areaId === null ? sec : [u.areaId, ...sec],
         verTodasAreas: verTodasAreas(u.perfil, cfg),
+        areasGeridas: u.areasGeridas.map((a) => a.areaId),
       }
       return [u.id, fresco] as const
     }),
@@ -94,7 +96,7 @@ export function criarRevogacao(io: ServidorRt, log: FastifyBaseLogger): Revogaca
             where: { id: { in: [...idsChamado] } },
             select: { id: true, ...selectEscopo },
           })
-      ).map((c) => [c.id, comAuxiliarIds(c)]),
+      ).map((c) => [c.id, comEscopo(c)]),
     )
     for (const s of sockets) {
       const u = usuarios.get(s.data.usuario.id)
@@ -168,7 +170,7 @@ export function criarRevogacao(io: ServidorRt, log: FastifyBaseLogger): Revogaca
           (s) => s.rooms.has(salaChamado(chamadoId)) || s.rooms.has(salaChamadoInterno(chamadoId)),
         )
         if (sockets.length === 0) return
-        const c = comAuxiliarIds(await prisma.chamado.findUnique({ where: { id: chamadoId }, select: selectEscopo }))
+        const c = comEscopo(await prisma.chamado.findUnique({ where: { id: chamadoId }, select: selectEscopo }))
         const frescos = await carregarUsuarios([...new Set(sockets.map((s) => s.data.usuario.id))])
         for (const s of sockets) {
           const base = frescos.get(s.data.usuario.id)

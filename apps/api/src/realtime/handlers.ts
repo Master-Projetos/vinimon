@@ -9,7 +9,7 @@ import {
 } from '@vinimon/shared'
 import type { FastifyBaseLogger } from 'fastify'
 import type { ZodType } from 'zod'
-import { comAuxiliarIds, podeVerChamado, podeVerInterno, selectEscopo } from '../autorizacao/chamados'
+import { comEscopo, podeVerChamado, podeVerInterno, selectEscopo } from '../autorizacao/chamados'
 import { prisma } from '../lib/prisma'
 import type { UsuarioSessao } from '../lib/sessao'
 import type { PublicadorTempoReal } from '../lib/tempo-real'
@@ -33,11 +33,18 @@ async function recarregarUsuario(id: number, base: UsuarioSessao): Promise<Usuar
       perfil: true,
       areaId: true,
       areasSecundarias: { select: { areaId: true } },
+      areasGeridas: { select: { areaId: true } },
     },
   })
   if (!u) return null
-  const secundarias = u.areasSecundarias.map((a) => a.areaId)
-  return { ...base, ...u, areaIds: u.areaId === null ? secundarias : [u.areaId, ...secundarias] }
+  const { areasSecundarias, areasGeridas, ...dados } = u
+  const secundarias = areasSecundarias.map((a) => a.areaId)
+  return {
+    ...base,
+    ...dados,
+    areaIds: u.areaId === null ? secundarias : [u.areaId, ...secundarias],
+    areasGeridas: areasGeridas.map((a) => a.areaId),
+  }
 }
 
 const idDaSala = (sala: string): { chamadoId: number; interna: boolean } | null => {
@@ -100,7 +107,7 @@ export function registrarHandlers(io: ServidorRt, log: FastifyBaseLogger): void 
         () => ({ limiter: 'chamado:entrar', chave: socket.id }),
         async ({ chamadoId }, ack) => {
           const u = await recarregarUsuario(socket.data.usuario.id, socket.data.usuario)
-          const c = comAuxiliarIds(await prisma.chamado.findUnique({ where: { id: chamadoId }, select: selectEscopo }))
+          const c = comEscopo(await prisma.chamado.findUnique({ where: { id: chamadoId }, select: selectEscopo }))
           // inexistente e sem acesso dão a mesma resposta (S92)
           if (!u || !c || !podeVerChamado(u, c)) return ack?.({ ok: false, erro: 'INDISPONIVEL' })
           const jaEstou = socket.rooms.has(salaChamado(chamadoId))

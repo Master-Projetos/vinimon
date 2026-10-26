@@ -1,7 +1,7 @@
 import { type ChamadoDetalhe, type CriarChamado, temPermissao } from '@vinimon/shared'
 import {
   acoesDoUsuario,
-  comAuxiliarIds,
+  comEscopo,
   escopoChamados,
   podeAtender,
   podeVerChamado,
@@ -43,6 +43,7 @@ export async function montarDetalhe(
     areaId: c.areaId,
     operadorId: c.operadorId,
     solicitanteId: c.solicitanteId,
+    solicitanteAreaId: c.solicitante.areaId,
     auxiliarIds: c.auxiliares.map((a) => a.usuarioId),
   }
   const verInterno = podeVerInterno(u, escopo)
@@ -100,7 +101,7 @@ export async function montarDetalhe(
     prioridade: c.prioridade,
     area: c.area,
     problema: c.problema,
-    solicitante: c.solicitante,
+    solicitante: { id: c.solicitante.id, nome: c.solicitante.nome },
     operador: c.operador,
     abertoEm: c.abertoEm,
     agendadoPara: c.agendadoPara,
@@ -242,7 +243,7 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
     // subchamado: quem abre precisa ver e atender o pai (404/403 só dizem o que `u` já pode saber)
     let paiId: number | null = null
     if (dados.paiId !== undefined) {
-      const pai = comAuxiliarIds(
+      const pai = comEscopo(
         await tx.chamado.findUnique({
           where: { id: dados.paiId },
           select: { id: true, statusTipo: true, ...selectEscopo },

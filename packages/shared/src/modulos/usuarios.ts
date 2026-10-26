@@ -14,6 +14,11 @@ const zLogin = () =>
     })
 /** E-mail normalizado em minúsculas (S14). */
 const zEmailNormalizado = () => z.string().trim().toLowerCase().pipe(zEmail())
+const zIds = (limite: number, mensagem: string) =>
+  z
+    .array(z.int().positive().max(2_147_483_647))
+    .max(limite, { error: mensagem })
+    .refine((ids) => new Set(ids).size === ids.length, { error: 'Áreas repetidas.' })
 const zAreasSecundarias = () =>
   z
     .array(z.int().positive().max(2_147_483_647))
@@ -32,6 +37,8 @@ export const UsuarioSchema = z.object({
   areaId: z.int().nullable(),
   area: UsuarioAreaSchema.nullable(),
   areaSecundariaIds: z.array(z.int()),
+  /** Áreas que o usuário gerencia (A04). */
+  areasGeridasIds: z.array(z.int()).default([]),
   departamentoId: z.int().nullable(),
   ativo: z.boolean(),
   deveTrocarSenha: z.boolean(),
@@ -67,6 +74,8 @@ export const AtualizarUsuarioSchema = z
     perfil: z.enum(PERFIS).optional(),
     areaId: z.int().positive().max(2_147_483_647).nullable().optional(),
     areaSecundariaIds: zAreasSecundarias().optional(),
+    /** USUARIO: só áreas que não atendem; OPERADOR e ADMIN: só as suas áreas (A04). */
+    areasGeridasIds: zIds(20, 'Informe no máximo 20 áreas geridas.').optional(),
     departamentoId: z.int().positive().max(2_147_483_647).nullable().optional(),
     ativo: z.boolean().optional(),
   })

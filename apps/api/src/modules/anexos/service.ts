@@ -8,7 +8,7 @@ import {
   MAX_BYTES_POR_CHAMADO,
   temPermissao,
 } from '@vinimon/shared'
-import { type ChamadoEscopo, comAuxiliarIds, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
+import { type ChamadoEscopo, comEscopo, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
 import { env } from '../../env'
 import type { Prisma } from '../../generated/prisma/client'
 import { chaveNova, DiscoLocal } from '../../lib/armazenamento'
@@ -44,7 +44,7 @@ const paraDto = (a: Prisma.AnexoGetPayload<{ select: typeof selectAnexo }>): Ane
  * não encerrado (409), `anexos.habilitados` (403) e a cota do chamado (413). Nada toca o disco aqui.
  */
 async function autorizarUpload(u: UsuarioSessao, chamadoId: number) {
-  const c = comAuxiliarIds(
+  const c = comEscopo(
     await prisma.chamado.findUnique({
       where: { id: chamadoId },
       select: {
@@ -53,6 +53,7 @@ async function autorizarUpload(u: UsuarioSessao, chamadoId: number) {
         operadorId: true,
         solicitanteId: true,
         statusTipo: true,
+        solicitante: { select: { areaId: true } },
         auxiliares: { select: { usuarioId: true } },
       },
     }),
@@ -227,10 +228,16 @@ export async function enviarAnexos(
 
 /** `GET /chamados/:id/anexos`: o interno só aparece para quem passa em `podeVerInterno` (S71). */
 export async function listarAnexos(chamadoId: number, u: UsuarioSessao): Promise<Anexo[]> {
-  const c = comAuxiliarIds(
+  const c = comEscopo(
     await prisma.chamado.findUnique({
       where: { id: chamadoId },
-      select: { areaId: true, operadorId: true, solicitanteId: true, auxiliares: { select: { usuarioId: true } } },
+      select: {
+        areaId: true,
+        operadorId: true,
+        solicitanteId: true,
+        solicitante: { select: { areaId: true } },
+        auxiliares: { select: { usuarioId: true } },
+      },
     }),
   )
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
@@ -254,11 +261,17 @@ export async function abrirAnexo(id: string, u: UsuarioSessao) {
       storageChave: true,
       interno: true,
       chamado: {
-        select: { areaId: true, operadorId: true, solicitanteId: true, auxiliares: { select: { usuarioId: true } } },
+        select: {
+          areaId: true,
+          operadorId: true,
+          solicitanteId: true,
+          solicitante: { select: { areaId: true } },
+          auxiliares: { select: { usuarioId: true } },
+        },
       },
     },
   })
-  const escopo = a ? comAuxiliarIds(a.chamado) : null
+  const escopo = a ? comEscopo(a.chamado) : null
   if (!a || !escopo || !podeVerChamado(u, escopo) || (a.interno && !podeVerInterno(u, escopo)))
     throw naoEncontrado('Anexo não encontrado.')
   return {

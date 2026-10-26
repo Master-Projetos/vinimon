@@ -1,5 +1,5 @@
 import type { Leitura, LeituraMarcada } from '@vinimon/shared'
-import { comAuxiliarIds, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
+import { comEscopo, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
 import { naoEncontrado, regraNegocio } from '../../lib/erros'
 import { prisma } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
@@ -7,7 +7,7 @@ import { tempoReal } from '../../lib/tempo-real'
 import { contarNaoLidas } from '../notificacoes/service'
 
 async function carregarVisivel(id: number, u: UsuarioSessao) {
-  const c = comAuxiliarIds(
+  const c = comEscopo(
     await prisma.chamado.findUnique({
       where: { id },
       select: {
@@ -15,6 +15,7 @@ async function carregarVisivel(id: number, u: UsuarioSessao) {
         areaId: true,
         operadorId: true,
         solicitanteId: true,
+        solicitante: { select: { areaId: true } },
         auxiliares: { select: { usuarioId: true } },
       },
     }),

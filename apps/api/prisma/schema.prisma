@@ -277,6 +277,7 @@ model Area {
   /// áreas para onde quem é desta área pode abrir chamado (vazio = todas)
   destinos            AreaDestino[] @relation("AreaOrigem")
   comoDestino         AreaDestino[] @relation("AreaDestino")
+  gerentes            AreaGerente[]
 
   @@index([jornadaId], map: "ix_areas_jornada")
   @@map("areas")
@@ -295,6 +296,19 @@ model AreaDestino {
   @@unique([areaOrigemId], map: "ux_area_destinos_padrao", where: raw("padrao"))
   @@index([areaDestinoId], map: "ix_area_destinos_destino")
   @@map("area_destinos")
+}
+
+/// Gerente de área (A04): vê os chamados dos usuários da área e edita telefone, departamento e situação deles
+model AreaGerente {
+  areaId    Int @map("area_id")
+  usuarioId Int @map("usuario_id")
+
+  area    Area    @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([areaId, usuarioId])
+  @@index([usuarioId], map: "ix_area_gerentes_usuario")
+  @@map("area_gerentes")
 }
 
 // ═════════════════════════ ACESSO ═════════════════════════
@@ -359,6 +373,7 @@ model Usuario {
   mencoes                 Mencao[]
   seguindo                ChamadoSeguidor[]
   auxiliarEm              ChamadoAuxiliar[]
+  areasGeridas            AreaGerente[]
   leituras                ChamadoLeitura[]
   anexosEnviados          Anexo[]
   avaliacoes              AvaliacaoChamado[]

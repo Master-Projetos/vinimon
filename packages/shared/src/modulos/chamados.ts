@@ -25,6 +25,7 @@ export const VISOES_CHAMADO = [
   'aguardando-validacao',
   'encerrados',
   'todos',
+  'areas-geridas',
 ] as const
 export type VisaoChamado = (typeof VISOES_CHAMADO)[number]
 
@@ -297,6 +298,8 @@ export const ChamadoContagensSchema = z.object({
   // ausentes para quem vê tudo (`chamado.verTodos`): contar a tabela inteira é caro e o selo só importa nas filas abertas
   encerrados: z.int().optional(),
   todos: z.int().optional(),
+  // só para quem gerencia alguma área (A04)
+  'areas-geridas': z.int().optional(),
 })
 export type ChamadoContagens = z.output<typeof ChamadoContagensSchema>
 

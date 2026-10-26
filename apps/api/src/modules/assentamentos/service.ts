@@ -10,7 +10,7 @@ import {
   acoesDoUsuario,
   type ChamadoEscopo,
   type ChamadoParaAcoes,
-  comAuxiliarIds,
+  comEscopo,
   podeVerChamado,
   podeVerInterno,
 } from '../../autorizacao/chamados'
@@ -44,12 +44,13 @@ const selectParaComentar = {
   versao: true,
   primeiraRespostaEm: true,
   status: { select: { papel: true } },
+  solicitante: { select: { areaId: true } },
   auxiliares: { select: { usuarioId: true } },
 } satisfies Prisma.ChamadoSelect
 
 /** Fora do escopo é 404, igual a inexistente (S46). */
 async function carregarVisivel(id: number, u: UsuarioSessao) {
-  const c = comAuxiliarIds(await prisma.chamado.findUnique({ where: { id }, select: selectParaComentar }))
+  const c = comEscopo(await prisma.chamado.findUnique({ where: { id }, select: selectParaComentar }))
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
   return c
 }
