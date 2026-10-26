@@ -77,9 +77,9 @@
 ### T-12.5 — Telas de e-mail e recuperação
 - **Depende de:** T-12.2–T-12.4 · **Paralelo com:** Fase 13
 - **Requisitos:** E03, E04, A11
-- **Arquivos:** `apps/web/src/routes/{recuperar-senha.tsx,redefinir-senha.tsx}`, `apps/web/src/routes/_app/admin/modelos-email.tsx`, `apps/web/src/features/modelos-email/queries.ts`, `apps/web/src/features/perfil/components/preferencias-notificacao-table.tsx`, `apps/web/src/routes/login.tsx`
+- **Arquivos:** `apps/web/src/routes/{recuperar-senha.tsx,redefinir-senha.tsx}`, `apps/web/src/routes/_app/admin/modelos-email.tsx`, `apps/web/src/features/modelos-email/queries.ts`, `apps/web/src/features/perfil/components/preferencias-notificacao-table.tsx`, `apps/web/src/routes/login.tsx`, `packages/shared/src/modulos/auth.ts`, `apps/api/src/modules/auth/{routes.ts,recuperacao.test.ts}`, `apps/web/src/features/modelos-email/modelos-email.test.tsx`, `apps/web/e2e/login.spec.ts`, `apps/web/playwright.config.ts`, `apps/api/scripts/e2e-preparar.ts`
 - **Passos:**
-  1. Link "Esqueci minha senha" no login, só quando a config pública `email.habilitado` estiver ligada.
+  1. Endpoint público `GET /auth/recuperacao` (`acesso: 'publico'`, contrato `recuperacaoHabilitada` em `shared/modulos/auth.ts`, resposta `{ habilitada: boolean }` = `email.habilitado`; não expõe outras chaves; teste em `recuperacao.test.ts`). Link "Esqueci minha senha" no login só quando `habilitada` for verdadeira. No E2E, o `webServer` do Playwright recebe `SMTP_URL` do Mailpit (`smtp://localhost:1025`) e `e2e-preparar.ts` liga `email.habilitado`.
   2. Editor de modelos com a lista das variáveis e "Enviar teste".
   3. Coluna "E-mail" na matriz de preferências.
 - **Pronto quando:**
