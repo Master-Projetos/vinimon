@@ -19,6 +19,8 @@ export interface UsuarioSessao {
   mfaAtivo: boolean
   /** OPERADOR com `chamado.isolarAreas` desligado: vê chamados de todas as áreas (só vê; atender continua por área). Ausente = isolado. */
   verTodasAreas?: boolean
+  /** Áreas que o usuário gerencia (A04): vê os chamados dos usuários dessas áreas. Ausente = nenhuma. */
+  areasGeridas?: number[]
 }
 
 export type MotivoRevogacao =
@@ -142,6 +144,7 @@ export async function carregarSessao(
           ativo: true,
           mfaAtivadoEm: true,
           areasSecundarias: { select: { areaId: true } },
+          areasGeridas: { select: { areaId: true }, orderBy: { areaId: 'asc' } },
         },
       },
     },
@@ -170,6 +173,7 @@ export async function carregarSessao(
     estado: s.estado,
     mfaAtivo: u.mfaAtivadoEm !== null,
     verTodasAreas: verTodasAreas(u.perfil, cfg),
+    areasGeridas: u.areasGeridas.map((a) => a.areaId),
   }
 }
 

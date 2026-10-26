@@ -207,6 +207,8 @@ export async function processarEvento(eventoId: number): Promise<number[]> {
       areaId: c.areaId,
       operadorId: c.operadorId,
       solicitanteId: c.solicitanteId,
+      // sem a área do solicitante (uma query a mais estoura o limite de N+1): quem só vê por gestão não recebe aqui
+      solicitanteAreaId: null,
       auxiliarIds: [] as number[],
     }
     const todos = destinatarios(regra, contexto)

@@ -44,7 +44,7 @@ export const selectChamadoDetalhe = {
   prioridade: { select: { id: true, nome: true, cor: true, ordem: true } },
   area: { select: { id: true, nome: true } },
   problema: { select: { id: true, nome: true } },
-  solicitante: { select: { id: true, nome: true } },
+  solicitante: { select: { id: true, nome: true, areaId: true } },
   abertoPor: { select: { id: true, nome: true } },
   operador: { select: { id: true, nome: true } },
   canal: { select: { id: true, nome: true } },

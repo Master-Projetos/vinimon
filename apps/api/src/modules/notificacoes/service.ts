@@ -11,7 +11,7 @@ import {
   temPermissao,
   textoPlano,
 } from '@vinimon/shared'
-import { comAuxiliarIds, escopoChamados, podeVerInterno } from '../../autorizacao/chamados'
+import { comEscopo, escopoChamados, podeVerInterno } from '../../autorizacao/chamados'
 import type { Prisma } from '../../generated/prisma/client'
 import { naoEncontrado, regraNegocio, requisicaoInvalida } from '../../lib/erros'
 import { prisma } from '../../lib/prisma'
@@ -98,6 +98,7 @@ export async function listarNotificacoes(u: UsuarioSessao, q: ListarNotificacoes
           areaId: true,
           operadorId: true,
           solicitanteId: true,
+          solicitante: { select: { areaId: true } },
           auxiliares: { select: { usuarioId: true } },
         },
       },
@@ -126,7 +127,7 @@ export async function listarNotificacoes(u: UsuarioSessao, q: ListarNotificacoes
 
   const itens: NotificacaoDTO[] = pagina.map((n) => {
     const a = n.assentamentoId === null ? undefined : textos.get(n.assentamentoId)
-    const visivel = a !== undefined && (!a.interno || podeVerInterno(u, comAuxiliarIds(n.chamado)))
+    const visivel = a !== undefined && (!a.interno || podeVerInterno(u, comEscopo(n.chamado)))
     const dados = NotificacaoDadosSchema.safeParse(n.dados)
     return {
       id: n.id,

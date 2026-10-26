@@ -23,7 +23,7 @@ import {
   acoesDoUsuario,
   type ChamadoEscopo,
   type ChamadoParaAcoes,
-  comAuxiliarIds,
+  comEscopo,
   podeAtender,
   podeVerChamado,
   selectEscopo,
@@ -66,6 +66,7 @@ const selectParaAcao = {
   area: { select: { nome: true } },
   operador: { select: { nome: true } },
   prioridade: { select: { nome: true } },
+  solicitante: { select: { areaId: true } },
   auxiliares: { select: { usuarioId: true } },
 } satisfies Prisma.ChamadoSelect
 
@@ -73,7 +74,7 @@ type ChamadoCarregado = NonNullable<Awaited<ReturnType<typeof carregarParaAcao>>
 
 /** Passo 1 do padrão de ação: carrega o que as regras precisam. Inexistente dá 404. */
 async function carregarParaAcao(tx: Tx, id: number) {
-  return comAuxiliarIds(await tx.chamado.findUnique({ where: { id }, select: selectParaAcao }))
+  return comEscopo(await tx.chamado.findUnique({ where: { id }, select: selectParaAcao }))
 }
 
 /**
@@ -263,6 +264,7 @@ async function quemPerdeuAcesso(tx: Tx, chamadoId: number, novoEscopo: ChamadoEs
       perfil: true,
       areaId: true,
       areasSecundarias: { select: { areaId: true } },
+      areasGeridas: { select: { areaId: true } },
     },
   })
   return usuarios
@@ -278,6 +280,7 @@ async function quemPerdeuAcesso(tx: Tx, chamadoId: number, novoEscopo: ChamadoEs
         sessaoId: '',
         estado: 'ATIVA',
         mfaAtivo: false,
+        areasGeridas: x.areasGeridas.map((a) => a.areaId),
       }
       return !podeVerChamado(candidato, novoEscopo)
     })
@@ -386,6 +389,7 @@ export async function encaminhar(
       areaId: destino.id,
       operadorId: operador?.id ?? null,
       solicitanteId: c.solicitanteId,
+      solicitanteAreaId: c.solicitanteAreaId,
       auxiliarIds: c.auxiliarIds,
     })
     return {
@@ -456,7 +460,7 @@ export async function definirPai(
       }
       if (novoPaiId === id) throw regraNegocio('Um chamado não pode ser pai de si mesmo.')
       if (novoPaiId !== null) {
-        const pai = comAuxiliarIds(
+        const pai = comEscopo(
           await tx.chamado.findUnique({ where: { id: novoPaiId }, select: { statusTipo: true, ...selectEscopo } }),
         )
         if (!pai || !podeVerChamado(u, pai)) throw naoEncontrado('Chamado pai não encontrado.')
@@ -599,6 +603,7 @@ export async function removerAuxiliar(
       areaId: c.areaId,
       operadorId: c.operadorId,
       solicitanteId: c.solicitanteId,
+      solicitanteAreaId: c.solicitanteAreaId,
       auxiliarIds: c.auxiliarIds.filter((x) => x !== usuarioId),
     })
     return {
@@ -861,6 +866,7 @@ export async function classificar(
           areaId,
           operadorId: c.operadorId,
           solicitanteId: c.solicitanteId,
+          solicitanteAreaId: c.solicitanteAreaId,
           auxiliarIds: c.auxiliarIds,
         })
       : []
@@ -1324,7 +1330,7 @@ export async function cancelar(
 }
 
 async function exigirVisivel(id: number, u: UsuarioSessao): Promise<void> {
-  const c = comAuxiliarIds(await prisma.chamado.findUnique({ where: { id }, select: selectEscopo }))
+  const c = comEscopo(await prisma.chamado.findUnique({ where: { id }, select: selectEscopo }))
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
 }
 

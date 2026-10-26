@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { type App, buildApp } from '../src/app'
-import { comAuxiliarIds, escopoChamados, podeVerChamado, selectEscopo } from '../src/autorizacao/chamados'
+import { comEscopo, escopoChamados, podeVerChamado, selectEscopo } from '../src/autorizacao/chamados'
 import { invalidarConfig } from '../src/lib/config'
 import { prisma } from '../src/lib/prisma'
 import { carregarSessao, type UsuarioSessao } from '../src/lib/sessao'
@@ -17,6 +17,8 @@ type Ator =
   | 'admin'
   | 'operadorSemIsolamento'
   | 'auxiliarOutraArea'
+  | 'gerenteUsuario'
+  | 'gerenteOperador'
 
 describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunto (T33)', () => {
   const atores = {} as Record<Ator, UsuarioSessao>
@@ -25,6 +27,7 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
     areaId: number
     operadorId: number | null
     solicitanteId: number
+    solicitanteAreaId: number | null
     auxiliarIds: number[]
   }> = []
 
@@ -35,6 +38,7 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
     const B = await criarArea()
     const C = await criarArea()
     const D = await criarArea()
+    const setor = await criarArea({ atende: false })
     const solicitante = await criarUsuario({ perfil: 'USUARIO' })
     const outroUsuario = await criarUsuario({ perfil: 'USUARIO' })
     const operadorDaArea = await criarUsuario({ perfil: 'OPERADOR', areaId: A.id })
@@ -43,6 +47,17 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
     const operadorOutraArea = await criarUsuario({ perfil: 'OPERADOR', areaId: B.id })
     const responsavelOutraArea = await criarUsuario({ perfil: 'OPERADOR', areaId: B.id })
     const auxiliarOutraArea = await criarUsuario({ perfil: 'OPERADOR', areaId: D.id })
+    // T-13.3: o setor (não atende) tem um solicitante e dois gerentes, um USUARIO e um OPERADOR de outra área
+    const doSetor = await criarUsuario({ perfil: 'USUARIO', areaId: setor.id })
+    const gerenteUsuario = await criarUsuario({ perfil: 'USUARIO', areaId: setor.id })
+    const gerenteOperador = await criarUsuario({ perfil: 'OPERADOR', areaId: C.id })
+    await prisma.usuarioArea.create({ data: { usuarioId: gerenteOperador.id, areaId: setor.id } })
+    await prisma.areaGerente.createMany({
+      data: [
+        { areaId: setor.id, usuarioId: gerenteUsuario.id },
+        { areaId: setor.id, usuarioId: gerenteOperador.id },
+      ],
+    })
     const admin = await criarUsuario({ perfil: 'ADMIN' })
     const usuarios = {
       solicitante,
@@ -52,6 +67,8 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
       operadorOutraArea,
       responsavelOutraArea,
       auxiliarOutraArea,
+      gerenteUsuario,
+      gerenteOperador,
       admin,
     }
     for (const [nome, u] of Object.entries(usuarios) as Array<[Ator, { id: number }]>) {
@@ -103,6 +120,13 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
         papel: 'CONCLUIDO',
         operadorId: responsavelOutraArea.id,
       }),
+      await novo({ solicitanteId: doSetor.id, areaId: A.id, papel: 'INICIAL' }), // usuário do setor gerido
+      await novo({
+        solicitanteId: doSetor.id,
+        areaId: B.id,
+        papel: 'EM_ATENDIMENTO',
+        operadorId: operadorOutraArea.id,
+      }),
     ]
     // T-15.1: operador de outra área é auxiliar de um chamado (o primeiro) e de nenhum outro
     const primeiro = criados[0]
@@ -114,13 +138,13 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
         select: { id: true, ...selectEscopo },
         orderBy: { id: 'asc' },
       })
-    ).map((c) => comAuxiliarIds(c))
+    ).map((c) => comEscopo(c))
   })
 
   const ids = (xs: Array<{ id: number }>) => xs.map((x) => x.id).sort((a, b) => a - b)
 
-  it('a fixture tem 12 chamados', () => {
-    expect(chamados).toHaveLength(12)
+  it('a fixture tem 14 chamados', () => {
+    expect(chamados).toHaveLength(14)
   })
 
   it.each([
@@ -133,6 +157,8 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
     'admin',
     'operadorSemIsolamento',
     'auxiliarOutraArea',
+    'gerenteUsuario',
+    'gerenteOperador',
   ] as const)('T33: ator %s: mesmo conjunto no Prisma e em memória', async (nome) => {
     const u = atores[nome]
     const noBanco = ids(await prisma.chamado.findMany({ where: escopoChamados(u), select: { id: true } }))
@@ -142,11 +168,12 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
 
   it('os conjuntos não são triviais: ninguém vê tudo, exceto o ADMIN, e há quem veja alguns', () => {
     const vistos = (nome: Ator) => chamados.filter((c) => podeVerChamado(atores[nome], c)).length
-    expect(vistos('admin')).toBe(12)
+    expect(vistos('admin')).toBe(14)
     expect(vistos('operadorOutraArea')).toBeGreaterThan(0)
-    expect(vistos('operadorOutraArea')).toBeLessThan(12)
-    expect(vistos('solicitante')).toBeLessThan(12)
-    expect(vistos('operadorSemIsolamento')).toBe(12)
+    expect(vistos('operadorOutraArea')).toBeLessThan(14)
+    expect(vistos('solicitante')).toBeLessThan(14)
+    expect(vistos('operadorSemIsolamento')).toBe(14)
+    expect(vistos('gerenteUsuario')).toBe(2)
     expect(vistos('auxiliarOutraArea')).toBe(1)
   })
 })

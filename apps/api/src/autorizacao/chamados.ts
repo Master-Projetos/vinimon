@@ -6,34 +6,48 @@ export interface ChamadoEscopo {
   areaId: number
   operadorId: number | null
   solicitanteId: number
+  /** Área do solicitante: o gerente dessa área vê o chamado (A04). */
+  solicitanteAreaId: number | null
   /** Operadores auxiliares (T-15.1): veem e comentam como equipe, mas não atendem. */
   auxiliarIds: readonly number[]
 }
 
-/** Projeção que todo ponto de escopo carrega; converta o resultado com `comAuxiliarIds`. */
+/** Projeção que todo ponto de escopo carrega; converta o resultado com `comEscopo`. */
 export const selectEscopo = {
   areaId: true,
   operadorId: true,
   solicitanteId: true,
+  solicitante: { select: { areaId: true } },
   auxiliares: { select: { usuarioId: true } },
 } satisfies Prisma.ChamadoSelect
 
-/** Troca `auxiliares: [{ usuarioId }]` (Prisma) por `auxiliarIds: number[]` (o formato do `ChamadoEscopo`). */
-export function comAuxiliarIds<T extends { auxiliares: ReadonlyArray<{ usuarioId: number }> }>(
-  c: T,
-): Omit<T, 'auxiliares'> & { auxiliarIds: number[] }
-export function comAuxiliarIds<T extends { auxiliares: ReadonlyArray<{ usuarioId: number }> }>(
-  c: T | null,
-): (Omit<T, 'auxiliares'> & { auxiliarIds: number[] }) | null
-export function comAuxiliarIds<T extends { auxiliares: ReadonlyArray<{ usuarioId: number }> }>(c: T | null) {
+type LinhaEscopo = {
+  solicitante: { areaId: number | null }
+  auxiliares: ReadonlyArray<{ usuarioId: number }>
+}
+type ComEscopo<T extends LinhaEscopo> = Omit<T, 'auxiliares' | 'solicitante'> & {
+  solicitanteAreaId: number | null
+  auxiliarIds: number[]
+}
+
+/**
+ * Troca `solicitante: { areaId }` e `auxiliares: [{ usuarioId }]` (Prisma) por `solicitanteAreaId` e `auxiliarIds`
+ * (o formato do `ChamadoEscopo`). Os demais campos da linha seguem como vieram.
+ */
+export function comEscopo<T extends LinhaEscopo>(c: T): ComEscopo<T>
+export function comEscopo<T extends LinhaEscopo>(c: T | null): ComEscopo<T> | null
+export function comEscopo<T extends LinhaEscopo>(c: T | null) {
   if (c === null) return null
-  const { auxiliares, ...resto } = c
-  return { ...resto, auxiliarIds: auxiliares.map((a) => a.usuarioId) }
+  const { auxiliares, solicitante, ...resto } = c
+  return { ...resto, solicitanteAreaId: solicitante.areaId, auxiliarIds: auxiliares.map((a) => a.usuarioId) }
 }
 
 /** SEMPRE combinar com AND: [escopoChamados(u), filtros]. Nunca espalhar no mesmo objeto. */
 export function escopoChamados(u: UsuarioSessao): Prisma.ChamadoWhereInput {
   if (temPermissao(u.perfil, 'chamado.verTodos')) return {}
+  // gerente (A04): os chamados dos usuários das áreas que gerencia
+  const geridas = u.areasGeridas ?? []
+  const porGestao: Prisma.ChamadoWhereInput[] = geridas.length > 0 ? [{ solicitante: { areaId: { in: geridas } } }] : []
   if (temPermissao(u.perfil, 'chamado.verArea')) {
     if (u.verTodasAreas === true) return {}
     return {
@@ -42,15 +56,17 @@ export function escopoChamados(u: UsuarioSessao): Prisma.ChamadoWhereInput {
         { operadorId: u.id },
         { solicitanteId: u.id },
         { auxiliares: { some: { usuarioId: u.id } } },
+        ...porGestao,
       ],
     }
   }
-  return { solicitanteId: u.id }
+  return porGestao.length > 0 ? { OR: [{ solicitanteId: u.id }, ...porGestao] } : { solicitanteId: u.id }
 }
 
 export function podeVerChamado(u: UsuarioSessao, c: ChamadoEscopo): boolean {
   if (temPermissao(u.perfil, 'chamado.verTodos')) return true
   if (c.solicitanteId === u.id) return true
+  if (c.solicitanteAreaId !== null && (u.areasGeridas ?? []).includes(c.solicitanteAreaId)) return true
   if (!temPermissao(u.perfil, 'chamado.verArea')) return false
   if (u.verTodasAreas === true) return true
   return u.areaIds.includes(c.areaId) || c.operadorId === u.id || c.auxiliarIds.includes(u.id)
