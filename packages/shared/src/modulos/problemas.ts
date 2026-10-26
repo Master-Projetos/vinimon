@@ -12,6 +12,9 @@ export const ProblemaSchema = z.object({
   slaRespostaMin: z.int().nullable(),
   slaSolucaoMin: z.int().nullable(),
   ativo: z.boolean(),
+  categoria1Id: z.int().nullable(),
+  categoria2Id: z.int().nullable(),
+  categoria3Id: z.int().nullable(),
   areas: z.array(ProblemaAreaSchema),
 })
 export type Problema = z.output<typeof ProblemaSchema>
@@ -28,6 +31,10 @@ const camposProblema = z.strictObject({
   slaRespostaMin: z.int().positive('Use um valor positivo.').nullable(),
   slaSolucaoMin: z.int().positive('Use um valor positivo.').nullable(),
   ativo: z.boolean(),
+  /** Categoria N precisa ser do grupo N; omitido mantém (atualização) ou fica sem categoria (criação). */
+  categoria1Id: zId().nullable().optional(),
+  categoria2Id: zId().nullable().optional(),
+  categoria3Id: zId().nullable().optional(),
 })
 
 const padraoEstaNaLista = {

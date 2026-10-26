@@ -197,7 +197,7 @@ describe('schemas de resposta', () => {
 })
 
 describe('chamadosApi', () => {
-  it('tem as 20 rotas do cartão, com método e caminho de §3.6', () => {
+  it('tem as rotas do cartão, com método e caminho de §3.6', () => {
     const rotas = Object.entries(chamadosApi).map(([nome, c]) => `${nome} ${c.metodo} ${c.caminho}`)
     expect(rotas).toEqual([
       'listar GET /chamados',
@@ -216,8 +216,12 @@ describe('chamadosApi', () => {
       'concluir POST /chamados/:id/concluir',
       'aprovar POST /chamados/:id/aprovar',
       'rejeitar POST /chamados/:id/rejeitar',
+      'solicitarRetorno POST /chamados/:id/solicitar-retorno',
       'reabrir POST /chamados/:id/reabrir',
       'cancelar POST /chamados/:id/cancelar',
+      'definirPai POST /chamados/:id/pai',
+      'adicionarAuxiliar POST /chamados/:id/auxiliares',
+      'removerAuxiliar DELETE /chamados/:id/auxiliares/:usuarioId',
       'seguir PUT /chamados/:id/seguir',
       'deixarDeSeguir DELETE /chamados/:id/seguir',
     ])

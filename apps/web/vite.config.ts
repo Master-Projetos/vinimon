@@ -19,5 +19,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: 'hidden',
+    // A CSP (font-src 'self') proíbe fontes em data: URI: as fontes ficam sempre como arquivos.
+    assetsInlineLimit: (arquivo) => (arquivo.endsWith('.woff2') ? false : undefined),
   },
 })

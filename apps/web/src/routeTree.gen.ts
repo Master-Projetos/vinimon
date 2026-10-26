@@ -12,12 +12,22 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as Configurar2faRouteImport } from './routes/configurar-2fa'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as TrocarSenhaRouteImport } from './routes/trocar-senha'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
+import { Route as AppAreasGeridasRouteImport } from './routes/_app/areas-geridas'
 import { Route as AppAtividadeRouteImport } from './routes/_app/atividade'
+import { Route as AppChamadosRouteRouteImport } from './routes/_app/chamados/route'
+import { Route as AppConhecimentoRouteRouteImport } from './routes/_app/conhecimento/route'
+import { Route as AppInventarioRouteRouteImport } from './routes/_app/inventario/route'
 import { Route as AppPainelRouteImport } from './routes/_app/painel'
+import { Route as AppPerfilRouteRouteImport } from './routes/_app/perfil/route'
+import { Route as AppRelatoriosRouteRouteImport } from './routes/_app/relatorios/route'
 import { Route as AppSemPermissaoRouteImport } from './routes/_app/sem-permissao'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
+import { Route as AppAdminAreasRouteImport } from './routes/_app/admin/areas'
 import { Route as AppAdminAuditoriaRouteImport } from './routes/_app/admin/auditoria'
 import { Route as AppAdminCanaisRouteImport } from './routes/_app/admin/canais'
 import { Route as AppAdminCategoriasArtigoRouteImport } from './routes/_app/admin/categorias-artigo'
@@ -25,6 +35,7 @@ import { Route as AppAdminConfiguracoesRouteImport } from './routes/_app/admin/c
 import { Route as AppAdminDepartamentosRouteImport } from './routes/_app/admin/departamentos'
 import { Route as AppAdminFeriadosRouteImport } from './routes/_app/admin/feriados'
 import { Route as AppAdminJornadasRouteImport } from './routes/_app/admin/jornadas'
+import { Route as AppAdminModelosEmailRouteImport } from './routes/_app/admin/modelos-email'
 import { Route as AppAdminPrioridadesRouteImport } from './routes/_app/admin/prioridades'
 import { Route as AppAdminProblemasRouteImport } from './routes/_app/admin/problemas'
 import { Route as AppAdminStatusRouteImport } from './routes/_app/admin/status'
@@ -36,9 +47,23 @@ import { Route as AppChamadosIndexRouteImport } from './routes/_app/chamados/ind
 import { Route as AppChamadosChamadoIdRouteRouteImport } from './routes/_app/chamados/$chamadoId/route'
 import { Route as AppChamadosNovoRouteImport } from './routes/_app/chamados/novo'
 import { Route as AppConhecimentoIndexRouteImport } from './routes/_app/conhecimento/index'
+import { Route as AppConhecimentoNovoRouteImport } from './routes/_app/conhecimento/novo'
 import { Route as AppInventarioIndexRouteImport } from './routes/_app/inventario/index'
+import { Route as AppInventarioAtivoIdRouteImport } from './routes/_app/inventario/$ativoId'
 import { Route as AppPerfilIndexRouteImport } from './routes/_app/perfil/index'
+import { Route as AppPerfilAparenciaRouteImport } from './routes/_app/perfil/aparencia'
+import { Route as AppPerfilNotificacoesRouteImport } from './routes/_app/perfil/notificacoes'
+import { Route as AppPerfilSegurancaRouteImport } from './routes/_app/perfil/seguranca'
+import { Route as AppPerfilSessoesRouteImport } from './routes/_app/perfil/sessoes'
 import { Route as AppRelatoriosIndexRouteImport } from './routes/_app/relatorios/index'
+import { Route as AppRelatoriosRelatorioRouteImport } from './routes/_app/relatorios/$relatorio'
+import { Route as AppChamadosChamadoIdIndexRouteImport } from './routes/_app/chamados/$chamadoId/index'
+import { Route as AppChamadosChamadoIdAnexosRouteImport } from './routes/_app/chamados/$chamadoId/anexos'
+import { Route as AppChamadosChamadoIdDetalhesRouteImport } from './routes/_app/chamados/$chamadoId/detalhes'
+import { Route as AppChamadosChamadoIdHistoricoRouteImport } from './routes/_app/chamados/$chamadoId/historico'
+import { Route as AppChamadosChamadoIdImprimirRouteImport } from './routes/_app/chamados/$chamadoId/imprimir'
+import { Route as AppConhecimentoArtigoIdIndexRouteImport } from './routes/_app/conhecimento/$artigoId/index'
+import { Route as AppConhecimentoArtigoIdEditarRouteImport } from './routes/_app/conhecimento/$artigoId/editar'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -54,6 +79,16 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrocarSenhaRoute = TrocarSenhaRouteImport.update({
   id: '/trocar-senha',
   path: '/trocar-senha',
@@ -64,14 +99,49 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAreasGeridasRoute = AppAreasGeridasRouteImport.update({
+  id: '/areas-geridas',
+  path: '/areas-geridas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAtividadeRoute = AppAtividadeRouteImport.update({
   id: '/atividade',
   path: '/atividade',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChamadosRouteRoute = AppChamadosRouteRouteImport.update({
+  id: '/chamados',
+  path: '/chamados',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConhecimentoRouteRoute = AppConhecimentoRouteRouteImport.update({
+  id: '/conhecimento',
+  path: '/conhecimento',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInventarioRouteRoute = AppInventarioRouteRouteImport.update({
+  id: '/inventario',
+  path: '/inventario',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPainelRoute = AppPainelRouteImport.update({
   id: '/painel',
   path: '/painel',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPerfilRouteRoute = AppPerfilRouteRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRelatoriosRouteRoute = AppRelatoriosRouteRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSemPermissaoRoute = AppSemPermissaoRouteImport.update({
@@ -80,127 +150,224 @@ const AppSemPermissaoRoute = AppSemPermissaoRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminAreasRoute = AppAdminAreasRouteImport.update({
+  id: '/areas',
+  path: '/areas',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminAuditoriaRoute = AppAdminAuditoriaRouteImport.update({
-  id: '/admin/auditoria',
-  path: '/admin/auditoria',
-  getParentRoute: () => AppRoute,
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminCanaisRoute = AppAdminCanaisRouteImport.update({
-  id: '/admin/canais',
-  path: '/admin/canais',
-  getParentRoute: () => AppRoute,
+  id: '/canais',
+  path: '/canais',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminCategoriasArtigoRoute =
   AppAdminCategoriasArtigoRouteImport.update({
-    id: '/admin/categorias-artigo',
-    path: '/admin/categorias-artigo',
-    getParentRoute: () => AppRoute,
+    id: '/categorias-artigo',
+    path: '/categorias-artigo',
+    getParentRoute: () => AppAdminRouteRoute,
   } as any)
 const AppAdminConfiguracoesRoute = AppAdminConfiguracoesRouteImport.update({
-  id: '/admin/configuracoes',
-  path: '/admin/configuracoes',
-  getParentRoute: () => AppRoute,
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminDepartamentosRoute = AppAdminDepartamentosRouteImport.update({
-  id: '/admin/departamentos',
-  path: '/admin/departamentos',
-  getParentRoute: () => AppRoute,
+  id: '/departamentos',
+  path: '/departamentos',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminFeriadosRoute = AppAdminFeriadosRouteImport.update({
-  id: '/admin/feriados',
-  path: '/admin/feriados',
-  getParentRoute: () => AppRoute,
+  id: '/feriados',
+  path: '/feriados',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminJornadasRoute = AppAdminJornadasRouteImport.update({
-  id: '/admin/jornadas',
-  path: '/admin/jornadas',
-  getParentRoute: () => AppRoute,
+  id: '/jornadas',
+  path: '/jornadas',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminModelosEmailRoute = AppAdminModelosEmailRouteImport.update({
+  id: '/modelos-email',
+  path: '/modelos-email',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminPrioridadesRoute = AppAdminPrioridadesRouteImport.update({
-  id: '/admin/prioridades',
-  path: '/admin/prioridades',
-  getParentRoute: () => AppRoute,
+  id: '/prioridades',
+  path: '/prioridades',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminProblemasRoute = AppAdminProblemasRouteImport.update({
-  id: '/admin/problemas',
-  path: '/admin/problemas',
-  getParentRoute: () => AppRoute,
+  id: '/problemas',
+  path: '/problemas',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminStatusRoute = AppAdminStatusRouteImport.update({
-  id: '/admin/status',
-  path: '/admin/status',
-  getParentRoute: () => AppRoute,
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminTagsRoute = AppAdminTagsRouteImport.update({
-  id: '/admin/tags',
-  path: '/admin/tags',
-  getParentRoute: () => AppRoute,
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminTiposAtivoRoute = AppAdminTiposAtivoRouteImport.update({
-  id: '/admin/tipos-ativo',
-  path: '/admin/tipos-ativo',
-  getParentRoute: () => AppRoute,
+  id: '/tipos-ativo',
+  path: '/tipos-ativo',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminUnidadesRoute = AppAdminUnidadesRouteImport.update({
-  id: '/admin/unidades',
-  path: '/admin/unidades',
-  getParentRoute: () => AppRoute,
+  id: '/unidades',
+  path: '/unidades',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminUsuariosRoute = AppAdminUsuariosRouteImport.update({
-  id: '/admin/usuarios',
-  path: '/admin/usuarios',
-  getParentRoute: () => AppRoute,
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppChamadosIndexRoute = AppChamadosIndexRouteImport.update({
-  id: '/chamados/',
-  path: '/chamados/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppChamadosRouteRoute,
 } as any)
 const AppChamadosChamadoIdRouteRoute =
   AppChamadosChamadoIdRouteRouteImport.update({
-    id: '/chamados/$chamadoId',
-    path: '/chamados/$chamadoId',
-    getParentRoute: () => AppRoute,
+    id: '/$chamadoId',
+    path: '/$chamadoId',
+    getParentRoute: () => AppChamadosRouteRoute,
   } as any)
 const AppChamadosNovoRoute = AppChamadosNovoRouteImport.update({
-  id: '/chamados/novo',
-  path: '/chamados/novo',
-  getParentRoute: () => AppRoute,
+  id: '/novo',
+  path: '/novo',
+  getParentRoute: () => AppChamadosRouteRoute,
 } as any)
 const AppConhecimentoIndexRoute = AppConhecimentoIndexRouteImport.update({
-  id: '/conhecimento/',
-  path: '/conhecimento/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppConhecimentoRouteRoute,
+} as any)
+const AppConhecimentoNovoRoute = AppConhecimentoNovoRouteImport.update({
+  id: '/novo',
+  path: '/novo',
+  getParentRoute: () => AppConhecimentoRouteRoute,
 } as any)
 const AppInventarioIndexRoute = AppInventarioIndexRouteImport.update({
-  id: '/inventario/',
-  path: '/inventario/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppInventarioRouteRoute,
+} as any)
+const AppInventarioAtivoIdRoute = AppInventarioAtivoIdRouteImport.update({
+  id: '/$ativoId',
+  path: '/$ativoId',
+  getParentRoute: () => AppInventarioRouteRoute,
 } as any)
 const AppPerfilIndexRoute = AppPerfilIndexRouteImport.update({
-  id: '/perfil/',
-  path: '/perfil/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppPerfilRouteRoute,
+} as any)
+const AppPerfilAparenciaRoute = AppPerfilAparenciaRouteImport.update({
+  id: '/aparencia',
+  path: '/aparencia',
+  getParentRoute: () => AppPerfilRouteRoute,
+} as any)
+const AppPerfilNotificacoesRoute = AppPerfilNotificacoesRouteImport.update({
+  id: '/notificacoes',
+  path: '/notificacoes',
+  getParentRoute: () => AppPerfilRouteRoute,
+} as any)
+const AppPerfilSegurancaRoute = AppPerfilSegurancaRouteImport.update({
+  id: '/seguranca',
+  path: '/seguranca',
+  getParentRoute: () => AppPerfilRouteRoute,
+} as any)
+const AppPerfilSessoesRoute = AppPerfilSessoesRouteImport.update({
+  id: '/sessoes',
+  path: '/sessoes',
+  getParentRoute: () => AppPerfilRouteRoute,
 } as any)
 const AppRelatoriosIndexRoute = AppRelatoriosIndexRouteImport.update({
-  id: '/relatorios/',
-  path: '/relatorios/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRelatoriosRouteRoute,
 } as any)
+const AppRelatoriosRelatorioRoute = AppRelatoriosRelatorioRouteImport.update({
+  id: '/$relatorio',
+  path: '/$relatorio',
+  getParentRoute: () => AppRelatoriosRouteRoute,
+} as any)
+const AppChamadosChamadoIdIndexRoute =
+  AppChamadosChamadoIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppChamadosChamadoIdRouteRoute,
+  } as any)
+const AppChamadosChamadoIdAnexosRoute =
+  AppChamadosChamadoIdAnexosRouteImport.update({
+    id: '/anexos',
+    path: '/anexos',
+    getParentRoute: () => AppChamadosChamadoIdRouteRoute,
+  } as any)
+const AppChamadosChamadoIdDetalhesRoute =
+  AppChamadosChamadoIdDetalhesRouteImport.update({
+    id: '/detalhes',
+    path: '/detalhes',
+    getParentRoute: () => AppChamadosChamadoIdRouteRoute,
+  } as any)
+const AppChamadosChamadoIdHistoricoRoute =
+  AppChamadosChamadoIdHistoricoRouteImport.update({
+    id: '/historico',
+    path: '/historico',
+    getParentRoute: () => AppChamadosChamadoIdRouteRoute,
+  } as any)
+const AppChamadosChamadoIdImprimirRoute =
+  AppChamadosChamadoIdImprimirRouteImport.update({
+    id: '/imprimir',
+    path: '/imprimir',
+    getParentRoute: () => AppChamadosChamadoIdRouteRoute,
+  } as any)
+const AppConhecimentoArtigoIdIndexRoute =
+  AppConhecimentoArtigoIdIndexRouteImport.update({
+    id: '/$artigoId/',
+    path: '/$artigoId/',
+    getParentRoute: () => AppConhecimentoRouteRoute,
+  } as any)
+const AppConhecimentoArtigoIdEditarRoute =
+  AppConhecimentoArtigoIdEditarRouteImport.update({
+    id: '/$artigoId/editar',
+    path: '/$artigoId/editar',
+    getParentRoute: () => AppConhecimentoRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/configurar-2fa': typeof Configurar2faRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/trocar-senha': typeof TrocarSenhaRoute
+  '/admin': typeof AppAdminRouteRouteWithChildren
+  '/chamados': typeof AppChamadosRouteRouteWithChildren
+  '/conhecimento': typeof AppConhecimentoRouteRouteWithChildren
+  '/inventario': typeof AppInventarioRouteRouteWithChildren
+  '/perfil': typeof AppPerfilRouteRouteWithChildren
+  '/relatorios': typeof AppRelatoriosRouteRouteWithChildren
+  '/areas-geridas': typeof AppAreasGeridasRoute
   '/atividade': typeof AppAtividadeRoute
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
-  '/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRoute
+  '/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRouteWithChildren
+  '/admin/areas': typeof AppAdminAreasRoute
   '/admin/auditoria': typeof AppAdminAuditoriaRoute
   '/admin/canais': typeof AppAdminCanaisRoute
   '/admin/categorias-artigo': typeof AppAdminCategoriasArtigoRoute
@@ -208,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/admin/departamentos': typeof AppAdminDepartamentosRoute
   '/admin/feriados': typeof AppAdminFeriadosRoute
   '/admin/jornadas': typeof AppAdminJornadasRoute
+  '/admin/modelos-email': typeof AppAdminModelosEmailRoute
   '/admin/prioridades': typeof AppAdminPrioridadesRoute
   '/admin/problemas': typeof AppAdminProblemasRoute
   '/admin/status': typeof AppAdminStatusRoute
@@ -216,22 +384,39 @@ export interface FileRoutesByFullPath {
   '/admin/unidades': typeof AppAdminUnidadesRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
   '/chamados/novo': typeof AppChamadosNovoRoute
+  '/conhecimento/novo': typeof AppConhecimentoNovoRoute
+  '/inventario/$ativoId': typeof AppInventarioAtivoIdRoute
+  '/perfil/aparencia': typeof AppPerfilAparenciaRoute
+  '/perfil/notificacoes': typeof AppPerfilNotificacoesRoute
+  '/perfil/seguranca': typeof AppPerfilSegurancaRoute
+  '/perfil/sessoes': typeof AppPerfilSessoesRoute
+  '/relatorios/$relatorio': typeof AppRelatoriosRelatorioRoute
   '/admin/': typeof AppAdminIndexRoute
   '/chamados/': typeof AppChamadosIndexRoute
   '/conhecimento/': typeof AppConhecimentoIndexRoute
   '/inventario/': typeof AppInventarioIndexRoute
   '/perfil/': typeof AppPerfilIndexRoute
   '/relatorios/': typeof AppRelatoriosIndexRoute
+  '/chamados/$chamadoId/anexos': typeof AppChamadosChamadoIdAnexosRoute
+  '/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
+  '/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
+  '/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
+  '/conhecimento/$artigoId/editar': typeof AppConhecimentoArtigoIdEditarRoute
+  '/chamados/$chamadoId/': typeof AppChamadosChamadoIdIndexRoute
+  '/conhecimento/$artigoId/': typeof AppConhecimentoArtigoIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/configurar-2fa': typeof Configurar2faRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/trocar-senha': typeof TrocarSenhaRoute
+  '/areas-geridas': typeof AppAreasGeridasRoute
   '/atividade': typeof AppAtividadeRoute
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
   '/': typeof AppIndexRoute
-  '/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRoute
+  '/admin/areas': typeof AppAdminAreasRoute
   '/admin/auditoria': typeof AppAdminAuditoriaRoute
   '/admin/canais': typeof AppAdminCanaisRoute
   '/admin/categorias-artigo': typeof AppAdminCategoriasArtigoRoute
@@ -239,6 +424,7 @@ export interface FileRoutesByTo {
   '/admin/departamentos': typeof AppAdminDepartamentosRoute
   '/admin/feriados': typeof AppAdminFeriadosRoute
   '/admin/jornadas': typeof AppAdminJornadasRoute
+  '/admin/modelos-email': typeof AppAdminModelosEmailRoute
   '/admin/prioridades': typeof AppAdminPrioridadesRoute
   '/admin/problemas': typeof AppAdminProblemasRoute
   '/admin/status': typeof AppAdminStatusRoute
@@ -247,24 +433,48 @@ export interface FileRoutesByTo {
   '/admin/unidades': typeof AppAdminUnidadesRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
   '/chamados/novo': typeof AppChamadosNovoRoute
+  '/conhecimento/novo': typeof AppConhecimentoNovoRoute
+  '/inventario/$ativoId': typeof AppInventarioAtivoIdRoute
+  '/perfil/aparencia': typeof AppPerfilAparenciaRoute
+  '/perfil/notificacoes': typeof AppPerfilNotificacoesRoute
+  '/perfil/seguranca': typeof AppPerfilSegurancaRoute
+  '/perfil/sessoes': typeof AppPerfilSessoesRoute
+  '/relatorios/$relatorio': typeof AppRelatoriosRelatorioRoute
   '/admin': typeof AppAdminIndexRoute
   '/chamados': typeof AppChamadosIndexRoute
   '/conhecimento': typeof AppConhecimentoIndexRoute
   '/inventario': typeof AppInventarioIndexRoute
   '/perfil': typeof AppPerfilIndexRoute
   '/relatorios': typeof AppRelatoriosIndexRoute
+  '/chamados/$chamadoId/anexos': typeof AppChamadosChamadoIdAnexosRoute
+  '/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
+  '/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
+  '/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
+  '/conhecimento/$artigoId/editar': typeof AppConhecimentoArtigoIdEditarRoute
+  '/chamados/$chamadoId': typeof AppChamadosChamadoIdIndexRoute
+  '/conhecimento/$artigoId': typeof AppConhecimentoArtigoIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/configurar-2fa': typeof Configurar2faRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/trocar-senha': typeof TrocarSenhaRoute
+  '/_app/admin': typeof AppAdminRouteRouteWithChildren
+  '/_app/chamados': typeof AppChamadosRouteRouteWithChildren
+  '/_app/conhecimento': typeof AppConhecimentoRouteRouteWithChildren
+  '/_app/inventario': typeof AppInventarioRouteRouteWithChildren
+  '/_app/perfil': typeof AppPerfilRouteRouteWithChildren
+  '/_app/relatorios': typeof AppRelatoriosRouteRouteWithChildren
+  '/_app/areas-geridas': typeof AppAreasGeridasRoute
   '/_app/atividade': typeof AppAtividadeRoute
   '/_app/painel': typeof AppPainelRoute
   '/_app/sem-permissao': typeof AppSemPermissaoRoute
   '/_app/': typeof AppIndexRoute
-  '/_app/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRoute
+  '/_app/chamados/$chamadoId': typeof AppChamadosChamadoIdRouteRouteWithChildren
+  '/_app/admin/areas': typeof AppAdminAreasRoute
   '/_app/admin/auditoria': typeof AppAdminAuditoriaRoute
   '/_app/admin/canais': typeof AppAdminCanaisRoute
   '/_app/admin/categorias-artigo': typeof AppAdminCategoriasArtigoRoute
@@ -272,6 +482,7 @@ export interface FileRoutesById {
   '/_app/admin/departamentos': typeof AppAdminDepartamentosRoute
   '/_app/admin/feriados': typeof AppAdminFeriadosRoute
   '/_app/admin/jornadas': typeof AppAdminJornadasRoute
+  '/_app/admin/modelos-email': typeof AppAdminModelosEmailRoute
   '/_app/admin/prioridades': typeof AppAdminPrioridadesRoute
   '/_app/admin/problemas': typeof AppAdminProblemasRoute
   '/_app/admin/status': typeof AppAdminStatusRoute
@@ -280,12 +491,26 @@ export interface FileRoutesById {
   '/_app/admin/unidades': typeof AppAdminUnidadesRoute
   '/_app/admin/usuarios': typeof AppAdminUsuariosRoute
   '/_app/chamados/novo': typeof AppChamadosNovoRoute
+  '/_app/conhecimento/novo': typeof AppConhecimentoNovoRoute
+  '/_app/inventario/$ativoId': typeof AppInventarioAtivoIdRoute
+  '/_app/perfil/aparencia': typeof AppPerfilAparenciaRoute
+  '/_app/perfil/notificacoes': typeof AppPerfilNotificacoesRoute
+  '/_app/perfil/seguranca': typeof AppPerfilSegurancaRoute
+  '/_app/perfil/sessoes': typeof AppPerfilSessoesRoute
+  '/_app/relatorios/$relatorio': typeof AppRelatoriosRelatorioRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/chamados/': typeof AppChamadosIndexRoute
   '/_app/conhecimento/': typeof AppConhecimentoIndexRoute
   '/_app/inventario/': typeof AppInventarioIndexRoute
   '/_app/perfil/': typeof AppPerfilIndexRoute
   '/_app/relatorios/': typeof AppRelatoriosIndexRoute
+  '/_app/chamados/$chamadoId/anexos': typeof AppChamadosChamadoIdAnexosRoute
+  '/_app/chamados/$chamadoId/detalhes': typeof AppChamadosChamadoIdDetalhesRoute
+  '/_app/chamados/$chamadoId/historico': typeof AppChamadosChamadoIdHistoricoRoute
+  '/_app/chamados/$chamadoId/imprimir': typeof AppChamadosChamadoIdImprimirRoute
+  '/_app/conhecimento/$artigoId/editar': typeof AppConhecimentoArtigoIdEditarRoute
+  '/_app/chamados/$chamadoId/': typeof AppChamadosChamadoIdIndexRoute
+  '/_app/conhecimento/$artigoId/': typeof AppConhecimentoArtigoIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -293,74 +518,127 @@ export interface FileRouteTypes {
     | '/'
     | '/configurar-2fa'
     | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
     | '/trocar-senha'
-    | '/atividade'
-    | '/painel'
-    | '/sem-permissao'
-    | '/chamados/$chamadoId'
-    | '/admin/auditoria'
-    | '/admin/canais'
-    | '/admin/categorias-artigo'
-    | '/admin/configuracoes'
-    | '/admin/departamentos'
-    | '/admin/feriados'
-    | '/admin/jornadas'
-    | '/admin/prioridades'
-    | '/admin/problemas'
-    | '/admin/status'
-    | '/admin/tags'
-    | '/admin/tipos-ativo'
-    | '/admin/unidades'
-    | '/admin/usuarios'
-    | '/chamados/novo'
-    | '/admin/'
-    | '/chamados/'
-    | '/conhecimento/'
-    | '/inventario/'
-    | '/perfil/'
-    | '/relatorios/'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/configurar-2fa'
-    | '/login'
-    | '/trocar-senha'
-    | '/atividade'
-    | '/painel'
-    | '/sem-permissao'
-    | '/'
-    | '/chamados/$chamadoId'
-    | '/admin/auditoria'
-    | '/admin/canais'
-    | '/admin/categorias-artigo'
-    | '/admin/configuracoes'
-    | '/admin/departamentos'
-    | '/admin/feriados'
-    | '/admin/jornadas'
-    | '/admin/prioridades'
-    | '/admin/problemas'
-    | '/admin/status'
-    | '/admin/tags'
-    | '/admin/tipos-ativo'
-    | '/admin/unidades'
-    | '/admin/usuarios'
-    | '/chamados/novo'
     | '/admin'
     | '/chamados'
     | '/conhecimento'
     | '/inventario'
     | '/perfil'
     | '/relatorios'
+    | '/areas-geridas'
+    | '/atividade'
+    | '/painel'
+    | '/sem-permissao'
+    | '/chamados/$chamadoId'
+    | '/admin/areas'
+    | '/admin/auditoria'
+    | '/admin/canais'
+    | '/admin/categorias-artigo'
+    | '/admin/configuracoes'
+    | '/admin/departamentos'
+    | '/admin/feriados'
+    | '/admin/jornadas'
+    | '/admin/modelos-email'
+    | '/admin/prioridades'
+    | '/admin/problemas'
+    | '/admin/status'
+    | '/admin/tags'
+    | '/admin/tipos-ativo'
+    | '/admin/unidades'
+    | '/admin/usuarios'
+    | '/chamados/novo'
+    | '/conhecimento/novo'
+    | '/inventario/$ativoId'
+    | '/perfil/aparencia'
+    | '/perfil/notificacoes'
+    | '/perfil/seguranca'
+    | '/perfil/sessoes'
+    | '/relatorios/$relatorio'
+    | '/admin/'
+    | '/chamados/'
+    | '/conhecimento/'
+    | '/inventario/'
+    | '/perfil/'
+    | '/relatorios/'
+    | '/chamados/$chamadoId/anexos'
+    | '/chamados/$chamadoId/detalhes'
+    | '/chamados/$chamadoId/historico'
+    | '/chamados/$chamadoId/imprimir'
+    | '/conhecimento/$artigoId/editar'
+    | '/chamados/$chamadoId/'
+    | '/conhecimento/$artigoId/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/configurar-2fa'
+    | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
+    | '/trocar-senha'
+    | '/areas-geridas'
+    | '/atividade'
+    | '/painel'
+    | '/sem-permissao'
+    | '/'
+    | '/admin/areas'
+    | '/admin/auditoria'
+    | '/admin/canais'
+    | '/admin/categorias-artigo'
+    | '/admin/configuracoes'
+    | '/admin/departamentos'
+    | '/admin/feriados'
+    | '/admin/jornadas'
+    | '/admin/modelos-email'
+    | '/admin/prioridades'
+    | '/admin/problemas'
+    | '/admin/status'
+    | '/admin/tags'
+    | '/admin/tipos-ativo'
+    | '/admin/unidades'
+    | '/admin/usuarios'
+    | '/chamados/novo'
+    | '/conhecimento/novo'
+    | '/inventario/$ativoId'
+    | '/perfil/aparencia'
+    | '/perfil/notificacoes'
+    | '/perfil/seguranca'
+    | '/perfil/sessoes'
+    | '/relatorios/$relatorio'
+    | '/admin'
+    | '/chamados'
+    | '/conhecimento'
+    | '/inventario'
+    | '/perfil'
+    | '/relatorios'
+    | '/chamados/$chamadoId/anexos'
+    | '/chamados/$chamadoId/detalhes'
+    | '/chamados/$chamadoId/historico'
+    | '/chamados/$chamadoId/imprimir'
+    | '/conhecimento/$artigoId/editar'
+    | '/chamados/$chamadoId'
+    | '/conhecimento/$artigoId'
   id:
     | '__root__'
     | '/_app'
     | '/configurar-2fa'
     | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
     | '/trocar-senha'
+    | '/_app/admin'
+    | '/_app/chamados'
+    | '/_app/conhecimento'
+    | '/_app/inventario'
+    | '/_app/perfil'
+    | '/_app/relatorios'
+    | '/_app/areas-geridas'
     | '/_app/atividade'
     | '/_app/painel'
     | '/_app/sem-permissao'
     | '/_app/'
     | '/_app/chamados/$chamadoId'
+    | '/_app/admin/areas'
     | '/_app/admin/auditoria'
     | '/_app/admin/canais'
     | '/_app/admin/categorias-artigo'
@@ -368,6 +646,7 @@ export interface FileRouteTypes {
     | '/_app/admin/departamentos'
     | '/_app/admin/feriados'
     | '/_app/admin/jornadas'
+    | '/_app/admin/modelos-email'
     | '/_app/admin/prioridades'
     | '/_app/admin/problemas'
     | '/_app/admin/status'
@@ -376,18 +655,34 @@ export interface FileRouteTypes {
     | '/_app/admin/unidades'
     | '/_app/admin/usuarios'
     | '/_app/chamados/novo'
+    | '/_app/conhecimento/novo'
+    | '/_app/inventario/$ativoId'
+    | '/_app/perfil/aparencia'
+    | '/_app/perfil/notificacoes'
+    | '/_app/perfil/seguranca'
+    | '/_app/perfil/sessoes'
+    | '/_app/relatorios/$relatorio'
     | '/_app/admin/'
     | '/_app/chamados/'
     | '/_app/conhecimento/'
     | '/_app/inventario/'
     | '/_app/perfil/'
     | '/_app/relatorios/'
+    | '/_app/chamados/$chamadoId/anexos'
+    | '/_app/chamados/$chamadoId/detalhes'
+    | '/_app/chamados/$chamadoId/historico'
+    | '/_app/chamados/$chamadoId/imprimir'
+    | '/_app/conhecimento/$artigoId/editar'
+    | '/_app/chamados/$chamadoId/'
+    | '/_app/conhecimento/$artigoId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   Configurar2faRoute: typeof Configurar2faRoute
   LoginRoute: typeof LoginRoute
+  RecuperarSenhaRoute: typeof RecuperarSenhaRoute
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   TrocarSenhaRoute: typeof TrocarSenhaRoute
 }
 
@@ -414,6 +709,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trocar-senha': {
       id: '/trocar-senha'
       path: '/trocar-senha'
@@ -428,6 +737,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/areas-geridas': {
+      id: '/_app/areas-geridas'
+      path: '/areas-geridas'
+      fullPath: '/areas-geridas'
+      preLoaderRoute: typeof AppAreasGeridasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/atividade': {
       id: '/_app/atividade'
       path: '/atividade'
@@ -435,11 +758,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAtividadeRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/chamados': {
+      id: '/_app/chamados'
+      path: '/chamados'
+      fullPath: '/chamados'
+      preLoaderRoute: typeof AppChamadosRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/conhecimento': {
+      id: '/_app/conhecimento'
+      path: '/conhecimento'
+      fullPath: '/conhecimento'
+      preLoaderRoute: typeof AppConhecimentoRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inventario': {
+      id: '/_app/inventario'
+      path: '/inventario'
+      fullPath: '/inventario'
+      preLoaderRoute: typeof AppInventarioRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/painel': {
       id: '/_app/painel'
       path: '/painel'
       fullPath: '/painel'
       preLoaderRoute: typeof AppPainelRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/perfil': {
+      id: '/_app/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AppPerfilRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/relatorios': {
+      id: '/_app/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AppRelatoriosRouteRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/sem-permissao': {
@@ -451,167 +809,275 @@ declare module '@tanstack/react-router' {
     }
     '/_app/admin/': {
       id: '/_app/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/areas': {
+      id: '/_app/admin/areas'
+      path: '/areas'
+      fullPath: '/admin/areas'
+      preLoaderRoute: typeof AppAdminAreasRouteImport
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/auditoria': {
       id: '/_app/admin/auditoria'
-      path: '/admin/auditoria'
+      path: '/auditoria'
       fullPath: '/admin/auditoria'
       preLoaderRoute: typeof AppAdminAuditoriaRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/canais': {
       id: '/_app/admin/canais'
-      path: '/admin/canais'
+      path: '/canais'
       fullPath: '/admin/canais'
       preLoaderRoute: typeof AppAdminCanaisRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/categorias-artigo': {
       id: '/_app/admin/categorias-artigo'
-      path: '/admin/categorias-artigo'
+      path: '/categorias-artigo'
       fullPath: '/admin/categorias-artigo'
       preLoaderRoute: typeof AppAdminCategoriasArtigoRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/configuracoes': {
       id: '/_app/admin/configuracoes'
-      path: '/admin/configuracoes'
+      path: '/configuracoes'
       fullPath: '/admin/configuracoes'
       preLoaderRoute: typeof AppAdminConfiguracoesRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/departamentos': {
       id: '/_app/admin/departamentos'
-      path: '/admin/departamentos'
+      path: '/departamentos'
       fullPath: '/admin/departamentos'
       preLoaderRoute: typeof AppAdminDepartamentosRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/feriados': {
       id: '/_app/admin/feriados'
-      path: '/admin/feriados'
+      path: '/feriados'
       fullPath: '/admin/feriados'
       preLoaderRoute: typeof AppAdminFeriadosRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/jornadas': {
       id: '/_app/admin/jornadas'
-      path: '/admin/jornadas'
+      path: '/jornadas'
       fullPath: '/admin/jornadas'
       preLoaderRoute: typeof AppAdminJornadasRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/modelos-email': {
+      id: '/_app/admin/modelos-email'
+      path: '/modelos-email'
+      fullPath: '/admin/modelos-email'
+      preLoaderRoute: typeof AppAdminModelosEmailRouteImport
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/prioridades': {
       id: '/_app/admin/prioridades'
-      path: '/admin/prioridades'
+      path: '/prioridades'
       fullPath: '/admin/prioridades'
       preLoaderRoute: typeof AppAdminPrioridadesRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/problemas': {
       id: '/_app/admin/problemas'
-      path: '/admin/problemas'
+      path: '/problemas'
       fullPath: '/admin/problemas'
       preLoaderRoute: typeof AppAdminProblemasRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/status': {
       id: '/_app/admin/status'
-      path: '/admin/status'
+      path: '/status'
       fullPath: '/admin/status'
       preLoaderRoute: typeof AppAdminStatusRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/tags': {
       id: '/_app/admin/tags'
-      path: '/admin/tags'
+      path: '/tags'
       fullPath: '/admin/tags'
       preLoaderRoute: typeof AppAdminTagsRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/tipos-ativo': {
       id: '/_app/admin/tipos-ativo'
-      path: '/admin/tipos-ativo'
+      path: '/tipos-ativo'
       fullPath: '/admin/tipos-ativo'
       preLoaderRoute: typeof AppAdminTiposAtivoRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/unidades': {
       id: '/_app/admin/unidades'
-      path: '/admin/unidades'
+      path: '/unidades'
       fullPath: '/admin/unidades'
       preLoaderRoute: typeof AppAdminUnidadesRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/usuarios': {
       id: '/_app/admin/usuarios'
-      path: '/admin/usuarios'
+      path: '/usuarios'
       fullPath: '/admin/usuarios'
       preLoaderRoute: typeof AppAdminUsuariosRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/chamados/': {
       id: '/_app/chamados/'
-      path: '/chamados'
+      path: '/'
       fullPath: '/chamados/'
       preLoaderRoute: typeof AppChamadosIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppChamadosRouteRoute
     }
     '/_app/chamados/$chamadoId': {
       id: '/_app/chamados/$chamadoId'
-      path: '/chamados/$chamadoId'
+      path: '/$chamadoId'
       fullPath: '/chamados/$chamadoId'
       preLoaderRoute: typeof AppChamadosChamadoIdRouteRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppChamadosRouteRoute
     }
     '/_app/chamados/novo': {
       id: '/_app/chamados/novo'
-      path: '/chamados/novo'
+      path: '/novo'
       fullPath: '/chamados/novo'
       preLoaderRoute: typeof AppChamadosNovoRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppChamadosRouteRoute
     }
     '/_app/conhecimento/': {
       id: '/_app/conhecimento/'
-      path: '/conhecimento'
+      path: '/'
       fullPath: '/conhecimento/'
       preLoaderRoute: typeof AppConhecimentoIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppConhecimentoRouteRoute
+    }
+    '/_app/conhecimento/novo': {
+      id: '/_app/conhecimento/novo'
+      path: '/novo'
+      fullPath: '/conhecimento/novo'
+      preLoaderRoute: typeof AppConhecimentoNovoRouteImport
+      parentRoute: typeof AppConhecimentoRouteRoute
     }
     '/_app/inventario/': {
       id: '/_app/inventario/'
-      path: '/inventario'
+      path: '/'
       fullPath: '/inventario/'
       preLoaderRoute: typeof AppInventarioIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppInventarioRouteRoute
+    }
+    '/_app/inventario/$ativoId': {
+      id: '/_app/inventario/$ativoId'
+      path: '/$ativoId'
+      fullPath: '/inventario/$ativoId'
+      preLoaderRoute: typeof AppInventarioAtivoIdRouteImport
+      parentRoute: typeof AppInventarioRouteRoute
     }
     '/_app/perfil/': {
       id: '/_app/perfil/'
-      path: '/perfil'
+      path: '/'
       fullPath: '/perfil/'
       preLoaderRoute: typeof AppPerfilIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppPerfilRouteRoute
+    }
+    '/_app/perfil/aparencia': {
+      id: '/_app/perfil/aparencia'
+      path: '/aparencia'
+      fullPath: '/perfil/aparencia'
+      preLoaderRoute: typeof AppPerfilAparenciaRouteImport
+      parentRoute: typeof AppPerfilRouteRoute
+    }
+    '/_app/perfil/notificacoes': {
+      id: '/_app/perfil/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/perfil/notificacoes'
+      preLoaderRoute: typeof AppPerfilNotificacoesRouteImport
+      parentRoute: typeof AppPerfilRouteRoute
+    }
+    '/_app/perfil/seguranca': {
+      id: '/_app/perfil/seguranca'
+      path: '/seguranca'
+      fullPath: '/perfil/seguranca'
+      preLoaderRoute: typeof AppPerfilSegurancaRouteImport
+      parentRoute: typeof AppPerfilRouteRoute
+    }
+    '/_app/perfil/sessoes': {
+      id: '/_app/perfil/sessoes'
+      path: '/sessoes'
+      fullPath: '/perfil/sessoes'
+      preLoaderRoute: typeof AppPerfilSessoesRouteImport
+      parentRoute: typeof AppPerfilRouteRoute
     }
     '/_app/relatorios/': {
       id: '/_app/relatorios/'
-      path: '/relatorios'
+      path: '/'
       fullPath: '/relatorios/'
       preLoaderRoute: typeof AppRelatoriosIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppRelatoriosRouteRoute
+    }
+    '/_app/relatorios/$relatorio': {
+      id: '/_app/relatorios/$relatorio'
+      path: '/$relatorio'
+      fullPath: '/relatorios/$relatorio'
+      preLoaderRoute: typeof AppRelatoriosRelatorioRouteImport
+      parentRoute: typeof AppRelatoriosRouteRoute
+    }
+    '/_app/chamados/$chamadoId/': {
+      id: '/_app/chamados/$chamadoId/'
+      path: '/'
+      fullPath: '/chamados/$chamadoId/'
+      preLoaderRoute: typeof AppChamadosChamadoIdIndexRouteImport
+      parentRoute: typeof AppChamadosChamadoIdRouteRoute
+    }
+    '/_app/chamados/$chamadoId/anexos': {
+      id: '/_app/chamados/$chamadoId/anexos'
+      path: '/anexos'
+      fullPath: '/chamados/$chamadoId/anexos'
+      preLoaderRoute: typeof AppChamadosChamadoIdAnexosRouteImport
+      parentRoute: typeof AppChamadosChamadoIdRouteRoute
+    }
+    '/_app/chamados/$chamadoId/detalhes': {
+      id: '/_app/chamados/$chamadoId/detalhes'
+      path: '/detalhes'
+      fullPath: '/chamados/$chamadoId/detalhes'
+      preLoaderRoute: typeof AppChamadosChamadoIdDetalhesRouteImport
+      parentRoute: typeof AppChamadosChamadoIdRouteRoute
+    }
+    '/_app/chamados/$chamadoId/historico': {
+      id: '/_app/chamados/$chamadoId/historico'
+      path: '/historico'
+      fullPath: '/chamados/$chamadoId/historico'
+      preLoaderRoute: typeof AppChamadosChamadoIdHistoricoRouteImport
+      parentRoute: typeof AppChamadosChamadoIdRouteRoute
+    }
+    '/_app/chamados/$chamadoId/imprimir': {
+      id: '/_app/chamados/$chamadoId/imprimir'
+      path: '/imprimir'
+      fullPath: '/chamados/$chamadoId/imprimir'
+      preLoaderRoute: typeof AppChamadosChamadoIdImprimirRouteImport
+      parentRoute: typeof AppChamadosChamadoIdRouteRoute
+    }
+    '/_app/conhecimento/$artigoId/': {
+      id: '/_app/conhecimento/$artigoId/'
+      path: '/$artigoId'
+      fullPath: '/conhecimento/$artigoId/'
+      preLoaderRoute: typeof AppConhecimentoArtigoIdIndexRouteImport
+      parentRoute: typeof AppConhecimentoRouteRoute
+    }
+    '/_app/conhecimento/$artigoId/editar': {
+      id: '/_app/conhecimento/$artigoId/editar'
+      path: '/$artigoId/editar'
+      fullPath: '/conhecimento/$artigoId/editar'
+      preLoaderRoute: typeof AppConhecimentoArtigoIdEditarRouteImport
+      parentRoute: typeof AppConhecimentoRouteRoute
     }
   }
 }
 
-interface AppRouteChildren {
-  AppAtividadeRoute: typeof AppAtividadeRoute
-  AppPainelRoute: typeof AppPainelRoute
-  AppSemPermissaoRoute: typeof AppSemPermissaoRoute
-  AppIndexRoute: typeof AppIndexRoute
-  AppChamadosChamadoIdRouteRoute: typeof AppChamadosChamadoIdRouteRoute
+interface AppAdminRouteRouteChildren {
+  AppAdminAreasRoute: typeof AppAdminAreasRoute
   AppAdminAuditoriaRoute: typeof AppAdminAuditoriaRoute
   AppAdminCanaisRoute: typeof AppAdminCanaisRoute
   AppAdminCategoriasArtigoRoute: typeof AppAdminCategoriasArtigoRoute
@@ -619,6 +1085,7 @@ interface AppRouteChildren {
   AppAdminDepartamentosRoute: typeof AppAdminDepartamentosRoute
   AppAdminFeriadosRoute: typeof AppAdminFeriadosRoute
   AppAdminJornadasRoute: typeof AppAdminJornadasRoute
+  AppAdminModelosEmailRoute: typeof AppAdminModelosEmailRoute
   AppAdminPrioridadesRoute: typeof AppAdminPrioridadesRoute
   AppAdminProblemasRoute: typeof AppAdminProblemasRoute
   AppAdminStatusRoute: typeof AppAdminStatusRoute
@@ -626,21 +1093,11 @@ interface AppRouteChildren {
   AppAdminTiposAtivoRoute: typeof AppAdminTiposAtivoRoute
   AppAdminUnidadesRoute: typeof AppAdminUnidadesRoute
   AppAdminUsuariosRoute: typeof AppAdminUsuariosRoute
-  AppChamadosNovoRoute: typeof AppChamadosNovoRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
-  AppChamadosIndexRoute: typeof AppChamadosIndexRoute
-  AppConhecimentoIndexRoute: typeof AppConhecimentoIndexRoute
-  AppInventarioIndexRoute: typeof AppInventarioIndexRoute
-  AppPerfilIndexRoute: typeof AppPerfilIndexRoute
-  AppRelatoriosIndexRoute: typeof AppRelatoriosIndexRoute
 }
 
-const AppRouteChildren: AppRouteChildren = {
-  AppAtividadeRoute: AppAtividadeRoute,
-  AppPainelRoute: AppPainelRoute,
-  AppSemPermissaoRoute: AppSemPermissaoRoute,
-  AppIndexRoute: AppIndexRoute,
-  AppChamadosChamadoIdRouteRoute: AppChamadosChamadoIdRouteRoute,
+const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminAreasRoute: AppAdminAreasRoute,
   AppAdminAuditoriaRoute: AppAdminAuditoriaRoute,
   AppAdminCanaisRoute: AppAdminCanaisRoute,
   AppAdminCategoriasArtigoRoute: AppAdminCategoriasArtigoRoute,
@@ -648,6 +1105,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminDepartamentosRoute: AppAdminDepartamentosRoute,
   AppAdminFeriadosRoute: AppAdminFeriadosRoute,
   AppAdminJornadasRoute: AppAdminJornadasRoute,
+  AppAdminModelosEmailRoute: AppAdminModelosEmailRoute,
   AppAdminPrioridadesRoute: AppAdminPrioridadesRoute,
   AppAdminProblemasRoute: AppAdminProblemasRoute,
   AppAdminStatusRoute: AppAdminStatusRoute,
@@ -655,13 +1113,139 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminTiposAtivoRoute: AppAdminTiposAtivoRoute,
   AppAdminUnidadesRoute: AppAdminUnidadesRoute,
   AppAdminUsuariosRoute: AppAdminUsuariosRoute,
-  AppChamadosNovoRoute: AppChamadosNovoRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
+}
+
+const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
+  AppAdminRouteRouteChildren,
+)
+
+interface AppChamadosChamadoIdRouteRouteChildren {
+  AppChamadosChamadoIdAnexosRoute: typeof AppChamadosChamadoIdAnexosRoute
+  AppChamadosChamadoIdDetalhesRoute: typeof AppChamadosChamadoIdDetalhesRoute
+  AppChamadosChamadoIdHistoricoRoute: typeof AppChamadosChamadoIdHistoricoRoute
+  AppChamadosChamadoIdImprimirRoute: typeof AppChamadosChamadoIdImprimirRoute
+  AppChamadosChamadoIdIndexRoute: typeof AppChamadosChamadoIdIndexRoute
+}
+
+const AppChamadosChamadoIdRouteRouteChildren: AppChamadosChamadoIdRouteRouteChildren =
+  {
+    AppChamadosChamadoIdAnexosRoute: AppChamadosChamadoIdAnexosRoute,
+    AppChamadosChamadoIdDetalhesRoute: AppChamadosChamadoIdDetalhesRoute,
+    AppChamadosChamadoIdHistoricoRoute: AppChamadosChamadoIdHistoricoRoute,
+    AppChamadosChamadoIdImprimirRoute: AppChamadosChamadoIdImprimirRoute,
+    AppChamadosChamadoIdIndexRoute: AppChamadosChamadoIdIndexRoute,
+  }
+
+const AppChamadosChamadoIdRouteRouteWithChildren =
+  AppChamadosChamadoIdRouteRoute._addFileChildren(
+    AppChamadosChamadoIdRouteRouteChildren,
+  )
+
+interface AppChamadosRouteRouteChildren {
+  AppChamadosChamadoIdRouteRoute: typeof AppChamadosChamadoIdRouteRouteWithChildren
+  AppChamadosNovoRoute: typeof AppChamadosNovoRoute
+  AppChamadosIndexRoute: typeof AppChamadosIndexRoute
+}
+
+const AppChamadosRouteRouteChildren: AppChamadosRouteRouteChildren = {
+  AppChamadosChamadoIdRouteRoute: AppChamadosChamadoIdRouteRouteWithChildren,
+  AppChamadosNovoRoute: AppChamadosNovoRoute,
   AppChamadosIndexRoute: AppChamadosIndexRoute,
+}
+
+const AppChamadosRouteRouteWithChildren =
+  AppChamadosRouteRoute._addFileChildren(AppChamadosRouteRouteChildren)
+
+interface AppConhecimentoRouteRouteChildren {
+  AppConhecimentoNovoRoute: typeof AppConhecimentoNovoRoute
+  AppConhecimentoIndexRoute: typeof AppConhecimentoIndexRoute
+  AppConhecimentoArtigoIdEditarRoute: typeof AppConhecimentoArtigoIdEditarRoute
+  AppConhecimentoArtigoIdIndexRoute: typeof AppConhecimentoArtigoIdIndexRoute
+}
+
+const AppConhecimentoRouteRouteChildren: AppConhecimentoRouteRouteChildren = {
+  AppConhecimentoNovoRoute: AppConhecimentoNovoRoute,
   AppConhecimentoIndexRoute: AppConhecimentoIndexRoute,
+  AppConhecimentoArtigoIdEditarRoute: AppConhecimentoArtigoIdEditarRoute,
+  AppConhecimentoArtigoIdIndexRoute: AppConhecimentoArtigoIdIndexRoute,
+}
+
+const AppConhecimentoRouteRouteWithChildren =
+  AppConhecimentoRouteRoute._addFileChildren(AppConhecimentoRouteRouteChildren)
+
+interface AppInventarioRouteRouteChildren {
+  AppInventarioAtivoIdRoute: typeof AppInventarioAtivoIdRoute
+  AppInventarioIndexRoute: typeof AppInventarioIndexRoute
+}
+
+const AppInventarioRouteRouteChildren: AppInventarioRouteRouteChildren = {
+  AppInventarioAtivoIdRoute: AppInventarioAtivoIdRoute,
   AppInventarioIndexRoute: AppInventarioIndexRoute,
+}
+
+const AppInventarioRouteRouteWithChildren =
+  AppInventarioRouteRoute._addFileChildren(AppInventarioRouteRouteChildren)
+
+interface AppPerfilRouteRouteChildren {
+  AppPerfilAparenciaRoute: typeof AppPerfilAparenciaRoute
+  AppPerfilNotificacoesRoute: typeof AppPerfilNotificacoesRoute
+  AppPerfilSegurancaRoute: typeof AppPerfilSegurancaRoute
+  AppPerfilSessoesRoute: typeof AppPerfilSessoesRoute
+  AppPerfilIndexRoute: typeof AppPerfilIndexRoute
+}
+
+const AppPerfilRouteRouteChildren: AppPerfilRouteRouteChildren = {
+  AppPerfilAparenciaRoute: AppPerfilAparenciaRoute,
+  AppPerfilNotificacoesRoute: AppPerfilNotificacoesRoute,
+  AppPerfilSegurancaRoute: AppPerfilSegurancaRoute,
+  AppPerfilSessoesRoute: AppPerfilSessoesRoute,
   AppPerfilIndexRoute: AppPerfilIndexRoute,
+}
+
+const AppPerfilRouteRouteWithChildren = AppPerfilRouteRoute._addFileChildren(
+  AppPerfilRouteRouteChildren,
+)
+
+interface AppRelatoriosRouteRouteChildren {
+  AppRelatoriosRelatorioRoute: typeof AppRelatoriosRelatorioRoute
+  AppRelatoriosIndexRoute: typeof AppRelatoriosIndexRoute
+}
+
+const AppRelatoriosRouteRouteChildren: AppRelatoriosRouteRouteChildren = {
+  AppRelatoriosRelatorioRoute: AppRelatoriosRelatorioRoute,
   AppRelatoriosIndexRoute: AppRelatoriosIndexRoute,
+}
+
+const AppRelatoriosRouteRouteWithChildren =
+  AppRelatoriosRouteRoute._addFileChildren(AppRelatoriosRouteRouteChildren)
+
+interface AppRouteChildren {
+  AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
+  AppChamadosRouteRoute: typeof AppChamadosRouteRouteWithChildren
+  AppConhecimentoRouteRoute: typeof AppConhecimentoRouteRouteWithChildren
+  AppInventarioRouteRoute: typeof AppInventarioRouteRouteWithChildren
+  AppPerfilRouteRoute: typeof AppPerfilRouteRouteWithChildren
+  AppRelatoriosRouteRoute: typeof AppRelatoriosRouteRouteWithChildren
+  AppAreasGeridasRoute: typeof AppAreasGeridasRoute
+  AppAtividadeRoute: typeof AppAtividadeRoute
+  AppPainelRoute: typeof AppPainelRoute
+  AppSemPermissaoRoute: typeof AppSemPermissaoRoute
+  AppIndexRoute: typeof AppIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
+  AppChamadosRouteRoute: AppChamadosRouteRouteWithChildren,
+  AppConhecimentoRouteRoute: AppConhecimentoRouteRouteWithChildren,
+  AppInventarioRouteRoute: AppInventarioRouteRouteWithChildren,
+  AppPerfilRouteRoute: AppPerfilRouteRouteWithChildren,
+  AppRelatoriosRouteRoute: AppRelatoriosRouteRouteWithChildren,
+  AppAreasGeridasRoute: AppAreasGeridasRoute,
+  AppAtividadeRoute: AppAtividadeRoute,
+  AppPainelRoute: AppPainelRoute,
+  AppSemPermissaoRoute: AppSemPermissaoRoute,
+  AppIndexRoute: AppIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -670,6 +1254,8 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   Configurar2faRoute: Configurar2faRoute,
   LoginRoute: LoginRoute,
+  RecuperarSenhaRoute: RecuperarSenhaRoute,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
   TrocarSenhaRoute: TrocarSenhaRoute,
 }
 export const routeTree = rootRouteImport

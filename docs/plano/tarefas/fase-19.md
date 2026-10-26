@@ -5,7 +5,7 @@
 ### T-19.1 — Abertura e resposta por e-mail (IMAP)
 - **Depende de:** T-12.3 · **Paralelo com:** T-19.5
 - **Requisitos:** B18; S139–S145
-- **Arquivos:** `apps/api/src/env.ts`, `apps/api/prisma/schema.prisma` + migração, `apps/api/src/lib/email-entrada.ts`, `apps/api/src/jobs/{email-importar.ts,index.ts}`, `apps/api/src/lib/email-entrada.test.ts`, `apps/api/src/lib/{cripto.ts,cripto.test.ts}`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (status de `EmailEntrada`), `apps/api/test/fixtures/emails/*.eml`
+- **Arquivos:** `apps/api/src/env.ts`, `apps/api/prisma/schema.prisma` + migração, `apps/api/src/lib/email-entrada.ts`, `apps/api/src/jobs/{email-importar.ts,index.ts}`, `apps/api/src/lib/email-entrada.test.ts`, `apps/api/src/lib/{cripto.ts,cripto.test.ts}`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (status de `EmailEntrada`), `apps/api/test/fixtures/emails/*.eml`, `apps/api/package.json` (imapflow 2.5.9 e mailparser 3.10.0, versões exatas do plano)
 - **Passos:**
   1. Instalar `imapflow@2.5.9` e `mailparser@3.10.0`.
   2. Env `IMAP_URL` e `IMAP_PASTA` (padrão INBOX), `MAIL_AUTHSERV_ID` e `MAIL_RESPOSTA_DOMINIO`.
@@ -42,7 +42,7 @@
 ### T-19.3 — Auto-cadastro com aprovação
 - **Depende de:** T-12.1 · **Paralelo com:** T-19.2
 - **Requisitos:** A14
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{config.ts,modulos/cadastro.ts}`, `apps/api/src/modules/cadastro/{service.ts,routes.ts,cadastro.test.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{config.ts,modulos/cadastro.ts}`, `apps/api/src/modules/cadastro/{service.ts,routes.ts,cadastro.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Config `cadastro.habilitado` (padrão `false`) e `cadastro.dominiosPermitidos: string[]`.
   2. Model `CadastroPendente {id, login, nome, email, departamentoId?, tokenHash, confirmadoEm?, criadoEm}`.
@@ -58,7 +58,7 @@
 ### T-19.4 — Formulário sem login e avaliação por link
 - **Depende de:** T-12.2, T-19.1 · **Paralelo com:** —
 - **Requisitos:** B19, E07
-- **Arquivos:** `apps/api/src/modules/publico/{service.ts,routes.ts,publico.test.ts}`, `packages/shared/src/{config.ts,modulos/publico.ts}`, `apps/api/src/app.ts`, `apps/api/src/lib/cripto.ts`
+- **Arquivos:** `apps/api/src/modules/publico/{service.ts,routes.ts,publico.test.ts}`, `packages/shared/src/{config.ts,modulos/publico.ts}`, `apps/api/src/app.ts`, `apps/api/src/lib/cripto.ts`, `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Config `publico.formularioHabilitado` e `publico.problemaId`.
   2. `POST /publico/chamados` (`publico`, 5/h por IP, campo honeypot `site` que precisa vir vazio): cria o chamado no usuário técnico `formulario.publico` (seed, inativo para login), com canal "Sistema Web" e o contato no corpo.

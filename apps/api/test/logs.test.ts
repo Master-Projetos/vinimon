@@ -40,7 +40,7 @@ describe('T49: redação de logs', () => {
     await app.close()
   })
 
-  it('segredos não aparecem nas linhas de log e [REDACTED] aparece', async () => {
+  it('T49: segredos não aparecem nas linhas de log e [REDACTED] aparece', async () => {
     const linhas: string[] = []
     const stream = new Writable({
       write(chunk, _enc, cb) {

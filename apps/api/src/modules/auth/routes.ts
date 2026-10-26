@@ -3,6 +3,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { contextoAnonimo, contextoDe } from '../../lib/contexto'
 import { csrfDaSessao, NOME_COOKIE, opcoesCookie, opcoesLimparCookie } from '../../lib/sessao'
 import * as mfa from './mfa'
+import * as recuperacao from './recuperacao'
 import { authApi as c } from './schemas'
 import * as service from './service'
 import * as sessoes from './sessoes'
@@ -141,6 +142,62 @@ export const rotasAuth: FastifyPluginAsyncZod = async (app) => {
       const r = await service.trocarSenha(req.body, contextoDe(req))
       aplicar(reply, r)
       return r.resposta
+    },
+  })
+
+  // Limite de 3/h por login, somado ao de 3/h por IP da config da rota (SEN-10).
+  const limitePorLogin = app.rateLimit({
+    max: 3,
+    timeWindow: '1 hour',
+    keyGenerator: (req) => {
+      const corpo = req.body
+      const login = typeof corpo === 'object' && corpo !== null && 'login' in corpo ? String(corpo.login) : ''
+      return `esqueci-senha:${login}`
+    },
+  })
+
+  app.route({
+    method: c.esqueciSenha.metodo,
+    url: c.esqueciSenha.caminho,
+    schema: {
+      tags,
+      summary: 'Solicita a redefinição de senha por e-mail',
+      body: c.esqueciSenha.body,
+      response: { 202: c.esqueciSenha.resposta },
+    },
+    config: { acesso: 'publico', rateLimit: { max: 3, timeWindow: '1 hour' } },
+    preHandler: limitePorLogin,
+    handler: async (req, reply) => {
+      await recuperacao.solicitar(req.body, contextoAnonimo(req))
+      return reply.code(202).send({ mensagem: recuperacao.MENSAGEM_ESQUECI })
+    },
+  })
+
+  app.route({
+    method: c.recuperacaoHabilitada.metodo,
+    url: c.recuperacaoHabilitada.caminho,
+    schema: {
+      tags,
+      summary: 'Informa se a recuperação de senha por e-mail está disponível',
+      response: { 200: c.recuperacaoHabilitada.resposta },
+    },
+    config: { acesso: 'publico', rateLimit: { max: 60, timeWindow: '1 minute' } },
+    handler: () => recuperacao.recuperacaoHabilitada(),
+  })
+
+  app.route({
+    method: c.redefinirSenha.metodo,
+    url: c.redefinirSenha.caminho,
+    schema: {
+      tags,
+      summary: 'Redefine a senha com o token recebido por e-mail',
+      body: c.redefinirSenha.body,
+      response: { 204: c.redefinirSenha.resposta },
+    },
+    config: { acesso: 'publico', rateLimit: { max: 10, timeWindow: '1 hour' } },
+    handler: async (req, reply) => {
+      await recuperacao.redefinir(req.body, contextoAnonimo(req))
+      return reply.code(204).send()
     },
   })
 

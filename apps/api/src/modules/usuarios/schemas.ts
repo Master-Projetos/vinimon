@@ -20,6 +20,7 @@ export const selectUsuario = {
   atualizadoEm: true,
   area: { select: { id: true, nome: true } },
   areasSecundarias: { select: { areaId: true }, orderBy: { areaId: 'asc' } },
+  areasGeridas: { select: { areaId: true }, orderBy: { areaId: 'asc' } },
 } satisfies Prisma.UsuarioSelect
 
 export const selectUsuarioBusca = {

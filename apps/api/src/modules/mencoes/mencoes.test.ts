@@ -34,7 +34,10 @@ describe('módulo menções', () => {
     chamado: { areaId: number; operadorId: number | null; solicitanteId: number },
     texto: string,
     interno: boolean,
-  ) => prisma.$transaction((tx) => validarMencoes(tx, chamado, texto, interno))
+  ) =>
+    prisma.$transaction((tx) =>
+      validarMencoes(tx, { ...chamado, solicitanteAreaId: null, auxiliarIds: [] }, texto, interno),
+    )
 
   describe('validarMencoes', () => {
     it('reescreve o token válido com o nome canônico do banco', async () => {

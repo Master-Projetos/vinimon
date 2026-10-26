@@ -6,22 +6,70 @@ export interface ChamadoEscopo {
   areaId: number
   operadorId: number | null
   solicitanteId: number
+  /** Área do solicitante: o gerente dessa área vê o chamado (A04). */
+  solicitanteAreaId: number | null
+  /** Operadores auxiliares (T-15.1): veem e comentam como equipe, mas não atendem. */
+  auxiliarIds: readonly number[]
+}
+
+/** Projeção que todo ponto de escopo carrega; converta o resultado com `comEscopo`. */
+export const selectEscopo = {
+  areaId: true,
+  operadorId: true,
+  solicitanteId: true,
+  solicitante: { select: { areaId: true } },
+  auxiliares: { select: { usuarioId: true } },
+} satisfies Prisma.ChamadoSelect
+
+type LinhaEscopo = {
+  solicitante: { areaId: number | null }
+  auxiliares: ReadonlyArray<{ usuarioId: number }>
+}
+type ComEscopo<T extends LinhaEscopo> = Omit<T, 'auxiliares' | 'solicitante'> & {
+  solicitanteAreaId: number | null
+  auxiliarIds: number[]
+}
+
+/**
+ * Troca `solicitante: { areaId }` e `auxiliares: [{ usuarioId }]` (Prisma) por `solicitanteAreaId` e `auxiliarIds`
+ * (o formato do `ChamadoEscopo`). Os demais campos da linha seguem como vieram.
+ */
+export function comEscopo<T extends LinhaEscopo>(c: T): ComEscopo<T>
+export function comEscopo<T extends LinhaEscopo>(c: T | null): ComEscopo<T> | null
+export function comEscopo<T extends LinhaEscopo>(c: T | null) {
+  if (c === null) return null
+  const { auxiliares, solicitante, ...resto } = c
+  return { ...resto, solicitanteAreaId: solicitante.areaId, auxiliarIds: auxiliares.map((a) => a.usuarioId) }
 }
 
 /** SEMPRE combinar com AND: [escopoChamados(u), filtros]. Nunca espalhar no mesmo objeto. */
 export function escopoChamados(u: UsuarioSessao): Prisma.ChamadoWhereInput {
   if (temPermissao(u.perfil, 'chamado.verTodos')) return {}
+  // gerente (A04): os chamados dos usuários das áreas que gerencia
+  const geridas = u.areasGeridas ?? []
+  const porGestao: Prisma.ChamadoWhereInput[] = geridas.length > 0 ? [{ solicitante: { areaId: { in: geridas } } }] : []
   if (temPermissao(u.perfil, 'chamado.verArea')) {
-    return { OR: [{ areaId: { in: u.areaIds } }, { operadorId: u.id }, { solicitanteId: u.id }] }
+    if (u.verTodasAreas === true) return {}
+    return {
+      OR: [
+        { areaId: { in: u.areaIds } },
+        { operadorId: u.id },
+        { solicitanteId: u.id },
+        { auxiliares: { some: { usuarioId: u.id } } },
+        ...porGestao,
+      ],
+    }
   }
-  return { solicitanteId: u.id }
+  return porGestao.length > 0 ? { OR: [{ solicitanteId: u.id }, ...porGestao] } : { solicitanteId: u.id }
 }
 
 export function podeVerChamado(u: UsuarioSessao, c: ChamadoEscopo): boolean {
   if (temPermissao(u.perfil, 'chamado.verTodos')) return true
   if (c.solicitanteId === u.id) return true
+  if (c.solicitanteAreaId !== null && (u.areasGeridas ?? []).includes(c.solicitanteAreaId)) return true
   if (!temPermissao(u.perfil, 'chamado.verArea')) return false
-  return u.areaIds.includes(c.areaId) || c.operadorId === u.id
+  if (u.verTodasAreas === true) return true
+  return u.areaIds.includes(c.areaId) || c.operadorId === u.id || c.auxiliarIds.includes(u.id)
 }
 
 /** Conteúdo interno nunca é visto pelo solicitante, qualquer que seja o perfil (corrige F10 da v1). */
@@ -29,9 +77,11 @@ export function podeVerInterno(u: UsuarioSessao, c: ChamadoEscopo): boolean {
   return temPermissao(u.perfil, 'chamado.verInterno') && c.solicitanteId !== u.id && podeVerChamado(u, c)
 }
 
-/** Atuar como atendente: operador da área do chamado, responsável atual ou admin. */
+/** Atuar como atendente: operador da área do chamado, responsável atual ou admin (auxiliar não atende). Ignora `verTodasAreas` (T-13.2). */
 export function podeAtender(u: UsuarioSessao, c: ChamadoEscopo): boolean {
   if (!temPermissao(u.perfil, 'chamado.atender')) return false
+  // A19: com `chamado.operadorTrataProprio` desligado, ninguém atende o chamado que abriu para si
+  if (c.solicitanteId === u.id && u.operadorTrataProprio === false) return false
   return temPermissao(u.perfil, 'chamado.verTodos') || u.areaIds.includes(c.areaId) || c.operadorId === u.id
 }
 

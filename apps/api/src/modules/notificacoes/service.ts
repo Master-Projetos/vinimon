@@ -1,5 +1,6 @@
 import {
   type AtualizarPreferencias,
+  canalEmailPadrao,
   type FiltroNotificacao,
   type ListarNotificacoesQuery,
   NotificacaoDadosSchema,
@@ -11,7 +12,7 @@ import {
   temPermissao,
   textoPlano,
 } from '@vinimon/shared'
-import { escopoChamados, podeVerInterno } from '../../autorizacao/chamados'
+import { comEscopo, escopoChamados, podeVerInterno } from '../../autorizacao/chamados'
 import type { Prisma } from '../../generated/prisma/client'
 import { naoEncontrado, regraNegocio, requisicaoInvalida } from '../../lib/erros'
 import { prisma } from '../../lib/prisma'
@@ -91,7 +92,17 @@ export async function listarNotificacoes(u: UsuarioSessao, q: ListarNotificacoes
       criadoEm: true,
       atualizadoEm: true,
       lidaEm: true,
-      chamado: { select: { id: true, assunto: true, areaId: true, operadorId: true, solicitanteId: true } },
+      chamado: {
+        select: {
+          id: true,
+          assunto: true,
+          areaId: true,
+          operadorId: true,
+          solicitanteId: true,
+          solicitante: { select: { areaId: true } },
+          auxiliares: { select: { usuarioId: true } },
+        },
+      },
     },
     orderBy: [{ atualizadoEm: 'desc' }, { id: 'desc' }],
     take: q.limite + 1,
@@ -117,7 +128,7 @@ export async function listarNotificacoes(u: UsuarioSessao, q: ListarNotificacoes
 
   const itens: NotificacaoDTO[] = pagina.map((n) => {
     const a = n.assentamentoId === null ? undefined : textos.get(n.assentamentoId)
-    const visivel = a !== undefined && (!a.interno || podeVerInterno(u, n.chamado))
+    const visivel = a !== undefined && (!a.interno || podeVerInterno(u, comEscopo(n.chamado)))
     const dados = NotificacaoDadosSchema.safeParse(n.dados)
     return {
       id: n.id,
@@ -187,7 +198,7 @@ export async function marcarTodasLidas(u: UsuarioSessao, chamadoId: number | und
 async function preferenciasDe(u: UsuarioSessao): Promise<PreferenciasNotificacao> {
   const salvas = await prisma.preferenciaNotificacao.findMany({
     where: { usuarioId: u.id },
-    select: { tipo: true, inApp: true, desktop: true },
+    select: { tipo: true, inApp: true, desktop: true, email: true },
   })
   const porTipo = new Map(salvas.map((p) => [p.tipo, p]))
   return {
@@ -196,7 +207,7 @@ async function preferenciasDe(u: UsuarioSessao): Promise<PreferenciasNotificacao
       const salva = porTipo.get(tipo)
       const inApp = padrao.fixo ? true : (salva?.inApp ?? padrao.inapp)
       const desktop = inApp && (salva?.desktop ?? padrao.desktop)
-      return { tipo, inApp, desktop, fixo: padrao.fixo }
+      return { tipo, inApp, desktop, email: salva?.email ?? canalEmailPadrao(tipo, u.perfil), fixo: padrao.fixo }
     }),
   }
 }
@@ -213,13 +224,19 @@ export async function atualizarPreferencias(u: UsuarioSessao, dados: AtualizarPr
       const padrao = preferenciaPadrao(item.tipo, u.perfil)
       const inApp = padrao.fixo ? true : item.inApp
       const desktop = inApp && item.desktop
-      if (inApp === padrao.inapp && desktop === padrao.desktop) {
+      const emailPadrao = canalEmailPadrao(item.tipo, u.perfil)
+      const atual = await tx.preferenciaNotificacao.findUnique({
+        where: { usuarioId_tipo: { usuarioId: u.id, tipo: item.tipo } },
+        select: { email: true },
+      })
+      const email = item.email ?? atual?.email ?? emailPadrao
+      if (inApp === padrao.inapp && desktop === padrao.desktop && email === emailPadrao) {
         await tx.preferenciaNotificacao.deleteMany({ where: { usuarioId: u.id, tipo: item.tipo } })
       } else {
         await tx.preferenciaNotificacao.upsert({
           where: { usuarioId_tipo: { usuarioId: u.id, tipo: item.tipo } },
-          create: { usuarioId: u.id, tipo: item.tipo, inApp, desktop },
-          update: { inApp, desktop },
+          create: { usuarioId: u.id, tipo: item.tipo, inApp, desktop, email },
+          update: { inApp, desktop, email },
         })
       }
     }

@@ -7,6 +7,7 @@ import type * as Prisma from '../generated/prisma/enums'
 type Igual<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
 
 export const _perfil: Igual<Shared.Perfil, Prisma.Perfil> = true
+export const _origemAutenticacao: Igual<Shared.OrigemAutenticacao, Prisma.OrigemAutenticacao> = true
 export const _estadoSessao: Igual<Shared.EstadoSessao, Prisma.EstadoSessao> = true
 export const _tema: Igual<Shared.Tema, Prisma.Tema> = true
 export const _densidade: Igual<Shared.Densidade, Prisma.Densidade> = true
@@ -23,3 +24,6 @@ export const _situacaoAtivo: Igual<Shared.SituacaoAtivo, Prisma.SituacaoAtivo> =
 export const _situacaoArtigo: Igual<Shared.SituacaoArtigo, Prisma.SituacaoArtigo> = true
 export const _visibilidadeArtigo: Igual<Shared.VisibilidadeArtigo, Prisma.VisibilidadeArtigo> = true
 export const _statusEmail: Igual<Shared.StatusEmail, Prisma.StatusEmail> = true
+export const _canalEmail: Igual<Shared.CanalEmail, Prisma.CanalEmail> = true
+export const _tipoCampo: Igual<Shared.TipoCampo, Prisma.TipoCampo> = true
+export const _visibilidadeCampo: Igual<Shared.VisibilidadeCampo, Prisma.VisibilidadeCampo> = true

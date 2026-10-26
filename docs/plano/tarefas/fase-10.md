@@ -78,7 +78,7 @@
 ### T-10.4 — Shell, parte 2: painéis, abas, guardas e redirecionamentos
 - **Depende de:** T-10.3 · **Paralelo com:** T-10.5
 - **Requisitos:** §6.2, §6.6 (`exigir`)
-- **Arquivos:** `apps/web/src/components/layout/{two-pane.tsx,pane-header.tsx,list-pane-section.tsx,list-pane-nav-item.tsx,route-tabs.tsx}`, `apps/web/src/features/auth/guards.ts`, `apps/web/src/routes/_app/{index.tsx,sem-permissao.tsx}`, `apps/web/src/features/auth/guards.test.tsx` (testa o redirecionamento de `/`, no lugar de `routes/_app/index.test.tsx`, que o roteador trataria como rota), `apps/web/src/features/auth/components/login.test.tsx` (USUARIO passa a cair em `/chamados`)
+- **Arquivos:** `apps/web/src/components/layout/{two-pane.tsx,pane-header.tsx,list-pane-section.tsx,list-pane-nav-item.tsx,route-tabs.tsx}`, `apps/web/src/features/auth/guards.ts`, `apps/web/src/routes/_app/{index.tsx,sem-permissao.tsx}`, `apps/web/src/features/auth/guards.test.tsx` (testa o redirecionamento da raiz; em routes o roteador trataria o teste como rota), `apps/web/src/features/auth/components/login.test.tsx` (USUARIO passa a cair na lista de chamados)
 - **Passos:**
   1. `TwoPane` com as props do design. O recolhimento fica em `vinimon:painel-lista:<id>`.
   2. `exigir(p)` no `beforeLoad`.
@@ -93,7 +93,7 @@
 ### T-10.5 — Meta, layout de administração e áreas (canônico)
 - **Depende de:** T-10.4, T-3.15 · **Paralelo com:** —
 - **Requisitos:** §7 (`areas.tsx`, `features/areas/queries.ts`)
-- **Arquivos:** `apps/web/src/features/meta/queries.ts`, `apps/web/src/features/areas/queries.ts`, `apps/web/src/routes/_app/admin/{route.tsx,index.tsx,areas.tsx,areas.test.tsx}`, `apps/web/src/features/admin/components/admin-nav-pane.tsx`, `apps/web/src/test/render-rota.test.tsx`
+- **Arquivos:** `apps/web/src/features/meta/queries.ts`, `apps/web/src/features/areas/queries.ts`, `apps/web/src/routes/_app/admin/{route.tsx,index.tsx,areas.tsx}`, `apps/web/src/features/areas/areas.test.tsx` (fora de routes: o tsr generate o trataria como rota), `apps/web/src/features/admin/components/admin-nav-pane.tsx`, `apps/web/src/test/render-rota.test.tsx`
 - **Passos:**
   1. `metaConsultas.tudo()` com `staleTime` de 5 min.
   2. Layout admin com `exigir('cadastro.gerenciar')` e as seções do painel (Pessoas, Chamados, SLA, Estrutura, Sistema).
@@ -111,7 +111,7 @@
 ### T-10.6 — Admin: unidades e departamentos
 - **Depende de:** T-10.5, T-3.3 · **Paralelo com:** T-10.7–T-10.12
 - **Requisitos:** padrão de tela de cadastro
-- **Arquivos:** `apps/web/src/routes/_app/admin/{unidades.tsx,departamentos.tsx}`, `apps/web/src/features/{unidades,departamentos}/queries.ts`
+- **Arquivos:** `apps/web/src/routes/_app/admin/{unidades.tsx,departamentos.tsx}`, `apps/web/src/features/{unidades,departamentos}/queries.ts`, `apps/web/src/features/unidades/unidades.test.tsx`, `apps/web/src/features/departamentos/departamentos.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:** copiar o padrão. Em departamentos, `Select` de unidade e filtro por unidade.
 - **Pronto quando:**
   - [ ] `unidades.test.tsx` e `departamentos.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização com os dados; (b) criar/editar chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
@@ -123,7 +123,7 @@
 ### T-10.7 — Admin: prioridades e status
 - **Depende de:** T-10.5, T-3.5 · **Paralelo com:** T-10.6, T-10.8–T-10.12
 - **Requisitos:** padrão; `ColorField`
-- **Arquivos:** `apps/web/src/routes/_app/admin/{prioridades.tsx,status.tsx}`, `apps/web/src/features/{prioridades,status}/queries.ts`
+- **Arquivos:** `apps/web/src/routes/_app/admin/{prioridades.tsx,status.tsx}`, `apps/web/src/features/{prioridades,status}/queries.ts`, `apps/web/src/features/prioridades/prioridades.test.tsx`, `apps/web/src/features/status/status.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Campos de cor com `ColorField`; a coluna "Prévia" mostra `PrioridadeBadge`/`StatusBadge`.
   2. Status: `Select` de tipo e papel; o papel filtra os tipos válidos.
@@ -138,7 +138,7 @@
 ### T-10.8 — Admin: tipos de problema e canais
 - **Depende de:** T-10.5, T-3.6, T-3.7 · **Paralelo com:** T-10.6, T-10.7, T-10.9–T-10.12
 - **Requisitos:** padrão
-- **Arquivos:** `apps/web/src/routes/_app/admin/{problemas.tsx,canais.tsx}`, `apps/web/src/features/{problemas,canais}/queries.ts`
+- **Arquivos:** `apps/web/src/routes/_app/admin/{problemas.tsx,canais.tsx}`, `apps/web/src/features/{problemas,canais}/queries.ts`, `apps/web/src/features/problemas/problemas.test.tsx`, `apps/web/src/features/canais/canais.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Problemas: `MultiComboboxField` de áreas; `Select` da área padrão filtrado pelas escolhidas; SLA em minutos com dica "(h × 60)".
   2. Canais: os de sistema aparecem com o botão "Excluir" desabilitado.
@@ -152,7 +152,7 @@
 ### T-10.9 — Admin: tags, tipos de ativo e categorias de artigo
 - **Depende de:** T-10.5, T-3.8–T-3.10 · **Paralelo com:** T-10.6–T-10.8, T-10.10–T-10.12
 - **Requisitos:** padrão
-- **Arquivos:** `apps/web/src/routes/_app/admin/{tags.tsx,tipos-ativo.tsx,categorias-artigo.tsx}`, `apps/web/src/features/{tags,tipos-ativo,categorias-artigo}/queries.ts`
+- **Arquivos:** `apps/web/src/routes/_app/admin/{tags.tsx,tipos-ativo.tsx,categorias-artigo.tsx}`, `apps/web/src/features/{tags,tipos-ativo,categorias-artigo}/queries.ts`, `apps/web/src/features/tags/tags.test.tsx`, `apps/web/src/features/tipos-ativo/tipos-ativo.test.tsx`, `apps/web/src/features/categorias-artigo/categorias-artigo.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:** copiar o padrão.
 - **Pronto quando:**
   - [ ] `tags.test.tsx`, `tipos-ativo.test.tsx` e `categorias-artigo.test.tsx` com `renderRota` + `apiFalsa`: (a) renderização com os dados; (b) criar/editar chama o contrato esperado com o body esperado; (c) 400 com `detalhes` aparece no campo; (d) 403/404 mostram `ErrorState`;
@@ -164,7 +164,7 @@
 ### T-10.10 — Admin: jornadas e feriados
 - **Depende de:** T-10.5, T-4.4, T-4.5 · **Paralelo com:** T-10.6–T-10.9, T-10.11, T-10.12
 - **Requisitos:** D02, D03
-- **Arquivos:** `apps/web/src/routes/_app/admin/{jornadas.tsx,feriados.tsx}`, `apps/web/src/features/{jornadas,feriados}/queries.ts`
+- **Arquivos:** `apps/web/src/routes/_app/admin/{jornadas.tsx,feriados.tsx}`, `apps/web/src/features/{jornadas,feriados}/queries.ts`, `apps/web/src/features/jornadas/jornadas.test.tsx`, `apps/web/src/features/feriados/feriados.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Jornadas: editor de horários com uma linha por janela (dia, início HH:MM, fim HH:MM, adicionar e remover), conversão HH:MM ↔ minutos, Switch "24x7" que esconde os horários.
   2. Feriados: `DatePicker`, "Repete todo ano" e filtro por ano.
@@ -179,7 +179,7 @@
 ### T-10.11 — Admin: usuários
 - **Depende de:** T-10.5, T-3.12 · **Paralelo com:** T-10.6–T-10.10, T-10.12
 - **Requisitos:** S16, S31, S48, S122
-- **Arquivos:** `apps/web/src/routes/_app/admin/usuarios.tsx`, `apps/web/src/features/usuarios/{queries.ts,components/usuario-sheet.tsx,components/senha-temporaria-dialog.tsx,components/acoes-usuario-menu.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/admin/usuarios.tsx`, `apps/web/src/features/usuarios/{queries.ts,components/usuario-sheet.tsx,components/senha-temporaria-dialog.tsx,components/acoes-usuario-menu.tsx}`, `apps/web/src/features/usuarios/usuarios.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Tabela com nome e avatar, login, e-mail, perfil, área, 2FA, último acesso e situação.
   2. Sheet com perfil, área e áreas secundárias (multi).
@@ -194,7 +194,7 @@
 ### T-10.12 — Admin: configurações e auditoria
 - **Depende de:** T-10.5, T-3.13, T-3.14 · **Paralelo com:** T-10.6–T-10.11
 - **Requisitos:** S89; §6.3 (12)
-- **Arquivos:** `apps/web/src/routes/_app/admin/{configuracoes.tsx,auditoria.tsx}`, `apps/web/src/features/{config,auditoria}/queries.ts`, `apps/web/src/features/admin/components/configuracoes-secao.tsx`
+- **Arquivos:** `apps/web/src/routes/_app/admin/{configuracoes.tsx,auditoria.tsx}`, `apps/web/src/features/{config,auditoria}/queries.ts`, `apps/web/src/features/admin/components/configuracoes-secao.tsx`, `apps/web/src/lib/api.ts` (query serializa `Date` em ISO), `apps/web/src/features/config/configuracoes.test.tsx`, `apps/web/src/features/auditoria/auditoria.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Configurações: seções Geral, Sessão, Chamados, Anexos e SLA, cada uma com um formulário e um PATCH próprios (só as chaves da seção). Salvar invalida `['meta']`.
   2. Auditoria: filtros (período, ator, ação, entidade), paginação e linha expansível com `<pre>{JSON.stringify(dados, null, 2)}</pre>`.
@@ -209,7 +209,7 @@
 ### T-10.13 — Cliente Socket.IO e sincronização
 - **Depende de:** T-10.4, T-7.4 · **Paralelo com:** T-10.6–T-10.12
 - **Requisitos:** S80; §3.7 (cliente se corrige via REST)
-- **Arquivos:** `apps/web/src/lib/socket.ts`, `apps/web/src/hooks/{use-socket-evento.ts,use-ocioso.ts}`, `apps/web/src/features/presenca/{queries.ts,hooks.ts}`, `apps/web/src/components/layout/offline-indicator.tsx`, `apps/web/src/routes/_app.tsx`
+- **Arquivos:** `apps/web/src/lib/socket.ts`, `apps/web/src/hooks/{use-socket-evento.ts,use-ocioso.ts}`, `apps/web/src/features/presenca/{queries.ts,hooks.ts}`, `apps/web/src/components/layout/offline-indicator.tsx`, `apps/web/src/routes/_app.tsx`, `apps/web/package.json` (socket.io-client 4.8.4, versão exata do plano), `apps/web/src/lib/socket.test.tsx` (inclui o teste do OfflineIndicator), `apps/web/src/test/socket-falso.ts` (socket falso dos testes)
 - **Passos:**
   1. `io({ path:'/socket.io', transports:['websocket'], autoConnect:false, withCredentials:true })`, tipado com `EventosServidor`/`EventosCliente`. Conecta no `_app` e desconecta no logout. No logout, chamar `limparDadosDoUsuario()` junto com `queryClient.clear()`.
   2. `connect_error`:
@@ -232,7 +232,7 @@
 ### T-10.14 — Menu do usuário, presença e cartão de perfil
 - **Depende de:** T-10.13, T-7.5 · **Paralelo com:** T-10.15
 - **Requisitos:** TM2, S97
-- **Arquivos:** `apps/web/src/features/presenca/components/user-menu.tsx`, `apps/web/src/components/display/user-hover-card.tsx`, `apps/web/src/features/presenca/{hooks.ts,queries.ts}`, `apps/web/src/components/layout/top-bar.tsx`
+- **Arquivos:** `apps/web/src/features/presenca/components/user-menu.tsx`, `apps/web/src/components/display/user-hover-card.tsx`, `apps/web/src/features/presenca/{hooks.ts,queries.ts}`, `apps/web/src/components/layout/top-bar.tsx`, `apps/web/src/features/presenca/presenca.test.tsx` (teste de tela fica em features, nunca em routes), `apps/web/src/features/auth/queries.ts` (mutação de logout para o item Sair do menu)
 - **Passos:**
   1. `UserMenu`:
      - status Disponível, Ocupado (1 h / hoje / até eu mudar), Ausente e Redefinir, via `PUT /me/presenca`;
@@ -249,7 +249,7 @@
 ### T-10.15 — Notificações: sino, contador e área de trabalho
 - **Depende de:** T-10.13, T-6.9 · **Paralelo com:** T-10.14
 - **Requisitos:** S104, S105; TM7; T69 (unidade)
-- **Arquivos:** `apps/web/src/features/notificacoes/{queries.ts,desktop.ts,desktop.test.ts,components/notification-bell.tsx,components/notification-item.tsx,components/desktop-notifications-prompt.tsx}`, `apps/web/src/components/layout/app-bar.tsx`
+- **Arquivos:** `apps/web/src/features/notificacoes/{queries.ts,desktop.ts,desktop.test.ts,components/notification-bell.tsx,components/notification-item.tsx,components/desktop-notifications-prompt.tsx}`, `apps/web/src/components/layout/{app-bar.tsx,app-shell.tsx,top-bar.tsx}`, `apps/web/src/hooks/use-contador-no-titulo.ts`
 - **Passos:**
   1. `notificacao:nova` e `notificacao:contagem` gravam direto no cache.
   2. Contador na app bar e título "(n) … · Vinimon".
@@ -265,7 +265,7 @@
 ### T-10.16 — Feed de Atividade
 - **Depende de:** T-10.15 · **Paralelo com:** T-10.17
 - **Requisitos:** TM6; S103; §6.3 (3)
-- **Arquivos:** `apps/web/src/routes/_app/atividade.tsx`, `apps/web/src/features/atividade/components/{activity-feed.tsx,activity-item.tsx,activity-filters.tsx,activity-preview.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/atividade.tsx`, `apps/web/src/features/atividade/components/{activity-feed.tsx,activity-item.tsx,activity-filters.tsx,activity-preview.tsx}`, `apps/web/src/features/atividade/atividade.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. `useInfiniteQuery` por cursor, com `IntersectionObserver`.
   2. Filtros via `ToggleGroup` e `?filtro=&item=`. Clicar marca como lida.
@@ -281,7 +281,7 @@
 ### T-10.17 — Busca Ctrl+K e atalhos
 - **Depende de:** T-10.4, T-6.10 · **Paralelo com:** T-10.16
 - **Requisitos:** TM8; S106–S108; §6.2 (atalhos)
-- **Arquivos:** `apps/web/src/components/command/{command-palette.tsx,atalhos-dialog.tsx}`, `apps/web/src/features/busca/{queries.ts,acoes.ts}`, `apps/web/src/lib/atalhos.ts`, `apps/web/src/hooks/use-atalhos.ts`, `apps/web/src/components/layout/busca-global-trigger.tsx`
+- **Arquivos:** `apps/web/src/components/command/{command-palette.tsx,atalhos-dialog.tsx}`, `apps/web/src/features/busca/{queries.ts,acoes.ts}`, `apps/web/src/lib/atalhos.ts`, `apps/web/src/hooks/use-atalhos.ts`, `apps/web/src/components/layout/busca-global-trigger.tsx`, `apps/web/src/components/command/command.test.tsx`, `apps/web/src/components/layout/{app-shell.tsx,top-bar.tsx}` (estado da paleta e do diálogo de atalhos; gatilho na barra superior)
 - **Passos:**
   1. `CommandDialog` com `shouldFilter={false}` e debounce de 200 ms.
   2. Grupos: "Abrir #N", Chamados, Base, Ativos, Pessoas, Ir para, Ações e Recentes (`vinimon:u<id>:recentes`, 8).
@@ -297,7 +297,7 @@
 ### T-10.18 — Chamados: layout, filtros na URL e visões
 - **Depende de:** T-10.4, T-5.5 · **Paralelo com:** T-10.16, T-10.17
 - **Requisitos:** §3.6 (`ChamadoFiltros`), §6.3 (4)
-- **Arquivos:** `apps/web/src/routes/_app/chamados/route.tsx`, `apps/web/src/features/chamados/{queries.ts,filtros.ts,components/visoes-pane.tsx}`, `apps/web/src/features/chamados/route.test.tsx` (fora de `routes/`: o `tsr generate` trataria como rota)
+- **Arquivos:** `apps/web/src/routes/_app/chamados/route.tsx`, `apps/web/src/features/chamados/{queries.ts,filtros.ts,components/visoes-pane.tsx}`, `apps/web/src/features/chamados/route.test.tsx` (fora de routes: o tsr generate o trataria como rota)
 - **Passos:**
   1. `validateSearch` com `ChamadoFiltrosSchema` em que todos os campos são `.optional()`.
   2. `chamadoChaves` e `chamadosConsultas` (`lista` com `placeholderData: keepPreviousData`, `contagens` com `staleTime: 30_000`, `detalhe`).
@@ -312,7 +312,7 @@
 ### T-10.19 — Tabela de chamados
 - **Depende de:** T-10.18, T-9.14 · **Paralelo com:** T-10.20
 - **Requisitos:** C05, G01; §6.3 (4)
-- **Arquivos:** `apps/web/src/routes/_app/chamados/index.tsx`, `apps/web/src/features/chamados/{columns.tsx,components/chamados-table.tsx,components/chamado-list-item.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/chamados/index.tsx`, `apps/web/src/features/chamados/{columns.tsx,components/chamados-table.tsx,components/chamado-list-item.tsx}`, `apps/web/src/features/chamados/lista.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Colunas da §6.3, com visibilidade em `vinimon:chamados:colunas:v1`.
   2. Filtros facetados vindos do `meta`, período, SLA, busca com debounce de 300 ms e ordenação no servidor.
@@ -320,7 +320,7 @@
   4. Cartões no mobile.
   5. Vazios com e sem filtros.
 - **Pronto quando:**
-  - [ ] `index.test.tsx` com `renderRota` + `apiFalsa`: (a) renderiza as linhas; filtrar por status, ordenar por # e mudar de página entram na URL e na query do `GET /chamados`; renderizar de novo com a mesma URL mantém tudo; (d) 403 mostra `ErrorState`;
+  - [ ] `lista.test.tsx` com `renderRota` + `apiFalsa`: (a) renderiza as linhas; filtrar por status, ordenar por # e mudar de página entram na URL e na query do `GET /chamados`; renderizar de novo com a mesma URL mantém tudo; (d) 403 mostra `ErrorState`;
   - [ ] `pnpm verificar`.
 - **Trilha:** W
 - **Modelo:** Haiku
@@ -329,7 +329,7 @@
 ### T-10.20 — Novo chamado, parte 1: formulário
 - **Depende de:** T-10.18, T-9.12 · **Paralelo com:** T-10.19
 - **Requisitos:** B01, B02, B04, B05, B12, S50; §6.3 (5)
-- **Arquivos:** `apps/web/src/routes/_app/chamados/novo.tsx`, `apps/web/src/features/chamados/components/{novo-chamado-form.tsx,prioridade-radio.tsx}`, `apps/web/src/features/chamados/queries.ts`
+- **Arquivos:** `apps/web/src/routes/_app/chamados/novo.tsx`, `apps/web/src/features/chamados/components/{novo-chamado-form.tsx,prioridade-radio.tsx}`, `apps/web/src/features/chamados/queries.ts`, `apps/web/src/features/chamados/novo.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   0. `novo.tsx` substitui o placeholder da T-10.0 mantendo o `validateSearch` (`equipamento`, `problema`, `pai`); `?problema=` pré-seleciona o tipo.
   1. Tipo de problema primeiro, com descrição. Área só para a equipe, entre as do tipo.
@@ -348,7 +348,7 @@
 ### T-10.21 — Novo chamado, parte 2: sugestões, reincidência, rascunho e anexos
 - **Depende de:** T-10.20, T-8.4, T-6.6 · **Paralelo com:** T-10.22
 - **Requisitos:** B16, B17, B20
-- **Arquivos:** `apps/web/src/features/chamados/components/{artigos-sugeridos.tsx,reincidencia-panel.tsx,novo-chamado-form.tsx}`, `apps/web/src/features/anexos/queries.ts`
+- **Arquivos:** `apps/web/src/features/chamados/components/{artigos-sugeridos.tsx,reincidencia-panel.tsx,novo-chamado-form.tsx}`, `apps/web/src/features/anexos/queries.ts`, `apps/web/src/features/chamados/novo.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. "Isto pode resolver": debounce de 400 ms e ≥ 4 caracteres. "Isso resolveu" limpa o rascunho e abre o artigo.
   2. Painel de reincidência quando há ativo ou problema.
@@ -365,7 +365,7 @@
 ### T-10.22 — Detalhe: layout, cabeçalho, trilho e aba Detalhes
 - **Depende de:** T-10.18, T-5.6 · **Paralelo com:** T-10.21
 - **Requisitos:** §6.3 (6)
-- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/{route.tsx,detalhes.tsx}`, `apps/web/src/features/chamados/components/{chamado-header.tsx,quick-actions-rail.tsx,operador-select.tsx,chamado-detalhes.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/{route.tsx,detalhes.tsx}`, `apps/web/src/features/chamados/components/{chamado-header.tsx,quick-actions-rail.tsx,operador-select.tsx,chamado-detalhes.tsx}`, `apps/web/src/features/chamados/queries.ts` (metaConsulta e as mutações com versao), `apps/web/src/features/chamados/detalhes.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. `route.tsx` substitui o placeholder da T-10.0, mantendo o `params.parse` com `z.coerce.number()`; parse com erro dá `notFound()`.
   2. Loader com `ensureQueryData`; abas via `RouteTabs`.
@@ -383,7 +383,7 @@
 ### T-10.23 — Diálogos de ação
 - **Depende de:** T-10.22, T-5.10 · **Paralelo com:** T-10.24
 - **Requisitos:** §3.5 (ações)
-- **Arquivos:** `apps/web/src/features/chamados/components/{encaminhar-dialog.tsx,concluir-dialog.tsx,reabrir-dialog.tsx,cancelar-dialog.tsx,agendar-popover.tsx,assumir-button.tsx,operador-select.tsx}`, `apps/web/src/features/chamados/queries.ts`
+- **Arquivos:** `apps/web/src/features/chamados/components/{encaminhar-dialog.tsx,concluir-dialog.tsx,reabrir-dialog.tsx,cancelar-dialog.tsx,agendar-popover.tsx,assumir-button.tsx,operador-select.tsx}`, `apps/web/src/features/chamados/queries.ts`, `apps/web/src/features/chamados/acoes.test.tsx`
 - **Passos:**
   1. Uma mutação por ação. `onSuccess` faz `setQueryData(detalhe)` e invalida listas e contagens.
   2. Assumir com outro responsável pede confirmação e reenvia com `confirmarTroca:true`.
@@ -399,7 +399,7 @@
 ### T-10.24 — Conversa: lista de mensagens
 - **Depende de:** T-10.22, T-6.3 · **Paralelo com:** T-10.23
 - **Requisitos:** TM1; §6.2 (acessibilidade da conversa), §6.3 (6)
-- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/index.tsx`, `apps/web/src/features/conversa/{queries.ts,components/conversa-view.tsx,components/message-list.tsx,components/message-bubble.tsx,components/system-event.tsx,components/descricao-inicial-card.tsx,components/new-messages-pill.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/index.tsx`, `apps/web/src/features/conversa/{queries.ts,components/conversa-view.tsx,components/message-list.tsx,components/message-bubble.tsx,components/system-event.tsx,components/descricao-inicial-card.tsx,components/new-messages-pill.tsx}`, `apps/web/src/features/conversa/conversa.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. `useInfiniteQuery` com `antesDe`. "Carregar anteriores" preserva a rolagem pela diferença de `scrollHeight`.
   2. Agrupamento por autor em até 5 min e separadores de data (`rotuloSeparador`).
@@ -408,7 +408,7 @@
   5. `role="log"`, cada mensagem num `<article>`.
   6. Avatar de cada autor com `UserAvatar mostrarPresenca`; os ids dos autores visíveis passam por `usePresenca(ids)` uma vez por render da lista.
 - **Pronto quando:**
-  - [ ] `index.test.tsx` com `renderRota` + `apiFalsa`: um link com `?foco=` centraliza e destaca; 403/404 mostram `ErrorState`;
+  - [ ] `conversa.test.tsx` com `renderRota` + `apiFalsa`: um link com `?foco=` centraliza e destaca; 403/404 mostram `ErrorState`;
   - [ ] teste com socket falso: `presenca:mudou` muda o `sr-only` do avatar do autor;
   - [ ] `pnpm verificar`.
 - **Trilha:** W
@@ -418,8 +418,9 @@
 ### T-10.25 — Compositor, menções e envio otimista
 - **Depende de:** T-10.24, T-6.2 · **Paralelo com:** —
 - **Requisitos:** TM5; S100, B16; §6.3 (Compositor)
-- **Arquivos:** `apps/web/src/features/conversa/{cache.ts,cache.test.ts,components/composer.tsx,components/mention-popover.tsx}`, `apps/web/src/features/conversa/queries.ts`
+- **Arquivos:** `apps/web/src/features/conversa/{cache.ts,cache.test.ts,components/composer.tsx,components/mention-popover.tsx}`, `apps/web/src/features/conversa/queries.ts`, `apps/web/src/features/conversa/components/{conversa-view.tsx,message-bubble.tsx,message-list.tsx}` (montar o compositor e mostrar os estados da mensagem), `apps/web/src/features/conversa/composer.test.tsx` (testes de tela ficam em features), `apps/web/src/features/conversa/conversa.test.tsx` (acréscimos), `apps/web/src/lib/api.test.ts` (só se `enviarArquivo` mudar)
 - **Passos:**
+  0. O contrato de `GET /chamados/:id/mencionaveis` não existe no shared; defina-o em `features/conversa/queries.ts` com `contrato()` (mesma resposta da rota: `id`, `nome`, `perfil`).
   1. `cache.ts`: `mesclarAssentamento(paginas, dto)`. Se o id existe, substitui; se o `clienteId` é de um pendente, substitui o pendente; senão, insere. Ordena por id, com os pendentes no fim.
   2. Compositor:
      - `@` abre o popover (`/mencionaveis`, debounce de 150 ms, ↑↓ Enter Tab Esc);
@@ -441,7 +442,7 @@
 ### T-10.26 — Conversa em tempo real: sala, digitação e "Visto por"
 - **Depende de:** T-10.25, T-10.13, T-7.3 · **Paralelo com:** T-10.27
 - **Requisitos:** TM1, TM3, TM4; S93, S98
-- **Arquivos:** `apps/web/src/features/conversa/{hooks.ts,hooks.test.ts,components/typing-indicator.tsx,components/read-receipt.tsx}`, `apps/web/src/features/conversa/components/conversa-view.tsx`
+- **Arquivos:** `apps/web/src/features/conversa/{hooks.ts,hooks.test.tsx,components/typing-indicator.tsx,components/read-receipt.tsx}`, `apps/web/src/features/conversa/components/{conversa-view.tsx,composer.tsx}` (o composer avisa quando a pessoa digita, para e envia)
 - **Passos:**
   1. `useSalaDoChamado(id)`: `chamado:entrar` ao montar e em cada `connect`; `acessoRevogado` leva ao toast "Você não tem mais acesso" e à lista.
   2. `assentamento:novo` faz `mesclarAssentamento`. Mensagem nova só rola sozinha a até 120 px do fim; senão, aparece a pílula.
@@ -458,7 +459,7 @@
 ### T-10.27 — Solução e validação pelo solicitante
 - **Depende de:** T-10.24, T-5.9 · **Paralelo com:** T-10.26, T-10.28
 - **Requisitos:** C13, C14; §6.3 (Chamado concluído)
-- **Arquivos:** `apps/web/src/features/conversa/components/{solucao-card.tsx,validacao-card.tsx,encerrado-bar.tsx,validacao-card.test.tsx}`
+- **Arquivos:** `apps/web/src/features/conversa/components/{solucao-card.tsx,validacao-card.tsx,encerrado-bar.tsx,validacao-card.test.tsx}`, `apps/web/src/features/conversa/components/conversa-view.tsx` (montar solução, validação e barra de encerrado)
 - **Passos:**
   1. `ValidacaoCard`: `RadioGroup` com Ótimo, Bom, Regular e Ruim (ícones `Laugh`, `Smile`, `Meh`, `Frown`) e comentário, ou "Não resolveu" com motivo obrigatório.
   2. Barra "Encerrado em … [Reabrir]".
@@ -472,7 +473,7 @@
 ### T-10.28 — Aba Anexos
 - **Depende de:** T-10.21, T-10.22, T-6.6 · **Paralelo com:** T-10.27, T-10.29
 - **Requisitos:** S70, S71
-- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/anexos.tsx`, `apps/web/src/features/anexos/{queries.ts,components/anexos-view.tsx,components/anexo-card.tsx,components/anexo-preview-dialog.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/anexos.tsx`, `apps/web/src/routes/_app/chamados/$chamadoId/route.tsx` (a aba "Anexos"), `apps/web/src/features/anexos/{queries.ts,components/anexos-view.tsx,components/anexo-card.tsx,components/anexo-preview-dialog.tsx}`, `apps/web/src/features/anexos/anexos.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Grade de cards e dropzone; o toggle "Interno" aparece só para a equipe.
   2. Prévia só para imagens (png, jpeg, gif, webp): `<img src="/api/v1/anexos/:id" loading="lazy">` no `AnexoPreviewDialog`. PDF e demais tipos não têm prévia, só o botão "Baixar". Não usar iframe, embed nem object.
@@ -489,7 +490,7 @@
 ### T-10.29 — Aba Histórico e impressão
 - **Depende de:** T-10.22 · **Paralelo com:** T-10.27, T-10.28
 - **Requisitos:** C22, C23
-- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/{historico.tsx,imprimir.tsx}`, `apps/web/src/features/historico/{queries.ts,components/historico-timeline.tsx,textos.ts}`
+- **Arquivos:** `apps/web/src/routes/_app/chamados/$chamadoId/{historico.tsx,imprimir.tsx}`, `apps/web/src/features/historico/{queries.ts,components/historico-timeline.tsx,textos.ts}`, `apps/web/src/features/historico/historico.test.tsx`
 - **Passos:**
   1. `textos.ts`: o texto de cada `TipoEvento` a partir de `dados`.
   2. Filtro: Tudo, Status, Atribuição, SLA e Anexos.
@@ -504,7 +505,7 @@
 ### T-10.30 — Painel
 - **Depende de:** T-10.4, T-8.1 · **Paralelo com:** T-10.31–T-10.37
 - **Requisitos:** G03; §6.3 (8)
-- **Arquivos:** `apps/web/src/routes/_app/painel.tsx`, `apps/web/src/features/painel/{queries.ts,components/kpi-grid.tsx,components/graficos.tsx,components/sla-proximos-table.tsx}`, `apps/web/src/components/display/chart-card.tsx`
+- **Arquivos:** `apps/web/src/routes/_app/painel.tsx`, `apps/web/src/features/painel/{queries.ts,painel.test.tsx,components/kpi-grid.tsx,components/graficos.tsx,components/sla-proximos-table.tsx}`, `apps/web/src/components/display/chart-card.tsx`
 - **Passos:**
   1. `StatCard`s clicáveis levam a `/chamados?visao=…`.
   2. Gráficos Recharts do shadcn, com `corDeGrafico` e "Ver como tabela".
@@ -520,7 +521,7 @@
 ### T-10.31 — Relatórios
 - **Depende de:** T-10.4, T-8.3 · **Paralelo com:** T-10.30, T-10.32–T-10.37
 - **Requisitos:** G04
-- **Arquivos:** `apps/web/src/routes/_app/relatorios/{route.tsx,index.tsx,$relatorio.tsx}`, `apps/web/src/features/relatorios/{queries.ts,components/relatorio-filtros.tsx,components/relatorio-tabela.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/relatorios/{route.tsx,index.tsx,$relatorio.tsx}`, `apps/web/src/features/relatorios/{queries.ts,components/relatorio-filtros.tsx,components/relatorio-tabela.tsx}`, `apps/web/src/features/relatorios/relatorios.test.tsx`
 - **Passos:**
   1. Layout com `exigir('relatorio.ver')`. O `index` redireciona para `visao-geral`; um `$relatorio` desconhecido dá `notFound()`.
   2. Filtros na URL, KPIs, gráfico, tabela ordenável no cliente, link CSV e impressão.
@@ -534,7 +535,7 @@
 ### T-10.32 — Conhecimento: lista e artigo
 - **Depende de:** T-10.4, T-8.4 · **Paralelo com:** T-10.30, T-10.31, T-10.33–T-10.37
 - **Requisitos:** F01, S108
-- **Arquivos:** `apps/web/src/routes/_app/conhecimento/{route.tsx,index.tsx,$artigoId/index.tsx}`, `apps/web/src/features/conhecimento/{queries.ts,components/categorias-pane.tsx,components/artigo-view.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/conhecimento/{route.tsx,index.tsx,$artigoId/index.tsx}`, `apps/web/src/features/conhecimento/{queries.ts,conhecimento.test.tsx,components/categorias-pane.tsx,components/artigo-view.tsx}`
 - **Passos:**
   1. Painel de categorias e busca.
   2. Artigo em `.markdown-artigo`, com "Foi útil?" e "Abrir chamado" (`/chamados/novo?problema=`).
@@ -549,7 +550,7 @@
 ### T-10.33 — Conhecimento: editor
 - **Depende de:** T-10.32 · **Paralelo com:** T-10.34–T-10.37
 - **Requisitos:** F01
-- **Arquivos:** `apps/web/src/routes/_app/conhecimento/{novo.tsx,$artigoId/editar.tsx}`, `apps/web/src/features/conhecimento/components/artigo-form.tsx`
+- **Arquivos:** `apps/web/src/routes/_app/conhecimento/{novo.tsx,index.tsx,$artigoId/editar.tsx}`, `apps/web/src/features/conhecimento/{queries.ts,components/artigo-view.tsx}` (links Novo/Editar e mutações), `apps/web/src/features/conhecimento/components/artigo-form.tsx`, `apps/web/src/features/conhecimento/novo.test.tsx`, `apps/web/src/features/conhecimento/editar.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Campos: título, resumo, categoria, tipos de problema (multi), visibilidade, situação e conteúdo (`MarkdownEditor`).
   2. `useAlteracoesNaoSalvas`. Excluir com confirmação.
@@ -563,7 +564,7 @@
 ### T-10.34 — Inventário: lista e edição
 - **Depende de:** T-10.4, T-8.5 · **Paralelo com:** T-10.30–T-10.33, T-10.35–T-10.37
 - **Requisitos:** I01
-- **Arquivos:** `apps/web/src/routes/_app/inventario/{route.tsx,index.tsx}`, `apps/web/src/features/inventario/{queries.ts,components/tipos-pane.tsx,components/ativos-table.tsx,components/ativo-sheet.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/inventario/{route.tsx,index.tsx}`, `apps/web/src/features/inventario/{index.test.tsx,queries.ts,components/tipos-pane.tsx,components/ativos-table.tsx,components/ativo-sheet.tsx}`
 - **Passos:**
   1. Layout com `exigir('inventario.ver')`.
   2. Tabela com filtros e cores de situação (§6.3, item 10).
@@ -578,7 +579,7 @@
 ### T-10.35 — Inventário: detalhe e etiqueta QR
 - **Depende de:** T-10.34 · **Paralelo com:** T-10.30–T-10.33, T-10.36, T-10.37
 - **Requisitos:** I02
-- **Arquivos:** `apps/web/src/routes/_app/inventario/$ativoId.tsx`, `apps/web/src/features/inventario/components/{etiqueta-qr-dialog.tsx,ativo-chamados.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/inventario/$ativoId.tsx`, `apps/web/src/features/inventario/components/{etiqueta-qr-dialog.tsx,ativo-chamados.tsx}`, `apps/web/src/features/inventario/{queries.ts,etiqueta-qr.test.tsx}`, `apps/web/src/features/inventario/components/ativos-table.tsx` (etiqueta vira link para o detalhe)
 - **Passos:**
   1. Abas Dados e Chamados.
   2. QR com `QRCodeSVG` para `${location.origin}/chamados/novo?equipamento=<etiqueta>`.
@@ -593,7 +594,7 @@
 ### T-10.36 — Perfil: conta, aparência e notificações
 - **Depende de:** T-10.4, T-10.15, T-6.9 · **Paralelo com:** T-10.30–T-10.35, T-10.37
 - **Requisitos:** §6.3 (13)
-- **Arquivos:** `apps/web/src/routes/_app/perfil/{route.tsx,index.tsx,aparencia.tsx,notificacoes.tsx}`, `apps/web/src/features/perfil/{queries.ts,components/preferencias-notificacao-table.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/perfil/{route.tsx,index.tsx,aparencia.tsx,notificacoes.tsx}`, `apps/web/src/features/perfil/{queries.ts,components/preferencias-notificacao-table.tsx}`, `apps/web/src/features/perfil/notificacoes.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Conta: login e perfil só leitura.
   2. Aparência: tema em 3 cartões, densidade e "Enter envia".
@@ -611,7 +612,7 @@
 ### T-10.37 — Perfil: segurança e sessões
 - **Depende de:** T-10.36, T-2.9 · **Paralelo com:** T-10.30–T-10.35
 - **Requisitos:** S24, S29, S30
-- **Arquivos:** `apps/web/src/routes/_app/perfil/{seguranca.tsx,sessoes.tsx}`, `apps/web/src/features/perfil/components/{trocar-senha-card.tsx,dois-fatores-card.tsx,sessoes-table.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/perfil/{route.tsx,seguranca.tsx,sessoes.tsx}` (route.tsx ganha as abas Segurança e Sessões), `apps/web/src/features/perfil/queries.ts`, `apps/web/src/features/perfil/components/{trocar-senha-card.tsx,dois-fatores-card.tsx,sessoes-table.tsx}`, `apps/web/src/features/perfil/sessoes.test.tsx`, `apps/web/src/features/perfil/seguranca.test.tsx` (teste de tela fica em features, nunca em routes: lá o tsr generate o trataria como rota)
 - **Passos:**
   1. Trocar senha. O toast avisa que as outras sessões foram encerradas.
   2. 2FA: "Gerar novos códigos" pede a senha; "Desativar" só para USUARIO.

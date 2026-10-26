@@ -5,6 +5,7 @@ import { invalidarConfig, obterConfig } from '../../lib/config'
 import type { ContextoUsuario } from '../../lib/contexto'
 import { ErroApp, regraNegocio } from '../../lib/erros'
 import { prisma } from '../../lib/prisma'
+import { tempoReal } from '../../lib/tempo-real'
 
 const MENSAGEM_JORNADA_INATIVA = 'A jornada padrão precisa estar ativa.'
 
@@ -23,6 +24,21 @@ export async function atualizarConfig(dados: AtualizarConfig, ctx: ContextoUsuar
       const jornada = await tx.jornada.findUnique({ where: { id: jornadaId }, select: { ativo: true } })
       if (!jornada) throw new ErroApp(422, 'REFERENCIA_INVALIDA', 'A jornada padrão não existe.')
       if (!jornada.ativo) throw regraNegocio(MENSAGEM_JORNADA_INATIVA)
+    }
+
+    const retornoId = dados['inatividade.statusRetornoId']
+    if (typeof retornoId === 'number') {
+      const destino = await tx.status.findFirst({
+        where: { id: retornoId, ativo: true, tipo: { in: ['ABERTO', 'EM_ATENDIMENTO'] } },
+        select: { id: true },
+      })
+      if (!destino)
+        throw regraNegocio('O status de retorno precisa estar ativo e ser do tipo Aberto ou Em atendimento.')
+    }
+    const monitorados = dados['inatividade.statusIds']
+    if (monitorados !== undefined && monitorados.length > 0) {
+      const existentes = await tx.status.count({ where: { id: { in: monitorados }, ativo: true } })
+      if (existentes !== new Set(monitorados).size) throw regraNegocio('Há status monitorado inexistente ou inativo.')
     }
 
     const linhas = await tx.config.findMany({ where: { chave: { in: entradas.map(([chave]) => chave) } } })
@@ -50,5 +66,6 @@ export async function atualizarConfig(dados: AtualizarConfig, ctx: ContextoUsuar
 
   // Efeito fora da transação: só depois do commit.
   invalidarConfig()
+  if (dados['chamado.isolarAreas'] !== undefined) tempoReal.revalidarTodos()
   return obterConfig()
 }

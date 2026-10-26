@@ -9,6 +9,7 @@ import type {
 import { normalizarBusca } from '@vinimon/shared'
 import type { Prisma } from '../../generated/prisma/client'
 import { auditar } from '../../lib/auditoria'
+import { obterConfig } from '../../lib/config'
 import type { ContextoUsuario } from '../../lib/contexto'
 import { conflito, naoEncontrado, regraNegocio } from '../../lib/erros'
 import { escaparLike } from '../../lib/like'
@@ -22,8 +23,13 @@ import { selectUsuario, selectUsuarioBusca } from './schemas'
 type LinhaUsuario = Prisma.UsuarioGetPayload<{ select: typeof selectUsuario }>
 
 function paraUsuario(u: LinhaUsuario): Usuario {
-  const { areasSecundarias, mfaAtivadoEm, ...resto } = u
-  return { ...resto, mfaAtivo: mfaAtivadoEm !== null, areaSecundariaIds: areasSecundarias.map((a) => a.areaId) }
+  const { areasSecundarias, areasGeridas, mfaAtivadoEm, ...resto } = u
+  return {
+    ...resto,
+    mfaAtivo: mfaAtivadoEm !== null,
+    areaSecundariaIds: areasSecundarias.map((a) => a.areaId),
+    areasGeridasIds: areasGeridas.map((a) => a.areaId),
+  }
 }
 
 /** Visão para auditoria: só dados cadastrais, nunca segredos. */
@@ -41,6 +47,58 @@ async function validarAreaOperador(tx: Tx, perfil: string, areaId: number | null
   if (areaId === null) throw regraNegocio('Operador precisa de uma área principal.')
   const area = await tx.area.findUnique({ where: { id: areaId }, select: { atende: true } })
   if (!area?.atende) throw regraNegocio('A área principal do operador precisa ser uma área que atende chamados.')
+}
+
+/**
+ * Gerente de área (A04): USUARIO só gerencia área que não atende; OPERADOR e ADMIN, só áreas entre as suas.
+ * Retorna as áreas válidas. Se o corpo trouxe uma lista com área inválida, é 422; se a lista apenas ficou
+ * inválida por mudança de perfil ou de áreas, as inválidas saem (nunca sobra privilégio sem base).
+ */
+async function areasGeridasValidas(
+  tx: Tx,
+  perfil: string,
+  areaIds: readonly number[],
+  pedidas: readonly number[],
+  explicito: boolean,
+): Promise<number[]> {
+  if (pedidas.length === 0) return []
+  const areas = await tx.area.findMany({ where: { id: { in: [...pedidas] } }, select: { id: true, atende: true } })
+  const validas = pedidas.filter((id) => {
+    const area = areas.find((a) => a.id === id)
+    if (!area) return false
+    return perfil === 'USUARIO' ? !area.atende : areaIds.includes(id)
+  })
+  if (explicito && validas.length !== pedidas.length) {
+    throw regraNegocio(
+      perfil === 'USUARIO'
+        ? 'Usuário comum só pode gerenciar áreas que não atendem chamados.'
+        : 'Só é possível gerenciar áreas entre as áreas do próprio usuário.',
+    )
+  }
+  return validas
+}
+
+/**
+ * B03: pessoas ativas do mesmo departamento de quem pergunta (USUARIO), para abrir chamado em nome de outro.
+ * Lista vazia com a regra desligada, sem departamento ou com menos de 2 caracteres; até 20, sem o próprio usuário.
+ */
+export async function buscarMesmoDepartamento(q: BuscarUsuariosQuery, ctx: ContextoUsuario) {
+  const termo = normalizarBusca(q.q)
+  if (termo.length < 2 || !(await obterConfig())['chamado.usuarioAbreParaOutros']) return []
+  const eu = await prisma.usuario.findUnique({ where: { id: ctx.usuario.id }, select: { departamentoId: true } })
+  if (eu?.departamentoId == null) return []
+  return prisma.usuario.findMany({
+    where: {
+      ativo: true,
+      perfil: 'USUARIO',
+      departamentoId: eu.departamentoId,
+      id: { not: ctx.usuario.id },
+      buscaNorm: { contains: escaparLike(termo) },
+    },
+    select: { id: true, nome: true },
+    orderBy: [{ nome: 'asc' }, { id: 'asc' }],
+    take: 20,
+  })
 }
 
 export async function listarUsuarios(q: ListarUsuariosQuery) {
@@ -146,6 +204,22 @@ export async function atualizarUsuario(id: number, dados: AtualizarUsuario, ctx:
       if (outros === 0) throw conflito('Não é possível remover o último administrador ativo.')
     }
     await validarAreaOperador(tx, perfil, areaId)
+
+    const todasAreas = [...(areaId === null ? [] : [areaId]), ...secundarias]
+    const geridas = await areasGeridasValidas(
+      tx,
+      perfil,
+      todasAreas,
+      dados.areasGeridasIds ?? antes.areasGeridasIds,
+      dados.areasGeridasIds !== undefined,
+    )
+    const mudouGeridas = !mesmaLista(geridas, antes.areasGeridasIds)
+    if (mudouGeridas) {
+      await tx.areaGerente.deleteMany({ where: { usuarioId: id } })
+      await tx.areaGerente.createMany({
+        data: geridas.map((areaGeridaId) => ({ usuarioId: id, areaId: areaGeridaId })),
+      })
+    }
 
     const mudouAreas = !mesmaLista(secundarias, antes.areaSecundariaIds)
     if (dados.areaSecundariaIds !== undefined && mudouAreas) {

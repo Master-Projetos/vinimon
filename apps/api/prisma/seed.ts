@@ -56,6 +56,74 @@ const STATUS_PADRAO = [
   { nome: 'Encerrado', tipo: 'ENCERRADO', papel: 'ENCERRADO', pausaSla: true, cor: '#546e7a', ordem: 500 },
   { nome: 'Cancelado', tipo: 'ENCERRADO', papel: 'CANCELADO', pausaSla: true, cor: '#757575', ordem: 510 },
 ] as const satisfies readonly Prisma.StatusCreateManyInput[]
+const MODELOS_EMAIL_PADRAO = [
+  {
+    evento: 'abertura',
+    assunto: 'Chamado {{numero}} aberto: {{assunto}}',
+    corpoTexto:
+      'Olá, {{solicitante}}.\nSeu chamado {{numero}} foi aberto para a área {{area}}.\nAcompanhe em {{link}}.\n\n{{sistema}}',
+    ativo: true,
+  },
+  {
+    evento: 'comentario',
+    assunto: 'Novo comentário no chamado {{numero}}',
+    corpoTexto: '{{autor}} comentou no chamado {{numero}} ({{assunto}}).\nAcompanhe em {{link}}.',
+    ativo: true,
+  },
+  {
+    evento: 'encaminhamento',
+    assunto: 'Chamado {{numero}} encaminhado para {{operador}}',
+    corpoTexto: 'O chamado {{numero}} ({{assunto}}) foi encaminhado para {{operador}}.\nAcesse {{link}}.',
+    ativo: true,
+  },
+  {
+    evento: 'agendamento',
+    assunto: 'Chamado {{numero}} agendado para {{dataAgendamento}}',
+    corpoTexto:
+      'O atendimento do chamado {{numero}} ({{assunto}}) está agendado para {{dataAgendamento}}.\nDetalhes em {{link}}.',
+    ativo: true,
+  },
+  {
+    evento: 'conclusao',
+    assunto: 'Chamado {{numero}} concluído',
+    corpoTexto:
+      'O chamado {{numero}} ({{assunto}}) foi concluído.\nSituação: {{status}}.\nSe o problema persistir, responda em {{link}}.',
+    ativo: true,
+  },
+  {
+    evento: 'rejeicao',
+    assunto: 'Chamado {{numero}} rejeitado',
+    corpoTexto: 'O chamado {{numero}} ({{assunto}}) foi rejeitado pela área {{area}}.\nVeja os detalhes em {{link}}.',
+    ativo: true,
+  },
+  {
+    evento: 'solicitacao_retorno',
+    assunto: 'Chamado {{numero}}: resposta necessária',
+    corpoTexto:
+      '{{operador}} precisa de uma resposta sua sobre o chamado {{numero}} ({{assunto}}).\nResponda em {{link}}.',
+    ativo: true,
+  },
+  {
+    evento: 'encerramento_automatico',
+    assunto: 'Chamado {{numero}} encerrado automaticamente',
+    corpoTexto:
+      'O chamado {{numero}} ({{assunto}}) foi encerrado automaticamente por falta de resposta.\nSituação: {{status}}.\nAcesse {{link}}.',
+    ativo: true,
+  },
+  {
+    evento: 'lembrete',
+    assunto: 'Lembrete: chamado {{numero}}',
+    corpoTexto: 'O chamado {{numero}} ({{assunto}}) aguarda atenção.\nAcesse {{link}}.',
+    ativo: true,
+  },
+  {
+    evento: 'recuperar_senha',
+    assunto: 'Recuperação de senha do {{sistema}}',
+    corpoTexto:
+      'Recebemos um pedido para redefinir sua senha no {{sistema}}.\nSe não foi você, ignore esta mensagem.\nPara continuar, acesse {{link}}.',
+    ativo: true,
+  },
+] as const satisfies readonly Prisma.ModeloEmailCreateManyInput[]
 const PRIORIDADES_PADRAO = [
   { nome: 'Baixa', cor: '#2e8b57', ordem: 1, padrao: false },
   { nome: 'Média', cor: '#d9a400', ordem: 2, padrao: true },
@@ -100,6 +168,8 @@ export async function seedBase(tx: Tx, { catalogos }: { catalogos: boolean }): P
     if (!existe) await tx.feriado.create({ data: { data, nome, recorrente: true } })
   }
   await tx.unidade.upsert({ where: { nome: 'Principal' }, update: {}, create: { nome: 'Principal' } })
+  // Modelos de e-mail padrão: só cria; quem já editou um modelo mantém o texto (skipDuplicates).
+  await tx.modeloEmail.createMany({ data: MODELOS_EMAIL_PADRAO.map((m) => ({ ...m })), skipDuplicates: true })
 
   if (!catalogos) return
   if ((await tx.status.count()) === 0) await tx.status.createMany({ data: STATUS_PADRAO.map((s) => ({ ...s })) })

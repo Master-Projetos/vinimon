@@ -2,6 +2,9 @@
 // compilação que cada união é igual ao enum gerado pelo Prisma: mudou um, mude o outro na mesma tarefa.
 export { PERFIS, type Perfil } from './permissoes'
 
+export const ORIGENS_AUTENTICACAO = ['LOCAL', 'LDAP'] as const
+export type OrigemAutenticacao = (typeof ORIGENS_AUTENTICACAO)[number]
+
 export const ESTADOS_SESSAO = ['PENDENTE_MFA', 'CADASTRO_MFA', 'TROCA_SENHA', 'ATIVA'] as const
 export type EstadoSessao = (typeof ESTADOS_SESSAO)[number]
 
@@ -50,6 +53,8 @@ export const TIPOS_EVENTO = [
   'APROVADO',
   'REJEITADO',
   'AUTO_APROVADO',
+  'SOLICITADO_RETORNO',
+  'AUTO_ENCERRADO',
   'REABERTO',
   'CANCELADO',
   'ANEXO_ADICIONADO',
@@ -57,6 +62,10 @@ export const TIPOS_EVENTO = [
   'SLA_RISCO',
   'SLA_ESTOURADO',
   'SLA_RESPOSTA_ESTOURADO',
+  'AUXILIAR_ADICIONADO',
+  'AUXILIAR_REMOVIDO',
+  'SUBCHAMADO_VINCULADO',
+  'SUBCHAMADO_DESVINCULADO',
 ] as const
 export type TipoEvento = (typeof TIPOS_EVENTO)[number]
 
@@ -91,3 +100,23 @@ export type VisibilidadeArtigo = (typeof VISIBILIDADES_ARTIGO)[number]
 
 export const STATUS_EMAIL = ['PENDENTE', 'ENVIADO', 'FALHOU'] as const
 export type StatusEmail = (typeof STATUS_EMAIL)[number]
+
+/** Canal de e-mail por tipo de notificação: nunca, na hora (IMEDIATO) ou no resumo diário (RESUMO). */
+export const CANAIS_EMAIL = ['NUNCA', 'IMEDIATO', 'RESUMO'] as const
+export type CanalEmail = (typeof CANAIS_EMAIL)[number]
+
+export const TIPOS_CAMPO = [
+  'TEXTO',
+  'NUMERO',
+  'SELECAO',
+  'SELECAO_MULTIPLA',
+  'DATA',
+  'HORA',
+  'DATA_HORA',
+  'AREA_TEXTO',
+  'CHECKBOX',
+] as const
+export type TipoCampo = (typeof TIPOS_CAMPO)[number]
+
+export const VISIBILIDADES_CAMPO = ['ABERTURA', 'SO_EDICAO', 'OCULTO_SOLICITANTE'] as const
+export type VisibilidadeCampo = (typeof VISIBILIDADES_CAMPO)[number]

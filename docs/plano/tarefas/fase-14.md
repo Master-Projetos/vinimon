@@ -5,7 +5,7 @@
 ### T-14.1 — Categorias de tipos de problema
 - **Depende de:** MVP · **Paralelo com:** T-14.2, T-14.5
 - **Requisitos:** B07
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{config.ts,modulos/categorias.ts,modulos/problemas.ts}`, `apps/api/src/modules/categorias/{service.ts,routes.ts,categorias.test.ts}`, `apps/api/src/modules/problemas/service.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{config.ts,modulos/categorias.ts,modulos/problemas.ts}`, `apps/api/src/modules/categorias/{service.ts,routes.ts,categorias.test.ts}`, `apps/api/src/modules/problemas/service.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato), `packages/shared/src/modulos/meta.ts`, `apps/api/src/modules/meta/service.ts`, `apps/web/src/features/problemas/problemas.test.tsx`
 - **Passos:**
   1. Model `Categoria {id, grupo SmallInt (1–3, CHECK), nome, ativo, @@unique([grupo, nome])}`. `Problema.categoria1Id?`, `categoria2Id?` e `categoria3Id?`, cada um com FK e CHECK de grupo via trigger simples ou validação no service: categoria`N` precisa ter `grupo=N`.
   2. Config `abertura.rotulosCategorias` (`string[3]`, padrão "Categoria 1..3") e `abertura.preFiltros` (`int[]` ⊂ {1,2,3}, padrão `[]`).
@@ -20,7 +20,7 @@
 ### T-14.2 — Campos personalizados: definição
 - **Depende de:** MVP · **Paralelo com:** T-14.1, T-14.5
 - **Requisitos:** B11
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{modulos/campos-personalizados.ts,campos.ts,campos.test.ts,enums.ts}`, `apps/api/src/lib/enums-check.ts` (enums `TipoCampo` e `VisibilidadeCampo`), `apps/api/src/modules/campos-personalizados/{service.ts,routes.ts,campos.test.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{modulos/campos-personalizados.ts,campos.ts,campos.test.ts,enums.ts}`, `apps/api/src/lib/enums-check.ts` (enums `TipoCampo` e `VisibilidadeCampo`), `apps/api/src/modules/campos-personalizados/{service.ts,routes.ts,campos.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Models:
      - `CampoPersonalizado {id, chave VarChar(60) @unique (^[a-z][a-z0-9_]{1,59}$), rotulo, tipo TipoCampo (TEXTO|NUMERO|SELECAO|SELECAO_MULTIPLA|DATA|HORA|DATA_HORA|AREA_TEXTO|CHECKBOX), opcoes String[], obrigatorio, regex VarChar(100)?, ajuda VarChar(300)?, visibilidade VisibilidadeCampo (ABERTURA|SO_EDICAO|OCULTO_SOLICITANTE), ordem, ativo}`;
@@ -39,7 +39,7 @@
 ### T-14.3 — Campos personalizados: valores no chamado
 - **Depende de:** T-14.2 · **Paralelo com:** T-14.4
 - **Requisitos:** B11, C22
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enum), `packages/shared/src/{modulos/chamados.ts,enums.ts}`, `apps/api/src/lib/enums-check.ts`, `apps/api/src/modules/chamados/{service.ts,acoes.ts,consultas.ts,routes.ts,campos-valores.test.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enum), `packages/shared/src/{modulos/chamados.ts,enums.ts}`, `apps/api/src/lib/enums-check.ts`, `apps/api/src/modules/chamados/{service.ts,acoes.ts,consultas.ts,routes.ts,campos-valores.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. `CriarChamadoSchema.campos?: z.record(z.string(), z.unknown())`, validado no service com `schemaDosCampos`.
   2. `PUT /chamados/:id/campos {versao, campos}` (`podeAtender`).
@@ -57,7 +57,7 @@
 ### T-14.4 — Formulários de abertura e obrigatoriedade por etapa
 - **Depende de:** T-14.3 · **Paralelo com:** —
 - **Requisitos:** B09, B10
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/formularios.ts`, `apps/api/src/modules/formularios/{service.ts,routes.ts,formularios.test.ts}`, `apps/api/src/modules/chamados/{service.ts,acoes.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/formularios.ts`, `apps/api/src/modules/formularios/{service.ts,routes.ts,formularios.test.ts}`, `apps/api/src/modules/chamados/{service.ts,acoes.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `FormularioAbertura {id, nome @unique, padrao Boolean, regras Json}` com `regras` validado por Zod:
      - `{campos: Record<'departamento'|'ativo'|'contato'|'telefone'|'contatoEmail'|'prioridade'|'anexo'|'tags', {visivel, obrigatorio}>, obrigatoriosConclusao: string[]}`;

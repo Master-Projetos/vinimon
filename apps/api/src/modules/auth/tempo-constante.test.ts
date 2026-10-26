@@ -28,7 +28,7 @@ describe('T07: login sem vazamento por tempo', () => {
       payload: { login, senha },
     })
 
-  it('login inexistente verifica 1 hash (contra o fictício)', async () => {
+  it('T07: login inexistente verifica 1 hash (contra o fictício)', async () => {
     const r = await entrar('naoexiste', SENHA_TESTE)
     expect(r.statusCode).toBe(401)
     expect(vi.mocked(verify)).toHaveBeenCalledTimes(1)

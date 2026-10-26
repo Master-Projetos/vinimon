@@ -103,7 +103,7 @@ describe('T15: IP real atrás de proxy', () => {
     }
   }
 
-  it('ignora X-Forwarded-For sem TRUST_PROXY', async () => {
+  it('T15: ignora X-Forwarded-For sem TRUST_PROXY', async () => {
     expect(await ipRegistrado('false', '127.0.0.1')).toBe('127.0.0.1')
   })
 

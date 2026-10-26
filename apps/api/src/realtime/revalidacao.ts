@@ -1,9 +1,9 @@
 import type { MotivoSessaoEncerrada } from '@vinimon/shared'
 import type { FastifyBaseLogger } from 'fastify'
-import { podeVerChamado, podeVerInterno } from '../autorizacao/chamados'
+import { comEscopo, podeVerChamado, podeVerInterno, selectEscopo } from '../autorizacao/chamados'
 import { obterConfig } from '../lib/config'
 import { prisma } from '../lib/prisma'
-import type { UsuarioSessao } from '../lib/sessao'
+import { type UsuarioSessao, verTodasAreas } from '../lib/sessao'
 import type { PublicadorTempoReal } from '../lib/tempo-real'
 import type { ServidorRt } from './plugin'
 import { SALA_ADMINS, salaArea, salaChamado, salaChamadoInterno, salaSessao, salaUsuario } from './salas'
@@ -12,7 +12,7 @@ type SocketLocal = ServidorRt['sockets']['sockets'] extends Map<string, infer S>
 
 export type Revogacao = Pick<
   PublicadorTempoReal,
-  'encerrarSessao' | 'encerrarSessoesDoUsuario' | 'revalidarUsuario' | 'revalidarChamado'
+  'encerrarSessao' | 'encerrarSessoesDoUsuario' | 'revalidarUsuario' | 'revalidarChamado' | 'revalidarTodos'
 > & {
   /** O corpo do intervalo: confere os `sessaoId` dos sockets locais numa query e derruba os inválidos. */
   revalidarSessoes(agora?: Date): Promise<number>
@@ -25,7 +25,11 @@ const salaDeChamado = (sala: string): number | null => {
   return m?.[1] ? Number(m[1]) : null
 }
 
+/** Tamanho do lote de `revalidarTodos`: uma query de usuários e uma de chamados por lote. */
+const LOTE_REVALIDACAO = 200
+
 async function carregarUsuarios(ids: number[]) {
+  const cfg = await obterConfig()
   const usuarios = await prisma.usuario.findMany({
     where: { id: { in: ids }, ativo: true },
     select: {
@@ -35,12 +39,23 @@ async function carregarUsuarios(ids: number[]) {
       perfil: true,
       areaId: true,
       areasSecundarias: { select: { areaId: true } },
+      areasGeridas: { select: { areaId: true } },
     },
   })
   return new Map(
     usuarios.map((u) => {
       const sec = u.areasSecundarias.map((a) => a.areaId)
-      return [u.id, { ...u, areaIds: u.areaId === null ? sec : [u.areaId, ...sec] }] as const
+      const fresco = {
+        id: u.id,
+        nome: u.nome,
+        login: u.login,
+        perfil: u.perfil,
+        areaId: u.areaId,
+        areaIds: u.areaId === null ? sec : [u.areaId, ...sec],
+        verTodasAreas: verTodasAreas(u.perfil, cfg),
+        areasGeridas: u.areasGeridas.map((a) => a.areaId),
+      }
+      return [u.id, fresco] as const
     }),
   )
 }
@@ -79,9 +94,9 @@ export function criarRevogacao(io: ServidorRt, log: FastifyBaseLogger): Revogaca
         ? []
         : await prisma.chamado.findMany({
             where: { id: { in: [...idsChamado] } },
-            select: { id: true, areaId: true, operadorId: true, solicitanteId: true },
+            select: { id: true, ...selectEscopo },
           })
-      ).map((c) => [c.id, c]),
+      ).map((c) => [c.id, comEscopo(c)]),
     )
     for (const s of sockets) {
       const u = usuarios.get(s.data.usuario.id)
@@ -100,6 +115,31 @@ export function criarRevogacao(io: ServidorRt, log: FastifyBaseLogger): Revogaca
     }
   }
 
+  /** Recarrega os usuários, refaz as salas de área/admin e reavalia as salas de chamado dos sockets deles. */
+  async function revalidarUsuarios(ids: readonly number[]) {
+    const alvo = new Set(ids)
+    const sockets = locais().filter((s) => alvo.has(s.data.usuario.id))
+    if (sockets.length === 0) return
+    const frescos = await carregarUsuarios([...new Set(sockets.map((s) => s.data.usuario.id))])
+    const usuarios = new Map<number, UsuarioSessao>()
+    const vivos: SocketLocal[] = []
+    for (const s of sockets) {
+      const fresco = frescos.get(s.data.usuario.id)
+      if (!fresco) {
+        derrubar([s], 'usuario_desativado')
+        continue
+      }
+      const atual: UsuarioSessao = { ...s.data.usuario, ...fresco }
+      s.data.usuario = atual
+      usuarios.set(atual.id, atual)
+      vivos.push(s)
+      for (const sala of s.rooms) if (sala.startsWith('area:') || sala === SALA_ADMINS) s.leave(sala)
+      if (atual.perfil === 'OPERADOR') for (const areaId of atual.areaIds) s.join(salaArea(areaId))
+      if (atual.perfil === 'ADMIN') s.join(SALA_ADMINS)
+    }
+    await reavaliarSalas(vivos, usuarios)
+  }
+
   return {
     encerrarSessao(sessaoId, motivo) {
       // `sessao:encerrada` primeiro, depois a queda (§3.7)
@@ -113,21 +153,14 @@ export function criarRevogacao(io: ServidorRt, log: FastifyBaseLogger): Revogaca
     },
 
     revalidarUsuario(usuarioId) {
-      seguro('revalidar-usuario', async () => {
-        const sockets = locais().filter((s) => s.data.usuario.id === usuarioId)
-        if (sockets.length === 0) return
-        const fresco = (await carregarUsuarios([usuarioId])).get(usuarioId)
-        if (!fresco) return derrubar(sockets, 'usuario_desativado')
-        const usuarios = new Map<number, UsuarioSessao>()
-        for (const s of sockets) {
-          const atual: UsuarioSessao = { ...s.data.usuario, ...fresco }
-          s.data.usuario = atual
-          usuarios.set(usuarioId, atual)
-          for (const sala of s.rooms) if (sala.startsWith('area:') || sala === SALA_ADMINS) s.leave(sala)
-          if (atual.perfil === 'OPERADOR') for (const areaId of atual.areaIds) s.join(salaArea(areaId))
-          if (atual.perfil === 'ADMIN') s.join(SALA_ADMINS)
-        }
-        await reavaliarSalas(sockets, usuarios)
+      seguro('revalidar-usuario', () => revalidarUsuarios([usuarioId]))
+    },
+
+    revalidarTodos() {
+      seguro('revalidar-todos', async () => {
+        const ids = [...new Set(locais().map((s) => s.data.usuario.id))]
+        for (let i = 0; i < ids.length; i += LOTE_REVALIDACAO)
+          await revalidarUsuarios(ids.slice(i, i + LOTE_REVALIDACAO))
       })
     },
 
@@ -137,10 +170,7 @@ export function criarRevogacao(io: ServidorRt, log: FastifyBaseLogger): Revogaca
           (s) => s.rooms.has(salaChamado(chamadoId)) || s.rooms.has(salaChamadoInterno(chamadoId)),
         )
         if (sockets.length === 0) return
-        const c = await prisma.chamado.findUnique({
-          where: { id: chamadoId },
-          select: { areaId: true, operadorId: true, solicitanteId: true },
-        })
+        const c = comEscopo(await prisma.chamado.findUnique({ where: { id: chamadoId }, select: selectEscopo }))
         const frescos = await carregarUsuarios([...new Set(sockets.map((s) => s.data.usuario.id))])
         for (const s of sockets) {
           const base = frescos.get(s.data.usuario.id)

@@ -6,13 +6,21 @@ import {
   type Mencao as MencaoTexto,
   temPermissao,
 } from '@vinimon/shared'
-import { acoesDoUsuario, type ChamadoParaAcoes, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
+import {
+  acoesDoUsuario,
+  type ChamadoEscopo,
+  type ChamadoParaAcoes,
+  comEscopo,
+  podeVerChamado,
+  podeVerInterno,
+} from '../../autorizacao/chamados'
 import { Prisma } from '../../generated/prisma/client'
 import { obterConfig } from '../../lib/config'
 import type { ContextoUsuario } from '../../lib/contexto'
 import { naoEncontrado, semPermissao } from '../../lib/erros'
 import { prisma, type Tx } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
+import { statusAoResponderSolicitante } from '../chamados/acoes'
 import { aposCommitChamado, type EfeitosChamado, type LogErro, registrarEvento } from '../chamados/eventos'
 import { aplicarTransicaoStatus, recalcularChamado } from '../sla/service'
 import { selectAssentamento } from './schemas'
@@ -36,11 +44,13 @@ const selectParaComentar = {
   versao: true,
   primeiraRespostaEm: true,
   status: { select: { papel: true } },
+  solicitante: { select: { areaId: true } },
+  auxiliares: { select: { usuarioId: true } },
 } satisfies Prisma.ChamadoSelect
 
 /** Fora do escopo é 404, igual a inexistente (S46). */
 async function carregarVisivel(id: number, u: UsuarioSessao) {
-  const c = await prisma.chamado.findUnique({ where: { id }, select: selectParaComentar })
+  const c = comEscopo(await prisma.chamado.findUnique({ where: { id }, select: selectParaComentar }))
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
   return c
 }
@@ -79,7 +89,7 @@ export async function listarAssentamentos(
 /** Menções que valem: ativo, com acesso ao chamado e, em comentário interno, também ao conteúdo interno (S100). */
 async function resolverMencoes(
   mencoes: MencaoTexto[],
-  c: Pick<Prisma.ChamadoGetPayload<{ select: typeof selectParaComentar }>, 'areaId' | 'operadorId' | 'solicitanteId'>,
+  c: ChamadoEscopo,
   interno: boolean,
   autorId: number,
 ): Promise<{ validas: number[]; ignoradas: MencaoTexto[] }> {
@@ -194,17 +204,14 @@ export async function comentar(
         c.solicitanteId !== u.id &&
         temPermissao(u.perfil, 'chamado.atender')
 
-      // o solicitante respondendo tira o chamado de "aguardando solicitante"
-      const volta = c.solicitanteId === u.id && c.status.papel === 'AGUARDANDO_SOLICITANTE'
-      if (volta) {
-        const emAtendimento = await tx.status.findFirstOrThrow({
-          where: { papel: 'EM_ATENDIMENTO', ativo: true },
-          select: { id: true },
-        })
+      // o solicitante respondendo tira o chamado de "aguardando solicitante" ou de status monitorado por inatividade
+      const destino = c.solicitanteId === u.id ? await statusAoResponderSolicitante(tx, c) : null
+      const volta = destino !== null
+      if (destino !== null) {
         await aplicarTransicaoStatus(tx, {
           chamadoId: id,
           versao: c.versao,
-          novoStatusId: emAtendimento.id,
+          novoStatusId: destino,
           atorId: u.id,
           agora,
         })

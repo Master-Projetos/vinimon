@@ -13,7 +13,7 @@ import {
   type VisaoChamado,
 } from '@vinimon/shared'
 import { DateTime } from 'luxon'
-import { escopoChamados, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
+import { comEscopo, escopoChamados, podeVerChamado, podeVerInterno, selectEscopo } from '../../autorizacao/chamados'
 import type { Prisma } from '../../generated/prisma/client'
 import { obterConfig } from '../../lib/config'
 import { naoEncontrado, semPermissao } from '../../lib/erros'
@@ -27,6 +27,7 @@ const DEZ_MINUTOS_MS = 10 * 60 * 1000
 const NOVENTA_DIAS_MS = 90 * 24 * 60 * 60 * 1000
 
 const selectResumo = {
+  auxiliares: { select: { usuarioId: true } },
   id: true,
   assunto: true,
   solicitanteId: true,
@@ -55,7 +56,7 @@ const selectResumo = {
   prioridade: { select: { id: true, nome: true, cor: true, ordem: true } },
   area: { select: { id: true, nome: true } },
   problema: { select: { id: true, nome: true } },
-  solicitante: { select: { id: true, nome: true } },
+  solicitante: { select: { id: true, nome: true, areaId: true } },
   operador: { select: { id: true, nome: true } },
 } satisfies Prisma.ChamadoSelect
 
@@ -80,6 +81,8 @@ function filtroVisao(u: UsuarioSessao, visao: VisaoChamado | undefined): Prisma.
       return { solicitanteId: u.id, statusTipo: 'CONCLUIDO' }
     case 'encerrados':
       return { statusTipo: 'ENCERRADO' }
+    case 'areas-geridas':
+      return { solicitante: { areaId: { in: u.areasGeridas ?? [] } } }
     default:
       return {}
   }
@@ -137,10 +140,13 @@ function filtrosDa(u: UsuarioSessao, f: ChamadoFiltros, fuso: string, agora: Dat
   }
   if (f.solicitanteId !== undefined) filtros.push({ solicitanteId: f.solicitanteId })
 
-  if (f.tagIds?.length) {
-    // tags são internas: quem não atende não filtra por elas (S49); "contém todas"
+  if (f.tagIds?.length || f.tagIdsAlguma?.length || f.tagIdsNenhuma?.length) {
+    // tags são internas: quem não atende não filtra por elas (S49)
     if (!temPermissao(u.perfil, 'chamado.atender')) throw semPermissao()
-    for (const tagId of f.tagIds) filtros.push({ tags: { some: { tagId } } })
+    // `tagIds`: contém todas · `tagIdsAlguma`: contém ao menos uma · `tagIdsNenhuma`: não contém nenhuma
+    for (const tagId of f.tagIds ?? []) filtros.push({ tags: { some: { tagId } } })
+    if (f.tagIdsAlguma?.length) filtros.push({ tags: { some: { tagId: { in: f.tagIdsAlguma } } } })
+    if (f.tagIdsNenhuma?.length) filtros.push({ tags: { none: { tagId: { in: f.tagIdsNenhuma } } } })
   }
   if (f.sla) filtros.push(filtroSla(f.sla, agora))
   if (f.avaliacao?.length) filtros.push({ avaliacao: { is: { nota: { in: f.avaliacao } } } })
@@ -193,7 +199,13 @@ export async function listar(u: UsuarioSessao, f: ChamadoFiltros, agora = new Da
   const lido = new Map(leituras.map((l) => [l.chamadoId, l.ultimoAssentamentoLidoId]))
 
   const itens: ChamadoResumo[] = linhas.map((c) => {
-    const verInterno = podeVerInterno(u, { areaId: c.areaId, operadorId: c.operadorId, solicitanteId: c.solicitanteId })
+    const verInterno = podeVerInterno(u, {
+      areaId: c.areaId,
+      operadorId: c.operadorId,
+      solicitanteId: c.solicitanteId,
+      solicitanteAreaId: c.solicitante.areaId,
+      auxiliarIds: c.auxiliares.map((a) => a.usuarioId),
+    })
     const ultimo = verInterno ? c.ultimoAssentamentoId : c.ultimoAssentamentoPublicoId
     const lidoAte = lido.get(c.id)
     const qtdAnexos = anexos
@@ -237,13 +249,21 @@ export async function listar(u: UsuarioSessao, f: ChamadoFiltros, agora = new Da
   return { itens, total, pagina: f.pagina, porPagina: f.porPagina }
 }
 
-/** Um `count` por visão, numa transação só. O status ignorado (C02) não entra. */
+/**
+ * Um `count` por visão, numa transação só. O status ignorado (C02) não entra. Quem tem `chamado.verTodos` não recebe
+ * `encerrados` nem `todos`: seriam contagens da tabela inteira (D3), e o selo só importa nas filas em aberto.
+ */
 export async function contagens(u: UsuarioSessao): Promise<ChamadoContagens> {
   const escopo = escopoChamados(u)
+  const veTudo = temPermissao(u.perfil, 'chamado.verTodos')
+  const gerente = (u.areasGeridas ?? []).length > 0
+  const visoes = VISOES_CHAMADO.filter(
+    (v) => !(veTudo && (v === 'encerrados' || v === 'todos')) && (v !== 'areas-geridas' || gerente),
+  )
   const contar = (visao: VisaoChamado) =>
     prisma.chamado.count({ where: { AND: [escopo, filtroVisao(u, visao), { status: { ignorado: false } }] } })
-  const totais = await prisma.$transaction(VISOES_CHAMADO.map((v) => contar(v)))
-  return Object.fromEntries(VISOES_CHAMADO.map((v, i) => [v, totais[i] ?? 0])) as ChamadoContagens
+  const totais = await prisma.$transaction(visoes.map((v) => contar(v)))
+  return Object.fromEntries(visoes.map((v, i) => [v, totais[i] ?? 0])) as ChamadoContagens
 }
 
 const TRINTA_DIAS_MS = 30 * 24 * 60 * 60 * 1000
@@ -254,10 +274,7 @@ const naoAchado = () => naoEncontrado('Chamado não encontrado.')
  * não vê o chamado não descobre que ele existe.
  */
 async function exigirVisivel(u: UsuarioSessao, id: number) {
-  const c = await prisma.chamado.findUnique({
-    where: { id },
-    select: { areaId: true, operadorId: true, solicitanteId: true },
-  })
+  const c = comEscopo(await prisma.chamado.findUnique({ where: { id }, select: selectEscopo }))
   if (!c || !podeVerChamado(u, c)) throw naoAchado()
   return c
 }

@@ -17,7 +17,7 @@ describe('T40: vazamento de segredos', () => {
     await app.close()
   })
 
-  it('percorre toda rota GET autenticada e não encontra segredos', async () => {
+  it('T40: percorre toda rota GET autenticada e não encontra segredos', async () => {
     const admin = await criarUsuario({ perfil: 'ADMIN' })
     await ativarMfa(admin.id)
     const headers = await headersDe(admin.id)

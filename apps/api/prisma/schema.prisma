@@ -24,6 +24,13 @@ enum Perfil {
   @@map("perfil")
 }
 
+enum OrigemAutenticacao {
+  LOCAL
+  LDAP
+
+  @@map("origem_autenticacao")
+}
+
 enum EstadoSessao {
   PENDENTE_MFA
   CADASTRO_MFA
@@ -110,6 +117,8 @@ enum TipoEvento {
   APROVADO
   REJEITADO
   AUTO_APROVADO
+  SOLICITADO_RETORNO
+  AUTO_ENCERRADO
   REABERTO
   CANCELADO
   ANEXO_ADICIONADO
@@ -117,6 +126,10 @@ enum TipoEvento {
   SLA_RISCO
   SLA_ESTOURADO
   SLA_RESPOSTA_ESTOURADO
+  AUXILIAR_ADICIONADO
+  AUXILIAR_REMOVIDO
+  SUBCHAMADO_VINCULADO
+  SUBCHAMADO_DESVINCULADO
 
   @@map("tipo_evento")
 }
@@ -188,6 +201,36 @@ enum StatusEmail {
   @@map("status_email")
 }
 
+enum CanalEmail {
+  NUNCA
+  IMEDIATO
+  RESUMO
+
+  @@map("canal_email")
+}
+
+enum TipoCampo {
+  TEXTO
+  NUMERO
+  SELECAO
+  SELECAO_MULTIPLA
+  DATA
+  HORA
+  DATA_HORA
+  AREA_TEXTO
+  CHECKBOX
+
+  @@map("tipo_campo")
+}
+
+enum VisibilidadeCampo {
+  ABERTURA
+  SO_EDICAO
+  OCULTO_SOLICITANTE
+
+  @@map("visibilidade_campo")
+}
+
 // ═════════════════════════ ORGANIZAÇÃO ═════════════════════════
 
 model Unidade {
@@ -226,6 +269,8 @@ model Area {
   id           Int      @id @default(autoincrement())
   nome         String   @unique @db.VarChar(120)
   atende       Boolean  @default(true)
+  /// OPERADOR sem nenhuma área com o módulo não acessa o inventário (A17)
+  moduloInventario Boolean @default(true) @map("modulo_inventario")
   /// jornada de SLA (null = config sla.jornadaPadraoId)
   jornadaId    Int?     @map("jornada_id")
   ativo        Boolean  @default(true)
@@ -238,9 +283,41 @@ model Area {
   problemas           ProblemaArea[]
   problemasPadrao     Problema[]
   chamados            Chamado[]
+  /// áreas para onde quem é desta área pode abrir chamado (vazio = todas)
+  destinos            AreaDestino[] @relation("AreaOrigem")
+  comoDestino         AreaDestino[] @relation("AreaDestino")
+  gerentes            AreaGerente[]
 
   @@index([jornadaId], map: "ix_areas_jornada")
   @@map("areas")
+}
+
+/// Áreas destino por área solicitante (A05). No máximo uma padrão por origem
+model AreaDestino {
+  areaOrigemId  Int     @map("area_origem_id")
+  areaDestinoId Int     @map("area_destino_id")
+  padrao        Boolean @default(false)
+
+  origem  Area @relation("AreaOrigem", fields: [areaOrigemId], references: [id], onDelete: Cascade)
+  destino Area @relation("AreaDestino", fields: [areaDestinoId], references: [id], onDelete: Restrict)
+
+  @@id([areaOrigemId, areaDestinoId])
+  @@unique([areaOrigemId], map: "ux_area_destinos_padrao", where: raw("padrao"))
+  @@index([areaDestinoId], map: "ix_area_destinos_destino")
+  @@map("area_destinos")
+}
+
+/// Gerente de área (A04): vê os chamados dos usuários da área e edita telefone, departamento e situação deles
+model AreaGerente {
+  areaId    Int @map("area_id")
+  usuarioId Int @map("usuario_id")
+
+  area    Area    @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([areaId, usuarioId])
+  @@index([usuarioId], map: "ix_area_gerentes_usuario")
+  @@map("area_gerentes")
 }
 
 // ═════════════════════════ ACESSO ═════════════════════════
@@ -258,6 +335,7 @@ model Usuario {
   deveTrocarSenha       Boolean    @default(false) @map("deve_trocar_senha")
   senhaAlteradaEm       DateTime?  @map("senha_alterada_em") @db.Timestamptz(3)
   perfil                Perfil     @default(USUARIO)
+  origemAutenticacao    OrigemAutenticacao @default(LOCAL) @map("origem_autenticacao")
   /// área primária (obrigatória para OPERADOR — CHECK)
   areaId                Int?       @map("area_id")
   departamentoId        Int?       @map("departamento_id")
@@ -274,6 +352,12 @@ model Usuario {
   /// null = padrão do perfil (COMPACTA para equipe, CONFORTAVEL para USUARIO)
   densidade             Densidade?
   enviarComEnter        Boolean    @default(true) @map("enviar_com_enter")
+  /// pode encaminhar chamado para um operador (T-15.1)
+  podeEncaminhar        Boolean    @default(true) @map("pode_encaminhar")
+  /// pode receber chamado encaminhado ou entrar como auxiliar (T-15.1)
+  podeReceber           Boolean    @default(true) @map("pode_receber")
+  /// #rrggbb do operador no calendário (T-15.2)
+  corCalendario         String?    @map("cor_calendario") @db.Char(7)
   criadoEm              DateTime   @default(now()) @map("criado_em") @db.Timestamptz(3)
   atualizadoEm          DateTime   @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
   /// trigger: lower(f_unaccent(nome login email))
@@ -285,6 +369,7 @@ model Usuario {
   areasSecundarias        UsuarioArea[]
   sessoes                 Sessao[]
   codigosRecuperacao      CodigoRecuperacao[]
+  tokensSenha             TokenSenha[]
   auditorias              Auditoria[]
   presenca                PresencaUsuario?
   preferenciasNotificacao PreferenciaNotificacao[]
@@ -297,6 +382,8 @@ model Usuario {
   assentamentos           Assentamento[]
   mencoes                 Mencao[]
   seguindo                ChamadoSeguidor[]
+  auxiliarEm              ChamadoAuxiliar[]
+  areasGeridas            AreaGerente[]
   leituras                ChamadoLeitura[]
   anexosEnviados          Anexo[]
   avaliacoes              AvaliacaoChamado[]
@@ -375,6 +462,22 @@ model CodigoRecuperacao {
   @@map("codigos_recuperacao")
 }
 
+/// Token de redefinição de senha (SEN-10): o banco guarda só sha256(token) em hex; uso único, validade de 30 min
+model TokenSenha {
+  id        Int       @id @default(autoincrement())
+  usuarioId Int       @map("usuario_id")
+  tokenHash String    @unique @map("token_hash") @db.Char(64)
+  expiraEm  DateTime  @map("expira_em") @db.Timestamptz(3)
+  usadoEm   DateTime? @map("usado_em") @db.Timestamptz(3)
+  ip        String?   @db.VarChar(45)
+  criadoEm  DateTime  @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId], map: "ix_tokens_senha_usuario")
+  @@map("tokens_senha")
+}
+
 /// Trilha de auditoria — somente inserção (trigger)
 model Auditoria {
   id         Int           @id @default(autoincrement())
@@ -418,6 +521,8 @@ model PreferenciaNotificacao {
   tipo      TipoNotificacao
   inApp     Boolean         @map("in_app")
   desktop   Boolean
+  /// null = padrão de `canalEmailPadrao` (shared); só as diferenças são gravadas
+  email     CanalEmail?
 
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
@@ -474,14 +579,40 @@ model Problema {
   slaRespostaMin Int?    @map("sla_resposta_min")
   slaSolucaoMin  Int?    @map("sla_solucao_min")
   ativo          Boolean @default(true)
+  /// categoria N precisa ter grupo = N (service, 422)
+  categoria1Id   Int?    @map("categoria1_id")
+  categoria2Id   Int?    @map("categoria2_id")
+  categoria3Id   Int?    @map("categoria3_id")
 
   areaPadrao Area?            @relation(fields: [areaPadraoId], references: [id], onDelete: Restrict)
+  categoria1 Categoria?       @relation("ProblemaCategoria1", fields: [categoria1Id], references: [id], onDelete: Restrict)
+  categoria2 Categoria?       @relation("ProblemaCategoria2", fields: [categoria2Id], references: [id], onDelete: Restrict)
+  categoria3 Categoria?       @relation("ProblemaCategoria3", fields: [categoria3Id], references: [id], onDelete: Restrict)
   areas      ProblemaArea[]
   chamados   Chamado[]
   artigos    ArtigoProblema[]
+  campos     CampoProblema[]
 
   @@index([areaPadraoId], map: "ix_problemas_area_padrao")
+  @@index([categoria1Id], map: "ix_problemas_categoria1")
+  @@index([categoria2Id], map: "ix_problemas_categoria2")
+  @@index([categoria3Id], map: "ix_problemas_categoria3")
   @@map("problemas")
+}
+
+/// Classificação opcional dos tipos de problema em até 3 grupos (B07). `grupo` é 1–3 (CHECK na migração).
+model Categoria {
+  id    Int     @id @default(autoincrement())
+  grupo Int     @db.SmallInt
+  nome  String  @db.VarChar(120)
+  ativo Boolean @default(true)
+
+  problemas1 Problema[] @relation("ProblemaCategoria1")
+  problemas2 Problema[] @relation("ProblemaCategoria2")
+  problemas3 Problema[] @relation("ProblemaCategoria3")
+
+  @@unique([grupo, nome], map: "ux_categorias_grupo_nome")
+  @@map("categorias")
 }
 
 model ProblemaArea {
@@ -494,6 +625,56 @@ model ProblemaArea {
   @@id([problemaId, areaId])
   @@index([areaId], map: "ix_problema_areas_area")
   @@map("problema_areas")
+}
+
+/// Campo personalizado (definição). chave: ^[a-z][a-z0-9_]{1,59}$ (CHECK)
+model CampoPersonalizado {
+  id           Int               @id @default(autoincrement())
+  chave        String            @unique @db.VarChar(60)
+  rotulo       String            @db.VarChar(120)
+  tipo         TipoCampo
+  opcoes       String[]
+  obrigatorio  Boolean           @default(false)
+  regex        String?           @db.VarChar(100)
+  ajuda        String?           @db.VarChar(300)
+  visibilidade VisibilidadeCampo @default(ABERTURA)
+  ordem        Int               @default(0)
+  ativo        Boolean           @default(true)
+
+  problemas CampoProblema[]
+  valores   ChamadoCampoValor[]
+
+  @@map("campos_personalizados")
+}
+
+/// Vincula o campo a problemas; sem vínculos = vale para todos. obrigatorio != null sobrepõe o do campo
+model CampoProblema {
+  campoId     Int      @map("campo_id")
+  problemaId  Int      @map("problema_id")
+  obrigatorio Boolean?
+
+  campo    CampoPersonalizado @relation(fields: [campoId], references: [id], onDelete: Cascade)
+  problema Problema           @relation(fields: [problemaId], references: [id], onDelete: Cascade)
+
+  @@id([campoId, problemaId])
+  @@index([problemaId], map: "ix_campo_problemas_problema")
+  @@map("campo_problemas")
+}
+
+model ChamadoCampoValor {
+  chamadoId   Int       @map("chamado_id")
+  campoId     Int       @map("campo_id")
+  valorTexto  String?   @map("valor_texto") @db.Text
+  valorNumero Decimal?  @map("valor_numero") @db.Decimal(18, 4)
+  valorData   DateTime? @map("valor_data") @db.Timestamptz(3)
+  valorOpcoes String[]  @map("valor_opcoes")
+
+  chamado Chamado            @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  campo   CampoPersonalizado @relation(fields: [campoId], references: [id], onDelete: Restrict)
+
+  @@id([chamadoId, campoId])
+  @@index([campoId], map: "ix_chamado_campo_valores_campo")
+  @@map("chamado_campo_valores")
 }
 
 model Canal {
@@ -644,7 +825,11 @@ model Chamado {
   atualizadoEm                DateTime   @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
   /// trigger: lower(f_unaccent(assunto + left(descricao, 2000)))
   buscaNorm                   String?    @map("busca_norm") @db.Text
+  /// subchamado: CHECK chamado_pai_id <> id (T-15.4)
+  chamadoPaiId                Int?       @map("chamado_pai_id")
 
+  pai          Chamado?      @relation("Subchamados", fields: [chamadoPaiId], references: [id], onDelete: Restrict)
+  filhos       Chamado[]     @relation("Subchamados")
   solicitante  Usuario       @relation("ChamadoSolicitante", fields: [solicitanteId], references: [id], onDelete: Restrict)
   abertoPor    Usuario       @relation("ChamadoAbertoPor", fields: [abertoPorId], references: [id], onDelete: Restrict)
   operador     Usuario?      @relation("ChamadoOperador", fields: [operadorId], references: [id], onDelete: Restrict)
@@ -662,17 +847,20 @@ model Chamado {
   assentamentos Assentamento[]
   mencoes       Mencao[]
   seguidores    ChamadoSeguidor[]
+  auxiliares    ChamadoAuxiliar[]
   leituras      ChamadoLeitura[]
   tags          ChamadoTag[]
   anexos        Anexo[]
   avaliacao     AvaliacaoChamado?
   notificacoes  Notificacao[]
+  camposValores ChamadoCampoValor[]
 
   @@index([solicitanteId, id(sort: Desc)], map: "ix_chamados_solicitante")
   @@index([abertoPorId], map: "ix_chamados_aberto_por")
   @@index([areaId, statusTipo, id(sort: Desc)], map: "ix_chamados_area_tipo")
   @@index([operadorId, statusTipo, id(sort: Desc)], map: "ix_chamados_operador_tipo")
   @@index([statusId, id(sort: Desc)], map: "ix_chamados_status")
+  @@index([statusTipo, id(sort: Desc)], map: "ix_chamados_status_tipo")
   @@index([areaId, id(sort: Desc)], map: "ix_chamados_area_em_aberto", where: raw("concluido_em IS NULL"))
   @@index([operadorId, id(sort: Desc)], map: "ix_chamados_operador_em_aberto", where: raw("concluido_em IS NULL"))
   @@index([areaId, abertoEm], map: "ix_chamados_fila", where: raw("concluido_em IS NULL AND operador_id IS NULL"))
@@ -685,6 +873,7 @@ model Chamado {
   @@index([abertoEm], map: "ix_chamados_aberto_em")
   @@index([encerradoEm], map: "ix_chamados_encerrado_em", where: raw("encerrado_em IS NOT NULL"))
   @@index([problemaId], map: "ix_chamados_problema")
+  @@index([chamadoPaiId], map: "ix_chamados_pai", where: raw("chamado_pai_id IS NOT NULL"))
   @@index([ativoId, id(sort: Desc)], map: "ix_chamados_ativo", where: raw("ativo_id IS NOT NULL"))
   @@index([buscaNorm(ops: raw("gin_trgm_ops"))], type: Gin, map: "ix_chamados_busca_norm_trgm")
   @@map("chamados")
@@ -799,6 +988,20 @@ model ChamadoSeguidor {
   @@id([chamadoId, usuarioId])
   @@index([usuarioId], map: "ix_seguidores_usuario")
   @@map("chamado_seguidores")
+}
+
+/// Operador auxiliar: vê e comenta como equipe, mas só o principal (operadorId) atende e conclui
+model ChamadoAuxiliar {
+  chamadoId Int      @map("chamado_id")
+  usuarioId Int      @map("usuario_id")
+  criadoEm  DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  chamado Chamado @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([chamadoId, usuarioId])
+  @@index([usuarioId], map: "ix_chamado_auxiliares_usuario")
+  @@map("chamado_auxiliares")
 }
 
 /// Confirmação de leitura: ponteiro monotônico (upsert com WHERE anterior < novo)
@@ -1053,4 +1256,15 @@ model EmailSaida {
 
   @@index([status, criadoEm], map: "ix_emails_saida_status_criado_em")
   @@map("emails_saida")
+}
+
+/// Modelo editável de e-mail por evento (E04): o texto usa a lista fechada de variáveis de `render.ts`.
+model ModeloEmail {
+  evento       String   @id
+  assunto      String   @db.VarChar(200)
+  corpoTexto   String   @map("corpo_texto") @db.Text
+  ativo        Boolean
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  @@map("modelos_email")
 }

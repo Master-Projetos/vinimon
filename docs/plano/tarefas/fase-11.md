@@ -73,7 +73,7 @@
 ### T-11.4 — Playwright: configuração, preparo e login
 - **Depende de:** T-10.2, T-10.4 · **Paralelo com:** T-11.1–T-11.3
 - **Requisitos:** T68, T70; §5.2 (\[P])
-- **Arquivos:** `apps/web/playwright.config.ts`, `apps/web/e2e/{totp.ts,ajudantes.ts,auth.setup.ts,login.spec.ts}`, `apps/api/scripts/e2e-preparar.ts`, `.github/workflows/ci.yml`, `.gitignore`
+- **Arquivos:** `apps/web/playwright.config.ts`, `apps/web/e2e/{totp.ts,ajudantes.ts,auth.setup.ts,login.spec.ts}`, `apps/api/scripts/e2e-preparar.ts`, `.github/workflows/ci.yml`, `.gitignore`, `apps/web/package.json` (`@playwright/test` 1.64.1)
 - **Passos:**
   1. `e2e-preparar.ts`:
      - exige que `DATABASE_URL` termine em `_e2e`;
@@ -111,7 +111,7 @@
 ### T-11.5 — E2E: fluxo principal do chamado
 - **Depende de:** T-11.4, T-10.23, T-10.25, T-10.27, T-10.28, T-10.29, T-10.31 · **Paralelo com:** T-11.6, T-11.7
 - **Requisitos:** T71; §3.5
-- **Arquivos:** `apps/web/e2e/chamado-fluxo.spec.ts`
+- **Arquivos:** `apps/web/e2e/{chamado-fluxo.spec.ts,auth.setup.ts}`, `apps/api/scripts/e2e-preparar.ts`, `apps/api/src/app.ts`, `apps/api/src/plugins/{spa.ts,spa.test.ts}`, `apps/api/src/modules/sla/service.ts`, `apps/api/src/modules/chamados/acoes-conclusao.test.ts`
 - **Passos:**
   1. USUARIO abre o chamado com anexo PNG.
   2. OPERADOR assume, comenta mencionando o USUARIO e conclui.
@@ -144,7 +144,7 @@
 ### T-11.7 — E2E: segurança e acessibilidade
 - **Depende de:** T-11.4 e todas as T-10.x · **Paralelo com:** T-11.5, T-11.6
 - **Requisitos:** T66, T67, T72; §6.2 (axe)
-- **Arquivos:** `apps/web/e2e/{seguranca.spec.ts,a11y.spec.ts}`, `apps/api/scripts/e2e-preparar.ts`
+- **Arquivos:** `apps/web/e2e/{seguranca.spec.ts,a11y.spec.ts,rotas.ts,ajudantes.ts}`, `apps/web/playwright.config.ts`, `apps/web/package.json`, `apps/api/scripts/e2e-preparar.ts`, `apps/web/public/theme-init.js`, `apps/web/vite.config.ts`, `apps/web/src/components/layout/{app-bar-item,busca-global-trigger,top-bar}.tsx`, `apps/web/src/features/chamados/components/chamado-detalhes.tsx`, `apps/web/src/features/presenca/components/user-menu.tsx`, `apps/web/src/routes/_app/chamados/$chamadoId/imprimir.tsx`
 - **Passos:**
   1. T66: `addInitScript` com `document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective))`; percorre todas as rotas da §6.6 e diálogos Radix e confere `[]`.
   2. T67: XSS no assunto, no comentário e em link `javascript:`.
@@ -215,7 +215,7 @@
 ### T-11.11 — Revisão final de segurança
 - **Depende de:** todas as T-1.x a T-11.10 · **Paralelo com:** T-11.12
 - **Requisitos:** S1–S123 (S124 e os demais S# fora do MVP constam com a fase da §5.1); T01–T72
-- **Arquivos:** `docs/plano/revisao-seguranca.md`, `apps/api/test/rastreabilidade.test.ts`
+- **Arquivos:** `docs/plano/revisao-seguranca.md`, `apps/api/test/rastreabilidade.test.ts`, `pnpm-lock.yaml`, `overrides`, `.map`, `apps/api/src/lib/forca-senha.test.ts`, `apps/api/src/lib/tipo-arquivo.test.ts`, `apps/api/src/modules/auth/auth.test.ts`, `apps/api/src/modules/auth/tempo-constante.test.ts`, `apps/api/src/plugins/spa.test.ts`, `apps/api/src/plugins/spa.ts`, `apps/api/src/realtime/handlers.test.ts`, `apps/api/src/realtime/handshake.test.ts`, `apps/api/src/realtime/revalidacao.test.ts`, `apps/api/test/bloqueio.test.ts`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/test/logs.test.ts`, `apps/api/test/meta-me.test.ts`, `apps/api/test/seed.test.ts`, `apps/api/test/vazamento-segredos.test.ts`, `pnpm-workspace.yaml`
 - **Passos:**
   1. Tabela S# → evidência (teste, arquivo ou passo de CI) → status. Toda linha "pendente" vira issue ou tarefa nova; nada é marcado "OK" sem evidência. S124 entra com status 'Fase 2 (T-17.8)', que não conta como pendência. Qualquer outro S# fora do MVP precisa de linha explícita na §5.1 com a fase.
   2. `rastreabilidade.test.ts` confere que cada um de T05–T62 (incluindo T40, de `vazamento-segredos.test.ts`) aparece em algum `it(...)`, por grep dos arquivos `*.test.ts`.
@@ -234,7 +234,7 @@
 - **Tamanho:** M
 
 ### T-11.12 — Revisão de performance
-- **Depende de:** T-11.3, T-11.7 · **Paralelo com:** T-11.11
+- **Depende de:** T-11.3 · **Paralelo com:** T-11.11, T-11.5–T-11.7
 - **Requisitos:** §4 (índices), orçamento de `docs/plano/relatorios/design.md` §4.8
 - **Arquivos:** `apps/api/scripts/carga.ts`, `docs/plano/revisao-performance.md`
 - **Passos:**
@@ -249,4 +249,80 @@
   - [ ] `pnpm verificar`.
 - **Trilha:** C
 - **Modelo:** Opus
+- **Tamanho:** M
+
+### T-11.91 — Relatórios em uma varredura (achado D1 da revisão de performance)
+- **Depende de:** T-11.12
+- **Requisitos:** §4 (índices), `docs/plano/revisao-performance.md` D1
+- **Arquivos:** `apps/api/src/modules/relatorios/service.ts`, `apps/api/src/modules/relatorios/relatorios.test.ts`, `apps/api/src/modules/relatorios/relatorios-sla.test.ts`
+- **Passos:**
+  1. Em `relatorios/service.ts`, calcular os totais e as dimensões dos relatórios `sla` e `por-area` numa única consulta agregada (`groupBy` com contadores condicionais, ou `$queryRaw` tipado com `Prisma.sql`), no lugar de 5 `count` e N `groupBy`.
+  2. Manter o resultado idêntico: os testes existentes dos relatórios continuam como estão.
+- **Pronto quando:**
+  - [ ] os testes de relatórios passam sem alteração das asserções;
+  - [ ] com `carga.ts` (50 mil chamados), cada consulta < 50 ms e o serviço < 150 ms em 366 dias;
+  - [ ] `pnpm verificar`.
+- **Trilha:** A
+- **Modelo:** Sonnet
+- **Tamanho:** M
+
+### T-11.92 — Índice do status do chamado (achado D2)
+- **Depende de:** T-11.12
+- **Requisitos:** §4 (índices), `docs/plano/revisao-performance.md` D2
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração
+- **Passos:**
+  1. Em `Chamado`, `@@index([statusTipo, id(sort: Desc)], map: "ix_chamados_status_tipo")`.
+  2. `pnpm --filter @vinimon/api exec prisma migrate dev --name indice_chamados_status_tipo`.
+  3. Repetir `carga.ts explicar` e registrar o plano da consulta "em aberto" do painel.
+- **Pronto quando:**
+  - [ ] o painel do admin usa o índice novo e leva < 20 ms com 50 mil chamados;
+  - [ ] `pnpm verificar`.
+- **Trilha:** A
+- **Modelo:** Haiku
+- **Tamanho:** P
+
+### T-11.93 — Contagens baratas das visões para quem vê tudo (achado D3)
+- **Depende de:** T-11.12
+- **Requisitos:** §3.6 (visões), `docs/plano/revisao-performance.md` D3
+- **Arquivos:** `apps/api/src/modules/chamados/consultas.ts`, `packages/shared/src/modulos/chamados.ts`, `apps/web/src/features/chamados/components/visoes-pane.tsx`, `apps/api/src/modules/chamados/lista.test.ts`
+- **Passos:**
+  1. Para perfil com `chamado.verTodos`, limitar as contagens de `encerrados` e `todos` à janela padrão da lista (90 dias, com `ix_chamados_aberto_em`), ou deixar de contá-las (o selo só importa nas filas em aberto).
+  2. Ajustar `ChamadoContagens` e a tela para o que a API passa a devolver.
+- **Pronto quando:**
+  - [ ] as contagens do admin levam < 20 ms cada com 50 mil chamados;
+  - [ ] os testes de lista e contagens cobrem o novo comportamento;
+  - [ ] `pnpm verificar`.
+- **Trilha:** A
+- **Modelo:** Sonnet
+- **Tamanho:** M
+
+### T-11.94 — Exportação com menos idas ao banco (achado D4)
+- **Depende de:** T-11.12
+- **Requisitos:** G01 (CSV), `docs/plano/revisao-performance.md` D4
+- **Arquivos:** `apps/api/src/modules/chamados/exportar.ts`, `apps/api/src/modules/chamados/exportar.test.ts`
+- **Passos:**
+  1. Carregar uma vez por exportação os nomes de status, prioridade, área, problema e pessoas em mapas e selecionar só ids em cada lote.
+  2. A saída do CSV não muda.
+- **Pronto quando:**
+  - [ ] os testes de exportação passam sem alteração das asserções;
+  - [ ] 5.000 linhas em < 250 ms no serviço com 50 mil chamados;
+  - [ ] `pnpm verificar`.
+- **Trilha:** A
+- **Modelo:** Sonnet
+- **Tamanho:** P
+
+### T-11.95 — Emagrecer o JS inicial do shell (achado D5)
+- **Depende de:** T-11.12
+- **Requisitos:** orçamento de `docs/plano/relatorios/design.md` §4.8, `docs/plano/revisao-performance.md` D5
+- **Arquivos:** `apps/web/src/features/auth/queries.ts`, `apps/web/src/lib/socket.ts`, `apps/web/vite.config.ts`
+- **Passos:**
+  1. Tirar o import estático de `lib/socket` de `features/auth/queries.ts` (o encerramento do tempo real no logout passa a ser carregado sob demanda): −12,6 kB medidos.
+  2. Importar `authApi` e `metaApi` por caminho próprio em vez do barril `@vinimon/shared`, para o shell não carregar contratos de módulos que não usa.
+  3. Carregar `input-otp` só no passo de 2FA.
+  4. Conferir com `pnpm -F @vinimon/web build`.
+- **Pronto quando:**
+  - [ ] JS inicial de `/login` ≤ 220 kB gzip (meta revista de 200 kB: com os 3 arquivos do cartão o ganho medido foi de 230,6 para 217,7 kB; o restante exige separar `@vinimon/shared` por caminho e fica como melhoria futura) e shell + `/chamados` ≤ 350 kB gzip, medidos como em `revisao-performance.md`;
+  - [ ] `pnpm verificar`.
+- **Trilha:** W
+- **Modelo:** Haiku
 - **Tamanho:** M

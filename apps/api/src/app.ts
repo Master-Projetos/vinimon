@@ -16,13 +16,17 @@ import { env } from './env'
 import { responderRotaInexistente } from './lib/erros'
 import { rotasAnexos } from './modules/anexos/routes'
 import { rotasAreas } from './modules/areas/routes'
+import { rotasAreasGeridas } from './modules/areas-geridas/routes'
 import { rotasArtigos } from './modules/artigos/routes'
 import { rotasAssentamentos } from './modules/assentamentos/routes'
 import { rotasAtivos } from './modules/ativos/routes'
 import { rotasAuditoria } from './modules/auditoria/routes'
 import { rotasAuth } from './modules/auth/routes'
 import { rotasBusca } from './modules/busca/routes'
+import { rotasCalendario } from './modules/calendario/routes'
+import { rotasCamposPersonalizados } from './modules/campos-personalizados/routes'
 import { rotasCanais } from './modules/canais/routes'
+import { rotasCategorias } from './modules/categorias/routes'
 import { rotasCategoriasArtigo } from './modules/categorias-artigo/routes'
 import { rotasChamados } from './modules/chamados/routes'
 import { rotasConfig } from './modules/config/routes'
@@ -33,6 +37,7 @@ import { rotasLeituras } from './modules/leituras/routes'
 import { rotasMe } from './modules/me/routes'
 import { rotasMencoes } from './modules/mencoes/routes'
 import { rotasMeta } from './modules/meta/routes'
+import { rotasModelosEmail } from './modules/modelos-email/routes'
 import { rotasNotificacoes } from './modules/notificacoes/routes'
 import { rotasPainel } from './modules/painel/routes'
 import { rotasPresenca } from './modules/presenca/routes'
@@ -50,7 +55,7 @@ import { autenticacaoPlugin } from './plugins/autenticacao'
 import { docsPlugin } from './plugins/docs'
 import { errosPlugin } from './plugins/erros'
 import { segurancaPlugin } from './plugins/seguranca'
-import { spaPlugin } from './plugins/spa'
+import { ehAssetEstatico, spaPlugin } from './plugins/spa'
 import { tempoRealPlugin } from './realtime/plugin'
 
 configurarZod()
@@ -161,6 +166,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
     max: 300,
     timeWindow: '1 minute',
     hook: 'preHandler',
+    allowList: (req) => ehAssetEstatico(req.method, req.url),
     keyGenerator: (req) => (req.usuario ? `u:${req.usuario.id}` : `ip:${req.ip}`),
   })
   await app.register(multipart, {
@@ -187,14 +193,18 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(segurancaPlugin)
       await api.register(rotasAnexos)
       await api.register(rotasAreas)
+      await api.register(rotasAreasGeridas)
       await api.register(rotasArtigos)
       await api.register(rotasAssentamentos)
       await api.register(rotasAtivos)
       await api.register(rotasAuditoria)
       await api.register(rotasAuth)
       await api.register(rotasBusca)
+      await api.register(rotasCalendario)
+      await api.register(rotasCamposPersonalizados)
       await api.register(rotasCanais)
       await api.register(rotasChamados)
+      await api.register(rotasCategorias)
       await api.register(rotasCategoriasArtigo)
       await api.register(rotasConfig)
       await api.register(rotasDepartamentos)
@@ -204,6 +214,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasMe)
       await api.register(rotasMencoes)
       await api.register(rotasMeta)
+      await api.register(rotasModelosEmail)
       await api.register(rotasNotificacoes)
       await api.register(rotasPainel)
       await api.register(rotasPresenca)

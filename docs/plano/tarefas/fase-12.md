@@ -25,7 +25,7 @@
 ### T-12.2 — Modelos de e-mail
 - **Depende de:** T-12.1 · **Paralelo com:** T-12.4
 - **Requisitos:** E04
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/modelos-email.ts`, `apps/api/src/modules/modelos-email/{service.ts,routes.ts,render.ts,modelos-email.test.ts}`, `apps/api/prisma/seed.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/modelos-email.ts`, `apps/api/src/modules/modelos-email/{service.ts,routes.ts,render.ts,modelos-email.test.ts}`, `apps/api/prisma/seed.ts`, `apps/api/src/app.ts` e `packages/shared/src/index.ts` (só a linha de registro do módulo)
 - **Passos:**
   1. Model `ModeloEmail {evento String @id, assunto VarChar(200), corpoTexto Text, ativo Boolean, atualizadoEm}`.
   2. Eventos: `abertura`, `comentario`, `encaminhamento`, `agendamento`, `conclusao`, `rejeicao`, `solicitacao_retorno`, `encerramento_automatico`, `lembrete`, `recuperar_senha`.
@@ -61,7 +61,7 @@
 ### T-12.4 — Recuperação de senha
 - **Depende de:** T-12.1 · **Paralelo com:** T-12.2, T-12.3
 - **Requisitos:** A11; SEN-10 (`docs/plano/relatorios/seguranca.md`, SEN-10); S10, S20
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/auth.ts`, `apps/api/src/modules/auth/{recuperacao.ts,routes.ts,recuperacao.test.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/auth.ts`, `apps/api/src/modules/auth/{recuperacao.ts,routes.ts,recuperacao.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `TokenSenha {id, usuarioId, tokenHash Char(64) @unique, expiraEm, usadoEm?, ip?, criadoEm}`.
   2. `POST /auth/esqueci-senha {login}` (público, 3/h por IP e por login): a resposta é **sempre** 202 "Se o login existir, enviaremos instruções". Só envia para usuário ativo, com e-mail, origem LOCAL e `email.habilitado`. Token de 32 bytes, sha256 e validade de 30 min.
@@ -77,9 +77,9 @@
 ### T-12.5 — Telas de e-mail e recuperação
 - **Depende de:** T-12.2–T-12.4 · **Paralelo com:** Fase 13
 - **Requisitos:** E03, E04, A11
-- **Arquivos:** `apps/web/src/routes/{recuperar-senha.tsx,redefinir-senha.tsx}`, `apps/web/src/routes/_app/admin/modelos-email.tsx`, `apps/web/src/features/modelos-email/queries.ts`, `apps/web/src/features/perfil/components/preferencias-notificacao-table.tsx`, `apps/web/src/routes/login.tsx`
+- **Arquivos:** `apps/web/src/routes/{recuperar-senha.tsx,redefinir-senha.tsx}`, `apps/web/src/routes/_app/admin/modelos-email.tsx`, `apps/web/src/features/modelos-email/queries.ts`, `apps/web/src/features/perfil/components/preferencias-notificacao-table.tsx`, `apps/web/src/routes/login.tsx`, `packages/shared/src/modulos/auth.ts`, `apps/api/src/modules/auth/{routes.ts,recuperacao.test.ts}`, `apps/web/src/features/modelos-email/modelos-email.test.tsx`, `apps/web/src/features/auth/components/login.test.tsx`, `apps/web/src/features/perfil/notificacoes.test.tsx`, `apps/web/src/routes/_app/perfil/notificacoes.tsx`, `packages/shared/src/modulos/notificacoes.ts`, `apps/api/src/modules/notificacoes/{service.ts,notificacoes.test.ts}`
 - **Passos:**
-  1. Link "Esqueci minha senha" no login, só quando a config pública `email.habilitado` estiver ligada.
+  1. Endpoint público `GET /auth/recuperacao` (`acesso: 'publico'`, contrato `recuperacaoHabilitada` em `shared/modulos/auth.ts`, resposta `{ habilitada: boolean }` = `email.habilitado`; não expõe outras chaves; teste em `recuperacao.test.ts`). Link "Esqueci minha senha" no login só quando `habilitada` for verdadeira. A matriz de preferências ganha `email` (`CanalEmail`) no contrato `PreferenciaItem` (opcional no PUT: omitido mantém o atual) e na API de preferências.
   2. Editor de modelos com a lista das variáveis e "Enviar teste".
   3. Coluna "E-mail" na matriz de preferências.
 - **Pronto quando:**
