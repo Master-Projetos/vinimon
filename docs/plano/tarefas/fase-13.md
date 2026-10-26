@@ -100,7 +100,7 @@
 ### T-13.6 — Telas: configurações de acesso
 - **Depende de:** T-13.1, T-13.2, T-13.4, T-13.5 · **Paralelo com:** T-13.7
 - **Requisitos:** A05, A12, A17, A19, B03
-- **Arquivos:** `apps/web/src/routes/_app/admin/{configuracoes.tsx,areas.tsx}`, `apps/web/src/features/config/queries.ts`, `apps/web/src/features/chamados/components/novo-chamado-form.tsx`, `apps/web/src/routes/_app/admin/{configuracoes.test.tsx,areas.test.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/admin/{configuracoes.tsx,areas.tsx}`, `apps/web/src/features/config/queries.ts`, `apps/web/src/features/chamados/components/novo-chamado-form.tsx`, `apps/web/src/routes/_app/admin/{configuracoes.test.tsx,areas.test.tsx}`, `apps/web/src/features/areas/areas.test.tsx`, `apps/web/src/features/config/configuracoes.test.tsx`, `apps/web/src/test/render-rota.test.tsx`
 - **Passos:**
   1. Seção "Acesso": isolar áreas, operador trata o próprio chamado, usuário abre para outros, "Testar LDAP".
   2. Sheet de área: destinos com padrão, módulo de inventário.
