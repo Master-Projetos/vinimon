@@ -312,6 +312,8 @@ model Usuario {
   podeEncaminhar        Boolean    @default(true) @map("pode_encaminhar")
   /// pode receber chamado encaminhado ou entrar como auxiliar (T-15.1)
   podeReceber           Boolean    @default(true) @map("pode_receber")
+  /// #rrggbb do operador no calendário (T-15.2)
+  corCalendario         String?    @map("cor_calendario") @db.Char(7)
   criadoEm              DateTime   @default(now()) @map("criado_em") @db.Timestamptz(3)
   atualizadoEm          DateTime   @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
   /// trigger: lower(f_unaccent(nome login email))
