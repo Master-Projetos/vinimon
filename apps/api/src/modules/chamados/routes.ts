@@ -296,6 +296,20 @@ export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
   })
 
   app.route({
+    method: c.definirPai.metodo,
+    url: c.definirPai.caminho,
+    schema: {
+      tags,
+      summary: 'Vincula ou desvincula o chamado de um pai (subchamado)',
+      params: c.definirPai.params,
+      body: c.definirPai.body,
+      response: { 200: c.definirPai.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.definirPai(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
     method: c.adicionarAuxiliar.metodo,
     url: c.adicionarAuxiliar.caminho,
     schema: {
