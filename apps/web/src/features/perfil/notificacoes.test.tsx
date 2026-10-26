@@ -52,6 +52,7 @@ const preferencias = (
     tipo,
     inApp: sobrescrever[tipo]?.inApp ?? true,
     desktop: sobrescrever[tipo]?.desktop ?? true,
+    email: 'NUNCA' as const,
     fixo: (TIPOS_INAPP_FIXOS as readonly string[]).includes(tipo),
   })),
 })
@@ -81,8 +82,14 @@ describe('/perfil/notificacoes', () => {
       tipo: 'COMENTARIO',
       inApp: true,
       desktop: false,
+      email: 'NUNCA',
     })
-    expect(corpo.itens.find((i) => i.tipo === 'MENCAO')).toEqual({ tipo: 'MENCAO', inApp: true, desktop: true })
+    expect(corpo.itens.find((i) => i.tipo === 'MENCAO')).toEqual({
+      tipo: 'MENCAO',
+      inApp: true,
+      desktop: true,
+      email: 'NUNCA',
+    })
     expect(await screen.findByText('Preferências salvas')).toBeInTheDocument()
 
     cleanup()
@@ -90,6 +97,20 @@ describe('/perfil/notificacoes', () => {
     montar({ 'GET /me/preferencias-notificacao': preferencias({ COMENTARIO: { inApp: true, desktop: false } }) })
     expect(await caixa('Comentário, na área de trabalho')).not.toBeChecked()
     expect(await caixa('Menção, na área de trabalho')).toBeChecked()
+  })
+
+  it('a coluna E-mail mostra o canal e o envia ao salvar', async () => {
+    const { falsa } = montar({
+      'GET /me/preferencias-notificacao': preferencias(),
+      'PUT /me/preferencias-notificacao': preferencias(),
+    })
+    const seletor = await screen.findByRole('combobox', { name: 'Comentário, por e-mail' })
+    expect(seletor).toHaveValue('NUNCA')
+    fireEvent.change(seletor, { target: { value: 'RESUMO' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar preferências' }))
+    await waitFor(() => expect(falsa.chamadas.some((c) => c.metodo === 'PUT')).toBe(true))
+    const corpo = falsa.chamadas.find((c) => c.metodo === 'PUT')?.corpo as { itens: { tipo: string; email: string }[] }
+    expect(corpo.itens.find((i) => i.tipo === 'COMENTARIO')?.email).toBe('RESUMO')
   })
 
   it('desligar o aviso no aplicativo desliga o da área de trabalho', async () => {

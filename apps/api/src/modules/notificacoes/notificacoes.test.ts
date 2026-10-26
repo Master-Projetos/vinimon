@@ -262,14 +262,36 @@ describe('rotas de notificações e preferências (S102, S103, T60, T61)', () =>
         tipo: 'MENCAO',
         inApp: true,
         desktop: true,
+        email: 'IMEDIATO',
         fixo: true,
       })
       expect(itens.find((i: { tipo: string }) => i.tipo === 'STATUS')).toEqual({
         tipo: 'STATUS',
         inApp: true,
         desktop: false,
+        email: 'IMEDIATO',
         fixo: false,
       })
+    })
+
+    it('PUT guarda o canal de e-mail só quando difere do padrão; omitido mantém o atual', async () => {
+      const x = await cenario()
+      const put = (itens: unknown[]) =>
+        app.inject({ method: 'PUT', url: '/api/v1/me/preferencias-notificacao', headers: x.hSol, payload: { itens } })
+      const r1 = await put([{ tipo: 'STATUS', inApp: true, desktop: false, email: 'RESUMO' }])
+      expect(r1.statusCode).toBe(200)
+      expect((r1.json().itens as Array<{ tipo: string; email: string }>).find((i) => i.tipo === 'STATUS')?.email).toBe(
+        'RESUMO',
+      )
+      const r2 = await put([{ tipo: 'STATUS', inApp: true, desktop: false }])
+      expect((r2.json().itens as Array<{ tipo: string; email: string }>).find((i) => i.tipo === 'STATUS')?.email).toBe(
+        'RESUMO',
+      )
+      const r3 = await put([{ tipo: 'STATUS', inApp: true, desktop: false, email: 'IMEDIATO' }])
+      expect((r3.json().itens as Array<{ tipo: string; email: string }>).find((i) => i.tipo === 'STATUS')?.email).toBe(
+        'IMEDIATO',
+      )
+      expect(await prisma.preferenciaNotificacao.count({ where: { usuarioId: x.sol.id } })).toBe(0)
     })
 
     it('PUT guarda só as diferenças do padrão; desligar o in-app desliga o desktop; voltar ao padrão apaga', async () => {
