@@ -59,6 +59,8 @@ export const TIPOS_EVENTO = [
   'SLA_RISCO',
   'SLA_ESTOURADO',
   'SLA_RESPOSTA_ESTOURADO',
+  'AUXILIAR_ADICIONADO',
+  'AUXILIAR_REMOVIDO',
 ] as const
 export type TipoEvento = (typeof TIPOS_EVENTO)[number]
 

@@ -1,6 +1,6 @@
 import type { MotivoSessaoEncerrada } from '@vinimon/shared'
 import type { FastifyBaseLogger } from 'fastify'
-import { podeVerChamado, podeVerInterno } from '../autorizacao/chamados'
+import { comAuxiliarIds, podeVerChamado, podeVerInterno, selectEscopo } from '../autorizacao/chamados'
 import { obterConfig } from '../lib/config'
 import { prisma } from '../lib/prisma'
 import { type UsuarioSessao, verTodasAreas } from '../lib/sessao'
@@ -92,9 +92,9 @@ export function criarRevogacao(io: ServidorRt, log: FastifyBaseLogger): Revogaca
         ? []
         : await prisma.chamado.findMany({
             where: { id: { in: [...idsChamado] } },
-            select: { id: true, areaId: true, operadorId: true, solicitanteId: true },
+            select: { id: true, ...selectEscopo },
           })
-      ).map((c) => [c.id, c]),
+      ).map((c) => [c.id, comAuxiliarIds(c)]),
     )
     for (const s of sockets) {
       const u = usuarios.get(s.data.usuario.id)
@@ -168,10 +168,7 @@ export function criarRevogacao(io: ServidorRt, log: FastifyBaseLogger): Revogaca
           (s) => s.rooms.has(salaChamado(chamadoId)) || s.rooms.has(salaChamadoInterno(chamadoId)),
         )
         if (sockets.length === 0) return
-        const c = await prisma.chamado.findUnique({
-          where: { id: chamadoId },
-          select: { areaId: true, operadorId: true, solicitanteId: true },
-        })
+        const c = comAuxiliarIds(await prisma.chamado.findUnique({ where: { id: chamadoId }, select: selectEscopo }))
         const frescos = await carregarUsuarios([...new Set(sockets.map((s) => s.data.usuario.id))])
         for (const s of sockets) {
           const base = frescos.get(s.data.usuario.id)

@@ -28,7 +28,12 @@ export async function montarDetalhe(
   tx: Tx = prisma,
 ): Promise<ChamadoDetalhe> {
   const c = await tx.chamado.findUniqueOrThrow({ where: { id }, select: selectChamadoDetalhe })
-  const escopo = { areaId: c.areaId, operadorId: c.operadorId, solicitanteId: c.solicitanteId }
+  const escopo = {
+    areaId: c.areaId,
+    operadorId: c.operadorId,
+    solicitanteId: c.solicitanteId,
+    auxiliarIds: c.auxiliares.map((a) => a.usuarioId),
+  }
   const verInterno = podeVerInterno(u, escopo)
   const ehEquipe = temPermissao(u.perfil, 'chamado.atender')
 

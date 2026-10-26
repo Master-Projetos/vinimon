@@ -1,4 +1,5 @@
 import {
+  type AdicionarAuxiliar,
   type AgendarChamado,
   type AprovarChamado,
   type AssumirChamado,
@@ -17,7 +18,15 @@ import {
   temPermissao,
 } from '@vinimon/shared'
 import { DateTime } from 'luxon'
-import { acoesDoUsuario, type ChamadoParaAcoes, podeVerChamado } from '../../autorizacao/chamados'
+import {
+  acoesDoUsuario,
+  type ChamadoEscopo,
+  type ChamadoParaAcoes,
+  comAuxiliarIds,
+  podeAtender,
+  podeVerChamado,
+  selectEscopo,
+} from '../../autorizacao/chamados'
 import { env } from '../../env'
 import type { Prisma } from '../../generated/prisma/client'
 import { obterConfig } from '../../lib/config'
@@ -55,13 +64,14 @@ const selectParaAcao = {
   area: { select: { nome: true } },
   operador: { select: { nome: true } },
   prioridade: { select: { nome: true } },
+  auxiliares: { select: { usuarioId: true } },
 } satisfies Prisma.ChamadoSelect
 
 type ChamadoCarregado = NonNullable<Awaited<ReturnType<typeof carregarParaAcao>>>
 
 /** Passo 1 do padrão de ação: carrega o que as regras precisam. Inexistente dá 404. */
 async function carregarParaAcao(tx: Tx, id: number) {
-  return tx.chamado.findUnique({ where: { id }, select: selectParaAcao })
+  return comAuxiliarIds(await tx.chamado.findUnique({ where: { id }, select: selectParaAcao }))
 }
 
 /**
@@ -235,11 +245,7 @@ export async function assumir(
 // ───────── encaminhar ─────────
 
 /** Candidatos com notificação aberta no chamado e que deixam de vê-lo depois do encaminhamento (em memória, S53). */
-async function quemPerdeuAcesso(
-  tx: Tx,
-  chamadoId: number,
-  novoEscopo: { areaId: number; operadorId: number | null; solicitanteId: number },
-): Promise<number[]> {
+async function quemPerdeuAcesso(tx: Tx, chamadoId: number, novoEscopo: ChamadoEscopo): Promise<number[]> {
   const pendentes = await tx.notificacao.findMany({
     where: { chamadoId, lidaEm: null },
     select: { usuarioId: true },
@@ -322,11 +328,13 @@ export async function encaminhar(
     if (!destino) throw regraNegocio('A área de destino não existe, está inativa ou não atende chamados.')
     let operador: { id: number; nome: string } | null = null
     if (dados.operadorId !== undefined) {
+      const ator = await tx.usuario.findUnique({ where: { id: u.id }, select: { podeEncaminhar: true } })
+      if (!ator?.podeEncaminhar) throw semPermissao('Você não tem permissão para encaminhar chamados a um operador.')
       const o = await tx.usuario.findFirst({
-        where: { id: dados.operadorId, ativo: true, perfil: { in: ['OPERADOR', 'ADMIN'] } },
+        where: { id: dados.operadorId, ativo: true, podeReceber: true, perfil: { in: ['OPERADOR', 'ADMIN'] } },
         select: { id: true, nome: true, perfil: true, areaId: true, areasSecundarias: { select: { areaId: true } } },
       })
-      if (!o) throw regraNegocio('O operador de destino não existe, está inativo ou não atende chamados.')
+      if (!o) throw regraNegocio('O operador de destino não existe, está inativo, não atende ou não recebe chamados.')
       const areasDele = [...(o.areaId === null ? [] : [o.areaId]), ...o.areasSecundarias.map((a) => a.areaId)]
       if (o.perfil !== 'ADMIN' && !areasDele.includes(destino.id))
         throw regraNegocio('A área de destino não está entre as áreas do operador.')
@@ -376,6 +384,7 @@ export async function encaminhar(
       areaId: destino.id,
       operadorId: operador?.id ?? null,
       solicitanteId: c.solicitanteId,
+      auxiliarIds: c.auxiliarIds,
     })
     return {
       chamadoId: id,
@@ -390,6 +399,122 @@ export async function encaminhar(
     }
   })
 
+  await limparNotificacoes(id, r.perderamAcesso, agora, log)
+  return concluirAcao(u, r, agora, log)
+}
+
+// ───────── operadores auxiliares ─────────
+
+/**
+ * `POST /chamados/:id/auxiliares`: o auxiliar vê e comenta como equipe, mas só o responsável atende e conclui.
+ * Quem chama precisa passar em `podeAtender`; o alvo, ativo e com `podeReceber`, não pode ser o responsável.
+ * Vira seguidor ATRIBUIDO e recebe a notificação ATRIBUIDO (fanout do evento).
+ */
+export async function adicionarAuxiliar(
+  id: number,
+  dados: AdicionarAuxiliar,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado> => {
+    const c = await carregarParaAcao(tx, id)
+    if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
+    if (!podeAtender(u, c)) throw semPermissao('Esta ação não está disponível para o chamado neste momento.')
+    if (c.statusTipo === 'ENCERRADO') throw regraNegocio('O chamado está encerrado.')
+    const alvo = await tx.usuario.findFirst({
+      where: { id: dados.usuarioId, ativo: true, podeReceber: true, perfil: { in: ['OPERADOR', 'ADMIN'] } },
+      select: { id: true, nome: true },
+    })
+    if (!alvo) throw regraNegocio('O operador não existe, está inativo ou não recebe chamados.')
+    if (alvo.id === c.operadorId) throw regraNegocio('O responsável pelo chamado não pode ser auxiliar.')
+    if (c.auxiliarIds.includes(alvo.id)) throw conflito('Este operador já é auxiliar do chamado.')
+
+    await tx.chamadoAuxiliar.create({ data: { chamadoId: id, usuarioId: alvo.id } })
+    await seguirComo(tx, id, alvo.id, 'ATRIBUIDO')
+    const dadosEvento = { auxiliar: { id: alvo.id, nome: alvo.nome } }
+    const sistema = await registrarSistema(
+      tx,
+      id,
+      'AUXILIAR_ADICIONADO',
+      `Operador auxiliar adicionado: ${alvo.nome}`,
+      dadosEvento,
+    )
+    const evento = await registrarEvento(tx, {
+      chamadoId: id,
+      tipo: 'AUXILIAR_ADICIONADO',
+      atorId: u.id,
+      assentamentoId: sistema,
+      dados: dadosEvento,
+    })
+    return {
+      chamadoId: id,
+      efeitos: {
+        eventoIds: [evento],
+        assentamentoIds: [sistema],
+        campos: ['operador'],
+        acessoMudou: true,
+        fila: 'atribuido',
+      },
+    }
+  })
+  return concluirAcao(u, r, agora, log)
+}
+
+/** `DELETE /chamados/:id/auxiliares/:usuarioId`: quem deixa de ver o chamado perde as salas e as notificações abertas (S53). */
+export async function removerAuxiliar(
+  id: number,
+  usuarioId: number,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado & { perderamAcesso: number[] }> => {
+    const c = await carregarParaAcao(tx, id)
+    if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
+    if (!podeAtender(u, c)) throw semPermissao('Esta ação não está disponível para o chamado neste momento.')
+    const alvo = await tx.chamadoAuxiliar.findUnique({
+      where: { chamadoId_usuarioId: { chamadoId: id, usuarioId } },
+      select: { usuario: { select: { id: true, nome: true } } },
+    })
+    if (!alvo) throw naoEncontrado('Este operador não é auxiliar do chamado.')
+
+    await tx.chamadoAuxiliar.delete({ where: { chamadoId_usuarioId: { chamadoId: id, usuarioId } } })
+    const dadosEvento = { auxiliar: { id: alvo.usuario.id, nome: alvo.usuario.nome } }
+    const sistema = await registrarSistema(
+      tx,
+      id,
+      'AUXILIAR_REMOVIDO',
+      `Operador auxiliar removido: ${alvo.usuario.nome}`,
+      dadosEvento,
+    )
+    const evento = await registrarEvento(tx, {
+      chamadoId: id,
+      tipo: 'AUXILIAR_REMOVIDO',
+      atorId: u.id,
+      assentamentoId: sistema,
+      dados: dadosEvento,
+    })
+    const perderamAcesso = await quemPerdeuAcesso(tx, id, {
+      areaId: c.areaId,
+      operadorId: c.operadorId,
+      solicitanteId: c.solicitanteId,
+      auxiliarIds: c.auxiliarIds.filter((x) => x !== usuarioId),
+    })
+    return {
+      chamadoId: id,
+      perderamAcesso,
+      efeitos: {
+        eventoIds: [evento],
+        assentamentoIds: [sistema],
+        campos: ['operador'],
+        acessoMudou: true,
+        fila: 'atribuido',
+      },
+    }
+  })
   await limparNotificacoes(id, r.perderamAcesso, agora, log)
   return concluirAcao(u, r, agora, log)
 }
@@ -634,7 +759,12 @@ export async function classificar(
       dados: { de, para },
     })
     const perderamAcesso = areaMudou
-      ? await quemPerdeuAcesso(tx, id, { areaId, operadorId: c.operadorId, solicitanteId: c.solicitanteId })
+      ? await quemPerdeuAcesso(tx, id, {
+          areaId,
+          operadorId: c.operadorId,
+          solicitanteId: c.solicitanteId,
+          auxiliarIds: c.auxiliarIds,
+        })
       : []
     return {
       chamadoId: id,
@@ -1094,10 +1224,7 @@ export async function cancelar(
 }
 
 async function exigirVisivel(id: number, u: UsuarioSessao): Promise<void> {
-  const c = await prisma.chamado.findUnique({
-    where: { id },
-    select: { areaId: true, operadorId: true, solicitanteId: true },
-  })
+  const c = comAuxiliarIds(await prisma.chamado.findUnique({ where: { id }, select: selectEscopo }))
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
 }
 

@@ -52,4 +52,5 @@ export const selectChamadoDetalhe = {
   avaliacao: { select: { nota: true, comentario: true, automatica: true, criadoEm: true } },
   seguidores: { select: { usuarioId: true, silenciadoEm: true, usuario: { select: { id: true, nome: true } } } },
   tags: { select: { tag: { select: { id: true, nome: true } } } },
+  auxiliares: { select: { usuarioId: true } },
 } satisfies Prisma.ChamadoSelect

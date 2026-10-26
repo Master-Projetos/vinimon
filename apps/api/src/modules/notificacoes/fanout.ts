@@ -49,6 +49,8 @@ function eventoNotificavel(e: EventoReclamado): EventoNotificavel | null {
       return { tipo: 'ASSUMIDO', id: e.id, operadorNovoId: typeof d.para === 'number' ? d.para : null }
     case 'ENCAMINHADO':
       return { tipo: 'ENCAMINHADO', id: e.id, operadorNovoId: idDe(d.operador) }
+    case 'AUXILIAR_ADICIONADO':
+      return { tipo: 'AUXILIAR_ADICIONADO', id: e.id, auxiliarId: idDe(d.auxiliar) ?? -1 }
     case 'CONCLUIDO':
       return { tipo: 'CONCLUIDO', encerrouDireto: d.direto === true }
     case 'APROVADO':
@@ -149,6 +151,7 @@ export async function processarEvento(eventoId: number): Promise<number[]> {
         ...(c.operadorId === null ? [] : [c.operadorId]),
         ...seguidores.map((s) => s.usuarioId),
         ...mencionados,
+        ...(ev.tipo === 'AUXILIAR_ADICIONADO' ? [idDe((ev.dados ?? {}).auxiliar) ?? -1] : []),
       ]),
     ]
     const candidatos = await tx.usuario.findMany({
@@ -200,14 +203,27 @@ export async function processarEvento(eventoId: number): Promise<number[]> {
       ator: ev.ator_id ?? -1,
     }
     // inativos (fora de `candidatos`), quem não vê o chamado e, em evento interno, quem não vê o interno
-    const escopo = { areaId: c.areaId, operadorId: c.operadorId, solicitanteId: c.solicitanteId }
-    const alvos = destinatarios(regra, contexto).filter((d) => {
-      const u = sessoes.get(d.usuarioId)
-      if (!u || !podeVerChamado(u, escopo)) return false
-      if (ev.interno && !podeVerInterno(u, escopo)) return false
-      if (ev.tipo === 'TAGS_ALTERADAS' && !temPermissao(u.perfil, 'chamado.atender')) return false
-      return true
-    })
+    const escopoBase = {
+      areaId: c.areaId,
+      operadorId: c.operadorId,
+      solicitanteId: c.solicitanteId,
+      auxiliarIds: [] as number[],
+    }
+    const todos = destinatarios(regra, contexto)
+    const passa = (escopo: typeof escopoBase) =>
+      todos.filter((d) => {
+        const u = sessoes.get(d.usuarioId)
+        if (!u || !podeVerChamado(u, escopo)) return false
+        if (ev.interno && !podeVerInterno(u, escopo)) return false
+        if (ev.tipo === 'TAGS_ALTERADAS' && !temPermissao(u.perfil, 'chamado.atender')) return false
+        return true
+      })
+    let alvos = passa(escopoBase)
+    // Auxiliares só contam quando alguém ficou de fora: a query extra não entra no caminho comum.
+    if (alvos.length < todos.length) {
+      const auxiliares = await tx.chamadoAuxiliar.findMany({ where: { chamadoId: c.id }, select: { usuarioId: true } })
+      if (auxiliares.length > 0) alvos = passa({ ...escopoBase, auxiliarIds: auxiliares.map((a) => a.usuarioId) })
+    }
     if (alvos.length === 0) return null
 
     // 5. preferências (só as diferenças do padrão estão no banco; os tipos fixos ignoram)
