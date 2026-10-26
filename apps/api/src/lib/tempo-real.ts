@@ -20,6 +20,8 @@ export interface PublicadorTempoReal {
   encerrarSessoesDoUsuario(usuarioId: number, motivo: MotivoEncerramento): void
   revalidarUsuario(usuarioId: number): void
   revalidarChamado(chamadoId: number): void
+  /** Revalida todos os usuários conectados, em lotes (mudança de `chamado.isolarAreas`). */
+  revalidarTodos(): void
   /** `assentamento:novo`: o servidor lê cada assentamento e manda o interno só para a sala interna. */
   emitirAssentamentos(chamadoId: number, assentamentoIds: readonly number[]): void
   /** `chamado:atualizado`. Com `apenasInterno`, só a sala `chamado:<id>:interno` recebe (S49, S93). */
@@ -35,6 +37,7 @@ const publicadorNulo: PublicadorTempoReal = {
   encerrarSessoesDoUsuario: () => undefined,
   revalidarUsuario: () => undefined,
   revalidarChamado: () => undefined,
+  revalidarTodos: () => undefined,
   emitirAssentamentos: () => undefined,
   emitirChamadoAtualizado: () => undefined,
   emitirFila: () => undefined,
@@ -44,6 +47,9 @@ const publicadorNulo: PublicadorTempoReal = {
 }
 
 export let tempoReal: PublicadorTempoReal = publicadorNulo
-export function definirTempoReal(p: PublicadorTempoReal): void {
-  tempoReal = p
+/** `revalidarTodos` é opcional aqui: quem não o fornece (publicadores de teste) fica com o nulo. */
+export function definirTempoReal(
+  p: Omit<PublicadorTempoReal, 'revalidarTodos'> & Partial<Pick<PublicadorTempoReal, 'revalidarTodos'>>,
+): void {
+  tempoReal = { revalidarTodos: publicadorNulo.revalidarTodos, ...p }
 }

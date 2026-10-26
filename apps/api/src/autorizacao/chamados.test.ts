@@ -258,3 +258,24 @@ describe('acoesDoUsuario (§3.5, camada 3)', () => {
     })
   })
 })
+
+describe('chamado.isolarAreas desligado (T-13.2)', () => {
+  const semIsolamento: UsuarioSessao = { ...operadorOutraArea, verTodasAreas: true }
+
+  it('o operador vê chamado de qualquer área, inclusive o interno, e o escopo Prisma fica sem filtro', () => {
+    expect(podeVerChamado(semIsolamento, chamado)).toBe(true)
+    expect(podeVerInterno(semIsolamento, chamado)).toBe(true)
+    expect(escopoChamados(semIsolamento)).toEqual({})
+  })
+
+  it('podeAtender não muda: só as áreas do operador ou o chamado de que é responsável', () => {
+    expect(podeAtender(semIsolamento, chamado)).toBe(false)
+    expect(podeAtender(semIsolamento, { ...chamado, areaId: 30 })).toBe(true)
+  })
+
+  it('verTodasAreas não vale para USUARIO (só OPERADOR, por permissão)', () => {
+    const u: UsuarioSessao = { ...outroUsuario, verTodasAreas: true }
+    expect(podeVerChamado(u, chamado)).toBe(false)
+    expect(escopoChamados(u)).toEqual({ solicitanteId: u.id })
+  })
+})
