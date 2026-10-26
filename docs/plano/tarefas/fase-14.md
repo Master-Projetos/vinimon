@@ -5,7 +5,7 @@
 ### T-14.1 — Categorias de tipos de problema
 - **Depende de:** MVP · **Paralelo com:** T-14.2, T-14.5
 - **Requisitos:** B07
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{config.ts,modulos/categorias.ts,modulos/problemas.ts}`, `apps/api/src/modules/categorias/{service.ts,routes.ts,categorias.test.ts}`, `apps/api/src/modules/problemas/service.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{config.ts,modulos/categorias.ts,modulos/problemas.ts}`, `apps/api/src/modules/categorias/{service.ts,routes.ts,categorias.test.ts}`, `apps/api/src/modules/problemas/service.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato), `packages/shared/src/modulos/meta.ts`, `apps/api/src/modules/meta/service.ts`, `apps/web/src/features/problemas/problemas.test.tsx`
 - **Passos:**
   1. Model `Categoria {id, grupo SmallInt (1–3, CHECK), nome, ativo, @@unique([grupo, nome])}`. `Problema.categoria1Id?`, `categoria2Id?` e `categoria3Id?`, cada um com FK e CHECK de grupo via trigger simples ou validação no service: categoria`N` precisa ter `grupo=N`.
   2. Config `abertura.rotulosCategorias` (`string[3]`, padrão "Categoria 1..3") e `abertura.preFiltros` (`int[]` ⊂ {1,2,3}, padrão `[]`).
