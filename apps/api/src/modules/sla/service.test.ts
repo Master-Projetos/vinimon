@@ -137,7 +137,12 @@ describe('serviço de SLA (§4.6)', () => {
 
   it('ajusta datas e operador conforme o tipo novo', async () => {
     const operador = await criarUsuario({ perfil: 'OPERADOR' })
-    const c = await novoChamado({ operadorId: operador.id, papel: 'EM_ATENDIMENTO' })
+    // A abertura fica antes das datas fixas do teste: com o relógio real o estágio começaria depois do fim (ck_estagios_intervalo).
+    const c = await novoChamado({
+      operadorId: operador.id,
+      papel: 'EM_ATENDIMENTO',
+      abertoEm: z('2026-10-26T10:00:00Z'),
+    })
     const t1 = z('2026-10-26T12:00:00Z')
 
     await transicao(c.id, 0, 'AGENDADO', t1, { agendadoPara: z('2026-10-27T12:00:00Z') })
@@ -166,7 +171,7 @@ describe('serviço de SLA (§4.6)', () => {
   })
 
   it('CONCLUIDO mantém o `concluidoEm` que já existia (`??=`)', async () => {
-    const c = await novoChamado({ papel: 'EM_ATENDIMENTO' })
+    const c = await novoChamado({ papel: 'EM_ATENDIMENTO', abertoEm: z('2026-10-26T10:00:00Z') })
     await prisma.chamado.update({ where: { id: c.id }, data: { slaSolucaoMin: 60 } })
     await transicao(c.id, 0, 'CONCLUIDO', z('2026-10-26T12:00:00Z'), { solucao: 'a' })
     const antes = await prisma.chamado.findUniqueOrThrow({ where: { id: c.id } })
