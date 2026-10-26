@@ -119,6 +119,8 @@ enum TipoEvento {
   SLA_RISCO
   SLA_ESTOURADO
   SLA_RESPOSTA_ESTOURADO
+  AUXILIAR_ADICIONADO
+  AUXILIAR_REMOVIDO
 
   @@map("tipo_evento")
 }
@@ -306,6 +308,10 @@ model Usuario {
   /// null = padrão do perfil (COMPACTA para equipe, CONFORTAVEL para USUARIO)
   densidade             Densidade?
   enviarComEnter        Boolean    @default(true) @map("enviar_com_enter")
+  /// pode encaminhar chamado para um operador (T-15.1)
+  podeEncaminhar        Boolean    @default(true) @map("pode_encaminhar")
+  /// pode receber chamado encaminhado ou entrar como auxiliar (T-15.1)
+  podeReceber           Boolean    @default(true) @map("pode_receber")
   criadoEm              DateTime   @default(now()) @map("criado_em") @db.Timestamptz(3)
   atualizadoEm          DateTime   @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
   /// trigger: lower(f_unaccent(nome login email))
@@ -330,6 +336,7 @@ model Usuario {
   assentamentos           Assentamento[]
   mencoes                 Mencao[]
   seguindo                ChamadoSeguidor[]
+  auxiliarEm              ChamadoAuxiliar[]
   leituras                ChamadoLeitura[]
   anexosEnviados          Anexo[]
   avaliacoes              AvaliacaoChamado[]
@@ -764,6 +771,7 @@ model Chamado {
   assentamentos Assentamento[]
   mencoes       Mencao[]
   seguidores    ChamadoSeguidor[]
+  auxiliares    ChamadoAuxiliar[]
   leituras      ChamadoLeitura[]
   tags          ChamadoTag[]
   anexos        Anexo[]
@@ -903,6 +911,20 @@ model ChamadoSeguidor {
   @@id([chamadoId, usuarioId])
   @@index([usuarioId], map: "ix_seguidores_usuario")
   @@map("chamado_seguidores")
+}
+
+/// Operador auxiliar: vê e comenta como equipe, mas só o principal (operadorId) atende e conclui
+model ChamadoAuxiliar {
+  chamadoId Int      @map("chamado_id")
+  usuarioId Int      @map("usuario_id")
+  criadoEm  DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  chamado Chamado @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([chamadoId, usuarioId])
+  @@index([usuarioId], map: "ix_chamado_auxiliares_usuario")
+  @@map("chamado_auxiliares")
 }
 
 /// Confirmação de leitura: ponteiro monotônico (upsert com WHERE anterior < novo)

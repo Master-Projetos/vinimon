@@ -6,7 +6,13 @@ import {
   serializarMencao,
   temPermissao,
 } from '@vinimon/shared'
-import { type ChamadoEscopo, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
+import {
+  type ChamadoEscopo,
+  comAuxiliarIds,
+  podeVerChamado,
+  podeVerInterno,
+  selectEscopo,
+} from '../../autorizacao/chamados'
 import type { Prisma } from '../../generated/prisma/client'
 import { ErroApp, naoEncontrado } from '../../lib/erros'
 import { escaparLike } from '../../lib/like'
@@ -109,10 +115,7 @@ export async function validarMencoes(
 
 /** Mesmo padrão de 404 do módulo de chamados: quem não vê o chamado não descobre que ele existe. */
 async function exigirVisivel(u: UsuarioSessao, id: number): Promise<ChamadoEscopo> {
-  const c = await prisma.chamado.findUnique({
-    where: { id },
-    select: { areaId: true, operadorId: true, solicitanteId: true },
-  })
+  const c = comAuxiliarIds(await prisma.chamado.findUnique({ where: { id }, select: selectEscopo }))
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
   return c
 }

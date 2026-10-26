@@ -101,6 +101,9 @@ export const AssumirChamadoSchema = z.strictObject({
   confirmarTroca: z.boolean().optional(),
   comentario: zComentario().optional(),
 })
+export const AdicionarAuxiliarSchema = z.strictObject({ usuarioId: zId() })
+export type AdicionarAuxiliar = z.output<typeof AdicionarAuxiliarSchema>
+export const AuxiliarParamsSchema = z.object({ id: zId(), usuarioId: zId() })
 export const EncaminharChamadoSchema = z.strictObject({
   versao: versao(),
   areaId: zId(),
@@ -356,6 +359,13 @@ export const chamadosApi = {
   solicitarRetorno: acao('/chamados/:id/solicitar-retorno', SolicitarRetornoSchema),
   reabrir: acao('/chamados/:id/reabrir', ReabrirChamadoSchema),
   cancelar: acao('/chamados/:id/cancelar', CancelarChamadoSchema),
+  adicionarAuxiliar: acao('/chamados/:id/auxiliares', AdicionarAuxiliarSchema),
+  removerAuxiliar: contrato({
+    metodo: 'DELETE',
+    caminho: '/chamados/:id/auxiliares/:usuarioId',
+    params: AuxiliarParamsSchema,
+    resposta: ChamadoDetalheSchema,
+  }),
   seguir: contrato({
     metodo: 'PUT',
     caminho: '/chamados/:id/seguir',

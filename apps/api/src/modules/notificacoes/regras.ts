@@ -11,6 +11,7 @@ export type EventoNotificavel =
   | { tipo: 'COMENTARIO'; id: number }
   | { tipo: 'ASSUMIDO'; id: number; operadorNovoId: number | null }
   | { tipo: 'ENCAMINHADO'; id: number; operadorNovoId: number | null }
+  | { tipo: 'AUXILIAR_ADICIONADO'; id: number; auxiliarId: number }
   | { tipo: 'STATUS_ALTERADO' }
   | { tipo: 'AGENDADO' }
   | { tipo: 'RETORNO_AGENDAMENTO' }
@@ -80,6 +81,10 @@ export function destinatarios(evento: EventoNotificavel, ctx: ContextoDestinatar
       } else {
         operadoresDaAreaPara('NOVO_NA_FILA', `novo:${evento.id}`)
       }
+      seguidoresPara('ATUALIZACAO', atualizacao)
+      break
+    case 'AUXILIAR_ADICIONADO':
+      adicionar(evento.auxiliarId, 'ATRIBUIDO', `atribuido:${evento.id}`)
       seguidoresPara('ATUALIZACAO', atualizacao)
       break
     case 'STATUS_ALTERADO':

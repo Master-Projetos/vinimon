@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { type App, buildApp } from '../src/app'
-import { escopoChamados, podeVerChamado } from '../src/autorizacao/chamados'
+import { comAuxiliarIds, escopoChamados, podeVerChamado, selectEscopo } from '../src/autorizacao/chamados'
 import { invalidarConfig } from '../src/lib/config'
 import { prisma } from '../src/lib/prisma'
 import { carregarSessao, type UsuarioSessao } from '../src/lib/sessao'
@@ -16,10 +16,17 @@ type Ator =
   | 'responsavelOutraArea'
   | 'admin'
   | 'operadorSemIsolamento'
+  | 'auxiliarOutraArea'
 
 describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunto (T33)', () => {
   const atores = {} as Record<Ator, UsuarioSessao>
-  let chamados: Array<{ id: number; areaId: number; operadorId: number | null; solicitanteId: number }> = []
+  let chamados: Array<{
+    id: number
+    areaId: number
+    operadorId: number | null
+    solicitanteId: number
+    auxiliarIds: number[]
+  }> = []
 
   beforeAll(async () => {
     await limparBanco()
@@ -27,6 +34,7 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
     const A = await criarArea()
     const B = await criarArea()
     const C = await criarArea()
+    const D = await criarArea()
     const solicitante = await criarUsuario({ perfil: 'USUARIO' })
     const outroUsuario = await criarUsuario({ perfil: 'USUARIO' })
     const operadorDaArea = await criarUsuario({ perfil: 'OPERADOR', areaId: A.id })
@@ -34,6 +42,7 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
     await prisma.usuarioArea.create({ data: { usuarioId: operadorSecundario.id, areaId: A.id } })
     const operadorOutraArea = await criarUsuario({ perfil: 'OPERADOR', areaId: B.id })
     const responsavelOutraArea = await criarUsuario({ perfil: 'OPERADOR', areaId: B.id })
+    const auxiliarOutraArea = await criarUsuario({ perfil: 'OPERADOR', areaId: D.id })
     const admin = await criarUsuario({ perfil: 'ADMIN' })
     const usuarios = {
       solicitante,
@@ -42,6 +51,7 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
       operadorSecundario,
       operadorOutraArea,
       responsavelOutraArea,
+      auxiliarOutraArea,
       admin,
     }
     for (const [nome, u] of Object.entries(usuarios) as Array<[Ator, { id: number }]>) {
@@ -94,12 +104,17 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
         operadorId: responsavelOutraArea.id,
       }),
     ]
-    chamados = criados.map((c) => ({
-      id: c.id,
-      areaId: c.areaId,
-      operadorId: c.operadorId,
-      solicitanteId: c.solicitanteId,
-    }))
+    // T-15.1: operador de outra área é auxiliar de um chamado (o primeiro) e de nenhum outro
+    const primeiro = criados[0]
+    if (!primeiro) throw new Error('a fixture não criou chamados')
+    await prisma.chamadoAuxiliar.create({ data: { chamadoId: primeiro.id, usuarioId: auxiliarOutraArea.id } })
+    chamados = (
+      await prisma.chamado.findMany({
+        where: { id: { in: criados.map((c) => c.id) } },
+        select: { id: true, ...selectEscopo },
+        orderBy: { id: 'asc' },
+      })
+    ).map((c) => comAuxiliarIds(c))
   })
 
   const ids = (xs: Array<{ id: number }>) => xs.map((x) => x.id).sort((a, b) => a - b)
@@ -117,6 +132,7 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
     'responsavelOutraArea',
     'admin',
     'operadorSemIsolamento',
+    'auxiliarOutraArea',
   ] as const)('T33: ator %s: mesmo conjunto no Prisma e em memória', async (nome) => {
     const u = atores[nome]
     const noBanco = ids(await prisma.chamado.findMany({ where: escopoChamados(u), select: { id: true } }))
@@ -131,6 +147,7 @@ describe('escopoChamados (Prisma) e podeVerChamado (TS) devolvem o mesmo conjunt
     expect(vistos('operadorOutraArea')).toBeLessThan(12)
     expect(vistos('solicitante')).toBeLessThan(12)
     expect(vistos('operadorSemIsolamento')).toBe(12)
+    expect(vistos('auxiliarOutraArea')).toBe(1)
   })
 })
 

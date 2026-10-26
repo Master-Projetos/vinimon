@@ -71,6 +71,10 @@ const TEXTO_POR_TIPO: Record<TipoEvento, (dados: Dados) => string> = {
   SLA_RISCO: () => 'SLA de solução em risco',
   SLA_ESTOURADO: () => 'SLA de solução estourado',
   SLA_RESPOSTA_ESTOURADO: () => 'SLA de resposta estourado',
+  AUXILIAR_ADICIONADO: (dados) =>
+    `Operador auxiliar adicionado${nomeDe(dados.auxiliar) ? `: ${nomeDe(dados.auxiliar)}` : ''}`,
+  AUXILIAR_REMOVIDO: (dados) =>
+    `Operador auxiliar removido${nomeDe(dados.auxiliar) ? `: ${nomeDe(dados.auxiliar)}` : ''}`,
 }
 
 /** Texto em pt-BR de um evento do histórico, montado a partir de `dados` (sem HTML). */

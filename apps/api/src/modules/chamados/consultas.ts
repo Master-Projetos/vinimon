@@ -13,7 +13,13 @@ import {
   type VisaoChamado,
 } from '@vinimon/shared'
 import { DateTime } from 'luxon'
-import { escopoChamados, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
+import {
+  comAuxiliarIds,
+  escopoChamados,
+  podeVerChamado,
+  podeVerInterno,
+  selectEscopo,
+} from '../../autorizacao/chamados'
 import type { Prisma } from '../../generated/prisma/client'
 import { obterConfig } from '../../lib/config'
 import { naoEncontrado, semPermissao } from '../../lib/erros'
@@ -27,6 +33,7 @@ const DEZ_MINUTOS_MS = 10 * 60 * 1000
 const NOVENTA_DIAS_MS = 90 * 24 * 60 * 60 * 1000
 
 const selectResumo = {
+  auxiliares: { select: { usuarioId: true } },
   id: true,
   assunto: true,
   solicitanteId: true,
@@ -196,7 +203,12 @@ export async function listar(u: UsuarioSessao, f: ChamadoFiltros, agora = new Da
   const lido = new Map(leituras.map((l) => [l.chamadoId, l.ultimoAssentamentoLidoId]))
 
   const itens: ChamadoResumo[] = linhas.map((c) => {
-    const verInterno = podeVerInterno(u, { areaId: c.areaId, operadorId: c.operadorId, solicitanteId: c.solicitanteId })
+    const verInterno = podeVerInterno(u, {
+      areaId: c.areaId,
+      operadorId: c.operadorId,
+      solicitanteId: c.solicitanteId,
+      auxiliarIds: c.auxiliares.map((a) => a.usuarioId),
+    })
     const ultimo = verInterno ? c.ultimoAssentamentoId : c.ultimoAssentamentoPublicoId
     const lidoAte = lido.get(c.id)
     const qtdAnexos = anexos
@@ -262,10 +274,7 @@ const naoAchado = () => naoEncontrado('Chamado não encontrado.')
  * não vê o chamado não descobre que ele existe.
  */
 async function exigirVisivel(u: UsuarioSessao, id: number) {
-  const c = await prisma.chamado.findUnique({
-    where: { id },
-    select: { areaId: true, operadorId: true, solicitanteId: true },
-  })
+  const c = comAuxiliarIds(await prisma.chamado.findUnique({ where: { id }, select: selectEscopo }))
   if (!c || !podeVerChamado(u, c)) throw naoAchado()
   return c
 }
