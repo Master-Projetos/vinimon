@@ -61,7 +61,7 @@
 ### T-15.4 — Subchamados
 - **Depende de:** MVP · **Paralelo com:** T-15.3
 - **Requisitos:** C20
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enum), `packages/shared/src/modulos/chamados.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (eventos SUBCHAMADO_*), `apps/api/src/modules/chamados/{acoes.ts,service.ts,consultas.ts,subchamados.test.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enum), `packages/shared/src/modulos/chamados.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (eventos SUBCHAMADO_*), `apps/api/src/modules/chamados/{acoes.ts,service.ts,consultas.ts,subchamados.test.ts}`, `apps/api/src/modules/chamados/{routes.ts,schemas.ts}` (rota e seleção do detalhe), `packages/shared/src/modulos/chamados.test.ts` (linha da nova rota), `apps/web/src/features/historico/{textos.ts,components/historico-timeline.tsx}` (texto dos novos eventos)
 - **Passos:**
   1. `Chamado.chamadoPaiId Int?` com autorrelação, índice parcial `IS NOT NULL` e CHECK `<> id`.
   2. `POST /chamados` aceita `paiId` (precisa ver e atender o pai).
