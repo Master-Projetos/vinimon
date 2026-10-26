@@ -85,7 +85,7 @@
 ### T-13.5 — Módulo de inventário por área, A19 e B03
 - **Depende de:** T-13.2 · **Paralelo com:** T-13.4
 - **Requisitos:** A17, A19, B03
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/chamados.ts`, `apps/api/src/modules/{ativos/routes.ts,chamados/service.ts,usuarios/routes.ts}`, `apps/api/test/regras-f2.test.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/chamados.ts`, `apps/api/src/modules/{ativos/routes.ts,chamados/service.ts,usuarios/routes.ts}`, `apps/api/test/regras-f2.test.ts`, `packages/shared/src/modulos/{areas.ts,usuarios.ts}`, `apps/api/src/modules/areas/{schemas.ts,service.ts}` (campo `moduloInventario` no cadastro de área), `apps/api/src/modules/usuarios/service.ts` (busca do mesmo departamento)
 - **Passos:**
   1. `Area.moduloInventario Boolean @default(true)`. OPERADOR sem nenhuma área com o módulo recebe 403 nas rotas `inventario.*` (`UsuarioSessao.inventarioHabilitado`); ADMIN sempre acessa.
   2. Config `chamado.operadorTrataProprio` (padrão `true`): com `false`, `podeAtender` é `false` quando o operador é o solicitante.
