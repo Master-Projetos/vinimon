@@ -68,7 +68,7 @@
 ### T-13.4 — Áreas destino por área solicitante
 - **Depende de:** MVP · **Paralelo com:** T-13.3
 - **Requisitos:** A05
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/areas.ts`, `apps/api/src/modules/areas/{service.ts,areas-destino.test.ts}`, `apps/api/src/modules/chamados/service.ts`, `apps/api/src/modules/meta/service.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/areas.ts`, `apps/api/src/modules/areas/{service.ts,areas-destino.test.ts}`, `apps/api/src/modules/chamados/service.ts`, `apps/api/src/modules/meta/service.ts`, `packages/shared/src/modulos/meta.ts` (campo `destinosPermitidos`)
 - **Passos:**
   1. Model `AreaDestino {areaOrigemId, areaDestinoId, padrao Boolean, @@id([areaOrigemId, areaDestinoId])}`, com no máximo uma padrão por origem.
   2. Body de área ganha `destinos: {areaId, padrao}[]`.
