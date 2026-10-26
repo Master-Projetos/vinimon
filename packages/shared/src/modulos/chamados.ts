@@ -54,6 +54,8 @@ export const ChamadoFiltrosSchema = PaginacaoQuerySchema.extend({
   operadorIds: zListaIdsOuZero(),
   canalIds: zListaIds(),
   tagIds: zListaIds(),
+  tagIdsAlguma: zListaIds(),
+  tagIdsNenhuma: zListaIds(),
   departamentoIds: zListaIds(),
   solicitanteId: zId().optional(),
   sla: z.enum(SLAS_FILTRO).optional(),
@@ -88,6 +90,8 @@ export const CriarChamadoSchema = z.strictObject({
   solicitanteId: zId().optional(),
   canalId: zId().optional(),
   tags: z.array(zTag()).max(10).optional(),
+  /** Abre como subchamado: quem abre precisa ver e atender o pai. */
+  paiId: zId().optional(),
 })
 export type CriarChamado = z.output<typeof CriarChamadoSchema>
 
@@ -99,6 +103,12 @@ export const AssumirChamadoSchema = z.strictObject({
   confirmarTroca: z.boolean().optional(),
   comentario: zComentario().optional(),
 })
+/** `paiId: null` desvincula o subchamado. */
+export const DefinirPaiSchema = z.strictObject({ versao: versao(), paiId: zId().nullable() })
+export type DefinirPai = z.output<typeof DefinirPaiSchema>
+export const AdicionarAuxiliarSchema = z.strictObject({ usuarioId: zId() })
+export type AdicionarAuxiliar = z.output<typeof AdicionarAuxiliarSchema>
+export const AuxiliarParamsSchema = z.object({ id: zId(), usuarioId: zId() })
 export const EncaminharChamadoSchema = z.strictObject({
   versao: versao(),
   areaId: zId(),
@@ -267,6 +277,12 @@ export const ChamadoDetalheSchema = ChamadoResumoSchema.extend({
     })
     .nullable(),
   seguindo: z.boolean(),
+  /** Subchamados (C20): só aparecem os chamados que quem consulta pode ver. */
+  pai: z
+    .object({ id: z.int(), assunto: z.string(), statusTipo: z.enum(TIPOS_STATUS) })
+    .nullable()
+    .optional(),
+  filhos: z.array(z.object({ id: z.int(), assunto: z.string(), statusTipo: z.enum(TIPOS_STATUS) })).optional(),
   acoes: ChamadoAcoesSchema,
 })
 export type ChamadoDetalhe = z.output<typeof ChamadoDetalheSchema>
@@ -354,6 +370,14 @@ export const chamadosApi = {
   solicitarRetorno: acao('/chamados/:id/solicitar-retorno', SolicitarRetornoSchema),
   reabrir: acao('/chamados/:id/reabrir', ReabrirChamadoSchema),
   cancelar: acao('/chamados/:id/cancelar', CancelarChamadoSchema),
+  definirPai: acao('/chamados/:id/pai', DefinirPaiSchema),
+  adicionarAuxiliar: acao('/chamados/:id/auxiliares', AdicionarAuxiliarSchema),
+  removerAuxiliar: contrato({
+    metodo: 'DELETE',
+    caminho: '/chamados/:id/auxiliares/:usuarioId',
+    params: AuxiliarParamsSchema,
+    resposta: ChamadoDetalheSchema,
+  }),
   seguir: contrato({
     metodo: 'PUT',
     caminho: '/chamados/:id/seguir',

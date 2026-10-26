@@ -8,7 +8,7 @@ import {
   MAX_BYTES_POR_CHAMADO,
   temPermissao,
 } from '@vinimon/shared'
-import { podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
+import { type ChamadoEscopo, comAuxiliarIds, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
 import { env } from '../../env'
 import type { Prisma } from '../../generated/prisma/client'
 import { chaveNova, DiscoLocal } from '../../lib/armazenamento'
@@ -44,10 +44,19 @@ const paraDto = (a: Prisma.AnexoGetPayload<{ select: typeof selectAnexo }>): Ane
  * não encerrado (409), `anexos.habilitados` (403) e a cota do chamado (413). Nada toca o disco aqui.
  */
 async function autorizarUpload(u: UsuarioSessao, chamadoId: number) {
-  const c = await prisma.chamado.findUnique({
-    where: { id: chamadoId },
-    select: { id: true, areaId: true, operadorId: true, solicitanteId: true, statusTipo: true },
-  })
+  const c = comAuxiliarIds(
+    await prisma.chamado.findUnique({
+      where: { id: chamadoId },
+      select: {
+        id: true,
+        areaId: true,
+        operadorId: true,
+        solicitanteId: true,
+        statusTipo: true,
+        auxiliares: { select: { usuarioId: true } },
+      },
+    }),
+  )
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
   if (!temPermissao(u.perfil, 'anexo.enviar')) throw semPermissao()
   if (c.statusTipo === 'ENCERRADO') throw conflito('O chamado está encerrado e não aceita novos anexos.')
@@ -68,7 +77,7 @@ async function autorizarUpload(u: UsuarioSessao, chamadoId: number) {
 /** Resolve `interno` e `assentamentoId` e valida ANTES do primeiro byte de arquivo (S63, T47). */
 async function resolverDestino(
   u: UsuarioSessao,
-  chamado: { id: number; areaId: number; operadorId: number | null; solicitanteId: number },
+  chamado: ChamadoEscopo & { id: number },
   campos: { interno: boolean; assentamentoId: number | undefined },
   agora: Date,
 ): Promise<{ interno: boolean; assentamentoId: number | null }> {
@@ -218,10 +227,12 @@ export async function enviarAnexos(
 
 /** `GET /chamados/:id/anexos`: o interno só aparece para quem passa em `podeVerInterno` (S71). */
 export async function listarAnexos(chamadoId: number, u: UsuarioSessao): Promise<Anexo[]> {
-  const c = await prisma.chamado.findUnique({
-    where: { id: chamadoId },
-    select: { areaId: true, operadorId: true, solicitanteId: true },
-  })
+  const c = comAuxiliarIds(
+    await prisma.chamado.findUnique({
+      where: { id: chamadoId },
+      select: { areaId: true, operadorId: true, solicitanteId: true, auxiliares: { select: { usuarioId: true } } },
+    }),
+  )
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
   const linhas = await prisma.anexo.findMany({
     where: { chamadoId, ...(podeVerInterno(u, c) ? {} : { interno: false }) },
@@ -242,10 +253,13 @@ export async function abrirAnexo(id: string, u: UsuarioSessao) {
       nomeOriginal: true,
       storageChave: true,
       interno: true,
-      chamado: { select: { areaId: true, operadorId: true, solicitanteId: true } },
+      chamado: {
+        select: { areaId: true, operadorId: true, solicitanteId: true, auxiliares: { select: { usuarioId: true } } },
+      },
     },
   })
-  if (!a || !podeVerChamado(u, a.chamado) || (a.interno && !podeVerInterno(u, a.chamado)))
+  const escopo = a ? comAuxiliarIds(a.chamado) : null
+  if (!a || !escopo || !podeVerChamado(u, escopo) || (a.interno && !podeVerInterno(u, escopo)))
     throw naoEncontrado('Anexo não encontrado.')
   return {
     mime: a.mime,

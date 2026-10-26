@@ -296,6 +296,47 @@ export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
   })
 
   app.route({
+    method: c.definirPai.metodo,
+    url: c.definirPai.caminho,
+    schema: {
+      tags,
+      summary: 'Vincula ou desvincula o chamado de um pai (subchamado)',
+      params: c.definirPai.params,
+      body: c.definirPai.body,
+      response: { 200: c.definirPai.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.definirPai(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.adicionarAuxiliar.metodo,
+    url: c.adicionarAuxiliar.caminho,
+    schema: {
+      tags,
+      summary: 'Adiciona operador auxiliar',
+      params: c.adicionarAuxiliar.params,
+      body: c.adicionarAuxiliar.body,
+      response: { 200: c.adicionarAuxiliar.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.adicionarAuxiliar(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.removerAuxiliar.metodo,
+    url: c.removerAuxiliar.caminho,
+    schema: {
+      tags,
+      summary: 'Remove operador auxiliar',
+      params: c.removerAuxiliar.params,
+      response: { 200: c.removerAuxiliar.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.removerAuxiliar(req.params.id, req.params.usuarioId, contextoDe(req), req.log),
+  })
+
+  app.route({
     method: c.seguir.metodo,
     url: c.seguir.caminho,
     schema: {

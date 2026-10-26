@@ -9,7 +9,7 @@ import {
 } from '@vinimon/shared'
 import type { FastifyBaseLogger } from 'fastify'
 import type { ZodType } from 'zod'
-import { podeVerChamado, podeVerInterno } from '../autorizacao/chamados'
+import { comAuxiliarIds, podeVerChamado, podeVerInterno, selectEscopo } from '../autorizacao/chamados'
 import { prisma } from '../lib/prisma'
 import type { UsuarioSessao } from '../lib/sessao'
 import type { PublicadorTempoReal } from '../lib/tempo-real'
@@ -100,10 +100,7 @@ export function registrarHandlers(io: ServidorRt, log: FastifyBaseLogger): void 
         () => ({ limiter: 'chamado:entrar', chave: socket.id }),
         async ({ chamadoId }, ack) => {
           const u = await recarregarUsuario(socket.data.usuario.id, socket.data.usuario)
-          const c = await prisma.chamado.findUnique({
-            where: { id: chamadoId },
-            select: { areaId: true, operadorId: true, solicitanteId: true },
-          })
+          const c = comAuxiliarIds(await prisma.chamado.findUnique({ where: { id: chamadoId }, select: selectEscopo }))
           // inexistente e sem acesso dão a mesma resposta (S92)
           if (!u || !c || !podeVerChamado(u, c)) return ack?.({ ok: false, erro: 'INDISPONIVEL' })
           const jaEstou = socket.rooms.has(salaChamado(chamadoId))
@@ -249,7 +246,7 @@ export function criarEmissores(
       seguro('fila', async () => {
         const c = await prisma.chamado.findUnique({
           where: { id: chamadoId },
-          select: { areaId: true, solicitanteId: true, operadorId: true },
+          select: { areaId: true, solicitanteId: true, operadorId: true, auxiliares: { select: { usuarioId: true } } },
         })
         if (!c) return
         const salas = [
@@ -257,6 +254,7 @@ export function criarEmissores(
           SALA_ADMINS,
           salaUsuario(c.solicitanteId),
           ...(c.operadorId === null ? [] : [salaUsuario(c.operadorId)]),
+          ...c.auxiliares.map((a) => salaUsuario(a.usuarioId)),
         ]
         io.to(salas).emit('fila:atualizada', { chamadoId, motivo })
       })

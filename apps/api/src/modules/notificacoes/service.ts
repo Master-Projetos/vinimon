@@ -12,7 +12,7 @@ import {
   temPermissao,
   textoPlano,
 } from '@vinimon/shared'
-import { escopoChamados, podeVerInterno } from '../../autorizacao/chamados'
+import { comAuxiliarIds, escopoChamados, podeVerInterno } from '../../autorizacao/chamados'
 import type { Prisma } from '../../generated/prisma/client'
 import { naoEncontrado, regraNegocio, requisicaoInvalida } from '../../lib/erros'
 import { prisma } from '../../lib/prisma'
@@ -92,7 +92,16 @@ export async function listarNotificacoes(u: UsuarioSessao, q: ListarNotificacoes
       criadoEm: true,
       atualizadoEm: true,
       lidaEm: true,
-      chamado: { select: { id: true, assunto: true, areaId: true, operadorId: true, solicitanteId: true } },
+      chamado: {
+        select: {
+          id: true,
+          assunto: true,
+          areaId: true,
+          operadorId: true,
+          solicitanteId: true,
+          auxiliares: { select: { usuarioId: true } },
+        },
+      },
     },
     orderBy: [{ atualizadoEm: 'desc' }, { id: 'desc' }],
     take: q.limite + 1,
@@ -118,7 +127,7 @@ export async function listarNotificacoes(u: UsuarioSessao, q: ListarNotificacoes
 
   const itens: NotificacaoDTO[] = pagina.map((n) => {
     const a = n.assentamentoId === null ? undefined : textos.get(n.assentamentoId)
-    const visivel = a !== undefined && (!a.interno || podeVerInterno(u, n.chamado))
+    const visivel = a !== undefined && (!a.interno || podeVerInterno(u, comAuxiliarIds(n.chamado)))
     const dados = NotificacaoDadosSchema.safeParse(n.dados)
     return {
       id: n.id,

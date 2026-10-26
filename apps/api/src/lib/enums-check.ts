@@ -24,3 +24,5 @@ export const _situacaoArtigo: Igual<Shared.SituacaoArtigo, Prisma.SituacaoArtigo
 export const _visibilidadeArtigo: Igual<Shared.VisibilidadeArtigo, Prisma.VisibilidadeArtigo> = true
 export const _statusEmail: Igual<Shared.StatusEmail, Prisma.StatusEmail> = true
 export const _canalEmail: Igual<Shared.CanalEmail, Prisma.CanalEmail> = true
+export const _tipoCampo: Igual<Shared.TipoCampo, Prisma.TipoCampo> = true
+export const _visibilidadeCampo: Igual<Shared.VisibilidadeCampo, Prisma.VisibilidadeCampo> = true

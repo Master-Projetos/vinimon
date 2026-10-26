@@ -31,7 +31,7 @@
 ### T-13.2 — Isolamento por área configurável
 - **Depende de:** MVP · **Paralelo com:** T-13.1
 - **Requisitos:** A03; S44
-- **Arquivos:** `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `apps/api/src/lib/tempo-real.ts`, `apps/api/src/realtime/revalidacao.ts`, `apps/api/src/modules/config/service.ts`, `apps/api/test/escopo-equivalencia.test.ts`
+- **Arquivos:** `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `apps/api/src/lib/tempo-real.ts`, `apps/api/src/realtime/revalidacao.ts`, `apps/api/src/realtime/plugin.ts`, `apps/api/src/modules/config/service.ts`, `apps/api/test/escopo-equivalencia.test.ts`
 - **Passos:**
   1. Config `chamado.isolarAreas` (padrão `true`).
   2. `UsuarioSessao.verTodasAreas = perfil==='OPERADOR' && !cfg['chamado.isolarAreas']`.
@@ -68,7 +68,7 @@
 ### T-13.4 — Áreas destino por área solicitante
 - **Depende de:** MVP · **Paralelo com:** T-13.3
 - **Requisitos:** A05
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/areas.ts`, `apps/api/src/modules/areas/{service.ts,areas-destino.test.ts}`, `apps/api/src/modules/chamados/service.ts`, `apps/api/src/modules/meta/service.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/areas.ts`, `apps/api/src/modules/areas/{service.ts,areas-destino.test.ts}`, `apps/api/src/modules/chamados/service.ts`, `apps/api/src/modules/meta/service.ts`, `packages/shared/src/modulos/meta.ts` (campo `destinosPermitidos`)
 - **Passos:**
   1. Model `AreaDestino {areaOrigemId, areaDestinoId, padrao Boolean, @@id([areaOrigemId, areaDestinoId])}`, com no máximo uma padrão por origem.
   2. Body de área ganha `destinos: {areaId, padrao}[]`.
