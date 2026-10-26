@@ -54,6 +54,8 @@ export const ChamadoFiltrosSchema = PaginacaoQuerySchema.extend({
   operadorIds: zListaIdsOuZero(),
   canalIds: zListaIds(),
   tagIds: zListaIds(),
+  tagIdsAlguma: zListaIds(),
+  tagIdsNenhuma: zListaIds(),
   departamentoIds: zListaIds(),
   solicitanteId: zId().optional(),
   sla: z.enum(SLAS_FILTRO).optional(),
