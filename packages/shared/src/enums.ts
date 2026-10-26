@@ -2,6 +2,9 @@
 // compilação que cada união é igual ao enum gerado pelo Prisma: mudou um, mude o outro na mesma tarefa.
 export { PERFIS, type Perfil } from './permissoes'
 
+export const ORIGENS_AUTENTICACAO = ['LOCAL', 'LDAP'] as const
+export type OrigemAutenticacao = (typeof ORIGENS_AUTENTICACAO)[number]
+
 export const ESTADOS_SESSAO = ['PENDENTE_MFA', 'CADASTRO_MFA', 'TROCA_SENHA', 'ATIVA'] as const
 export type EstadoSessao = (typeof ESTADOS_SESSAO)[number]
 

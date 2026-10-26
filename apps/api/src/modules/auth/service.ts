@@ -1,6 +1,7 @@
 import {
   type EntrarBody,
   PERMISSOES_POR_PERFIL,
+  type Perfil,
   type SessaoResposta,
   type TrocarSenhaBody,
   type UsuarioMe,
@@ -8,8 +9,9 @@ import {
 import { auditar } from '../../lib/auditoria'
 import { obterConfig } from '../../lib/config'
 import type { Contexto, ContextoUsuario } from '../../lib/contexto'
-import { ErroApp, loginInvalido, muitasTentativas } from '../../lib/erros'
+import { ErroApp, loginInvalido, muitasTentativas, regraNegocio } from '../../lib/erros'
 import { validarNovaSenha } from '../../lib/forca-senha'
+import { autenticarLdap, type ConfigLdap, configLdapDoAmbiente, type PerfilLdap, testarLdap } from '../../lib/ldap'
 import { prisma } from '../../lib/prisma'
 import { hashSenha, verificarSenha } from '../../lib/senha'
 import {
@@ -21,6 +23,56 @@ import {
   revogarSessoesDoUsuario,
 } from '../../lib/sessao'
 import { estadoAposSenha, estadoAposTrocaSenha } from './estados'
+
+interface Candidato {
+  id: number
+  perfil: Perfil
+  deveTrocarSenha: boolean
+  mfaAtivadoEm: Date | null
+}
+
+/** Cria ou atualiza o usuário vindo do LDAP. Sem senha local (senhaHash null); OPERADOR novo recebe a área padrão. */
+async function sincronizarUsuarioLdap(
+  login: string,
+  p: PerfilLdap,
+  cfg: ConfigLdap,
+  existenteId: number | null,
+): Promise<Candidato | null> {
+  const email = p.email !== null && /^[^\s@]+@[^\s@]+$/.test(p.email) ? p.email.toLowerCase() : null
+  const telefone = p.telefone !== null && /^[0-9+()\- ]{1,30}$/.test(p.telefone) ? p.telefone : null
+  const nome = p.nome.slice(0, 120)
+  const dono = email === null ? null : await prisma.usuario.findUnique({ where: { email }, select: { id: true } })
+  const emailLivre = email !== null && (dono === null || dono.id === existenteId) ? email : null
+  const select = { id: true, perfil: true, deveTrocarSenha: true, mfaAtivadoEm: true } as const
+  if (existenteId === null) {
+    return prisma.usuario.create({
+      data: {
+        login,
+        nome,
+        email: emailLivre,
+        telefone,
+        perfil: p.perfil,
+        areaId: p.perfil === 'OPERADOR' ? cfg.areaPadraoId : null,
+        origemAutenticacao: 'LDAP',
+        senhaHash: null,
+        deveTrocarSenha: false,
+      },
+      select,
+    })
+  }
+  const atual = await prisma.usuario.findUniqueOrThrow({ where: { id: existenteId }, select: { areaId: true } })
+  return prisma.usuario.update({
+    where: { id: existenteId },
+    data: {
+      nome,
+      email: emailLivre,
+      telefone,
+      perfil: p.perfil,
+      areaId: p.perfil === 'OPERADOR' && atual.areaId === null ? cfg.areaPadraoId : undefined,
+    },
+    select,
+  })
+}
 
 const JANELA_MS = 15 * 60_000
 const MAX_FALHAS_LOGIN = 5
@@ -42,10 +94,36 @@ export async function entrar(dados: EntrarBody, ctx: Contexto & { ip: string }) 
 
   const u = await prisma.usuario.findUnique({
     where: { login },
-    select: { id: true, ativo: true, perfil: true, senhaHash: true, deveTrocarSenha: true, mfaAtivadoEm: true },
+    select: {
+      id: true,
+      ativo: true,
+      perfil: true,
+      senhaHash: true,
+      deveTrocarSenha: true,
+      mfaAtivadoEm: true,
+      origemAutenticacao: true,
+    },
   })
-  const candidato = u?.ativo ? u : null
-  const { ok, precisaRehash } = await verificarSenha(dados.senha, candidato?.senhaHash ?? null)
+  // Usuário LOCAL existente autentica localmente; os demais vão ao LDAP, se configurado.
+  const cfgLdap = u?.origemAutenticacao === 'LOCAL' ? null : configLdapDoAmbiente()
+  let candidato: Candidato | null = null
+  let ok = false
+  let precisaRehash = false
+  if (cfgLdap !== null) {
+    if (u === null || u.ativo) {
+      const perfilLdap = await autenticarLdap(login, dados.senha, cfgLdap)
+      if (perfilLdap !== null) {
+        candidato = await sincronizarUsuarioLdap(login, perfilLdap, cfgLdap, u?.id ?? null)
+        ok = candidato !== null
+      }
+    }
+  } else {
+    const local = u?.ativo ? u : null
+    const r = await verificarSenha(dados.senha, local?.senhaHash ?? null)
+    ok = r.ok
+    precisaRehash = r.precisaRehash
+    candidato = local
+  }
 
   if (!ok || candidato === null) {
     await prisma.$transaction(async (tx) => {
@@ -64,7 +142,7 @@ export async function entrar(dados: EntrarBody, ctx: Contexto & { ip: string }) 
   }
 
   const estado = estadoAposSenha(candidato)
-  const novoHash = precisaRehash ? await hashSenha(dados.senha) : null // fora da transação (custo de CPU)
+  const novoHash = precisaRehash && cfgLdap === null ? await hashSenha(dados.senha) : null // fora da transação (custo de CPU)
   await prisma.$transaction(async (tx) => {
     if (novoHash) {
       await tx.usuario.update({ where: { id: candidato.id }, data: { senhaHash: novoHash } })
@@ -131,8 +209,17 @@ export async function trocarSenha(
 ): Promise<{ resposta: SessaoResposta; token: string; expiraEm: Date }> {
   const u = await prisma.usuario.findUniqueOrThrow({
     where: { id: ctx.usuario.id },
-    select: { id: true, login: true, nome: true, email: true, perfil: true, mfaAtivadoEm: true },
+    select: {
+      id: true,
+      login: true,
+      nome: true,
+      email: true,
+      perfil: true,
+      mfaAtivadoEm: true,
+      origemAutenticacao: true,
+    },
   })
+  if (u.origemAutenticacao === 'LDAP') throw regraNegocio('A senha deste usuário é gerenciada pelo diretório (LDAP).')
   const [atual] = await prisma.$queryRaw<
     { senha_hash: string | null }[]
   >`SELECT senha_hash FROM usuarios WHERE id = ${u.id}`
@@ -170,4 +257,21 @@ export async function trocarSenha(
     },
     ...nova,
   }
+}
+
+/** POST /config/ldap/testar: confere conexão, CA e bind de serviço (auditado, sem detalhes do servidor). */
+export async function testarConexaoLdap(ctx: ContextoUsuario): Promise<{ ok: boolean; mensagem: string }> {
+  const cfg = configLdapDoAmbiente()
+  const resultado = cfg
+    ? await testarLdap(cfg)
+    : { ok: false, mensagem: 'LDAP não configurado: defina as variáveis LDAP_* no ambiente.' }
+  await prisma.$transaction((tx) =>
+    auditar(tx, ctx, {
+      acao: 'config.ldap_testado',
+      entidade: 'config',
+      entidadeId: null,
+      dados: { ok: resultado.ok },
+    }),
+  )
+  return resultado
 }

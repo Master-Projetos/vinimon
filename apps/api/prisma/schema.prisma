@@ -24,6 +24,13 @@ enum Perfil {
   @@map("perfil")
 }
 
+enum OrigemAutenticacao {
+  LOCAL
+  LDAP
+
+  @@map("origem_autenticacao")
+}
+
 enum EstadoSessao {
   PENDENTE_MFA
   CADASTRO_MFA
@@ -328,6 +335,7 @@ model Usuario {
   deveTrocarSenha       Boolean    @default(false) @map("deve_trocar_senha")
   senhaAlteradaEm       DateTime?  @map("senha_alterada_em") @db.Timestamptz(3)
   perfil                Perfil     @default(USUARIO)
+  origemAutenticacao    OrigemAutenticacao @default(LOCAL) @map("origem_autenticacao")
   /// área primária (obrigatória para OPERADOR — CHECK)
   areaId                Int?       @map("area_id")
   departamentoId        Int?       @map("departamento_id")
