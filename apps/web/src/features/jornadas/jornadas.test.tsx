@@ -149,7 +149,10 @@ describe('/admin/jornadas', () => {
   })
 
   it('(b) excluir confirma e faz DELETE /jornadas/:id', async () => {
-    const { falsa } = montar('/admin/jornadas', { ...lista, 'DELETE /jornadas/1': () => new Response(null, { status: 204 }) })
+    const { falsa } = montar('/admin/jornadas', {
+      ...lista,
+      'DELETE /jornadas/1': () => new Response(null, { status: 204 }),
+    })
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir Comercial' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
     await waitFor(() =>

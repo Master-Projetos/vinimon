@@ -32,5 +32,8 @@ export function useSalvarCategoriaArtigo(id: number | null) {
 }
 
 export function useExcluirCategoriaArtigo() {
-  return useExcluirCadastro((id) => chamar(categoriasArtigoApi.excluir, { params: { id } }), [categoriaArtigoChaves.todas])
+  return useExcluirCadastro(
+    (id) => chamar(categoriasArtigoApi.excluir, { params: { id } }),
+    [categoriaArtigoChaves.todas],
+  )
 }

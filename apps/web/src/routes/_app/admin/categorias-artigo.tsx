@@ -13,7 +13,11 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
-import { categoriasArtigoConsultas, useExcluirCategoriaArtigo, useSalvarCategoriaArtigo } from '@/features/categorias-artigo/queries'
+import {
+  categoriasArtigoConsultas,
+  useExcluirCategoriaArtigo,
+  useSalvarCategoriaArtigo,
+} from '@/features/categorias-artigo/queries'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
 
 const BuscaSchema = z.object({
