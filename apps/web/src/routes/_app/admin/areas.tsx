@@ -140,6 +140,8 @@ function AreaSheet({ area, aoFechar }: { area: Area | 'nova' | null; aoFechar: (
       atende: existente?.atende ?? true,
       ativo: existente?.ativo ?? true,
       jornadaId: existente?.jornadaId ?? null,
+      moduloInventario: existente?.moduloInventario ?? true,
+      destinos: existente?.destinos ?? [],
     },
   })
 
@@ -208,6 +210,64 @@ function AreaSheet({ area, aoFechar }: { area: Area | 'nova' | null; aoFechar: (
                 onCheckedChange={field.onChange}
               />
             )}
+          </CampoForm>
+          <CampoForm control={form.control} name="moduloInventario" rotulo="Módulo de inventário">
+            {(field, controle) => (
+              <Switch
+                id={controle.id}
+                aria-describedby={controle['aria-describedby']}
+                checked={field.value ?? true}
+                onCheckedChange={field.onChange}
+              />
+            )}
+          </CampoForm>
+          <CampoForm
+            control={form.control}
+            name="destinos"
+            rotulo="Áreas destino"
+            descricao="Vazio: quem é desta área pode abrir chamado para qualquer área. Marque uma como padrão."
+          >
+            {(field, controle) => {
+              const destinos = field.value ?? []
+              const alternar = (areaId: number, marcado: boolean) =>
+                field.onChange(
+                  marcado ? [...destinos, { areaId, padrao: false }] : destinos.filter((d) => d.areaId !== areaId),
+                )
+              const definirPadrao = (areaId: number) =>
+                field.onChange(destinos.map((d) => ({ ...d, padrao: d.areaId === areaId })))
+              return (
+                <ul id={controle.id} className="space-y-1" aria-describedby={controle['aria-describedby']}>
+                  {meta.areas
+                    .filter((a) => a.atende && a.id !== existente?.id)
+                    .map((a) => {
+                      const atual = destinos.find((d) => d.areaId === a.id)
+                      return (
+                        <li key={a.id} className="flex items-center justify-between gap-2 text-sm">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={atual !== undefined}
+                              onChange={(e) => alternar(a.id, e.target.checked)}
+                            />
+                            {a.nome}
+                          </label>
+                          {atual ? (
+                            <label className="text-muted-foreground flex items-center gap-1 text-xs">
+                              <input
+                                type="radio"
+                                name="destino-padrao"
+                                checked={atual.padrao}
+                                onChange={() => definirPadrao(a.id)}
+                              />
+                              Padrão
+                            </label>
+                          ) : null}
+                        </li>
+                      )
+                    })}
+                </ul>
+              )
+            }}
           </CampoForm>
           <SheetFooter className="px-0">
             <Button type="button" variant="outline" onClick={aoFechar}>

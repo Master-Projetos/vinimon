@@ -96,7 +96,7 @@ describe('renderRota + apiFalsa (rota real /admin/areas)', () => {
       expect(falsa.chamadas).toContainEqual({
         metodo: 'POST',
         url: '/api/v1/areas',
-        corpo: { nome: 'Jurídico', atende: true, ativo: true, jornadaId: null },
+        corpo: { nome: 'Jurídico', atende: true, ativo: true, jornadaId: null, moduloInventario: true, destinos: [] },
       }),
     )
     expect(falsa.chamadas.filter((c) => c.metodo === 'POST')).toHaveLength(1)
