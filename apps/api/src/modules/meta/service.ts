@@ -2,6 +2,7 @@ import { CHAVES_CONFIG_PUBLICAS, type Meta, temPermissao } from '@vinimon/shared
 import { obterConfig } from '../../lib/config'
 import { prisma } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
+import { destinosDaArea } from '../areas/service'
 
 /** Catálogos ativos em uma única leitura. `tags` só entram para quem atende chamados (`chamado.atender`). */
 export async function obterMeta(usuario: UsuarioSessao): Promise<Meta> {
@@ -49,6 +50,10 @@ export async function obterMeta(usuario: UsuarioSessao): Promise<Meta> {
       }),
     ])
 
+  const destinosPermitidos = (await destinosDaArea(prisma, usuario.areaId)).map((d) => ({
+    areaId: d.areaDestinoId,
+    padrao: d.padrao,
+  }))
   const tags = temPermissao(usuario.perfil, 'chamado.atender')
     ? await prisma.tag.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } })
     : undefined
@@ -70,6 +75,7 @@ export async function obterMeta(usuario: UsuarioSessao): Promise<Meta> {
     tiposAtivo,
     jornadas,
     categorias,
+    destinosPermitidos,
     config: configPublica,
     ...(tags === undefined ? {} : { tags }),
   }

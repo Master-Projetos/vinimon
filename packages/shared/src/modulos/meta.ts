@@ -41,6 +41,8 @@ export const MetaSchema = z.object({
   tiposAtivo: z.array(ItemNomeSchema),
   jornadas: z.array(ItemNomeSchema),
   categorias: z.array(ItemNomeSchema),
+  /** Áreas para onde o usuário pode abrir chamado; vazio = todas (A05). Sempre presente na resposta da API. */
+  destinosPermitidos: z.array(z.object({ areaId: z.int(), padrao: z.boolean() })).optional(),
   config: ConfigPublicaSchema,
   tags: z.array(ItemNomeSchema).optional(),
 })
