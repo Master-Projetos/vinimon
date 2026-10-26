@@ -191,4 +191,30 @@ describe('/admin/problemas', () => {
     })
     expect(await screen.findByText(titulo)).toBeInTheDocument()
   })
+  it('excluir confirma e faz DELETE /problemas/1', async () => {
+    const { falsa } = montar('/admin/problemas', {
+      ...lista,
+      'DELETE /problemas/1': () => new Response(null, { status: 204 }),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Impressora' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/problemas/1', corpo: null }),
+    )
+    expect(await screen.findByText('Tipo de problema excluído')).toBeInTheDocument()
+  })
+
+  it('409 ao excluir mostra a mensagem do servidor', async () => {
+    montar('/admin/problemas', {
+      ...lista,
+      'DELETE /problemas/1': () =>
+        json(
+          { erro: { codigo: 'REGISTRO_EM_USO', mensagem: 'O tipo de problema está em uso e não pode ser excluído.' } },
+          409,
+        ),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Impressora' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    expect(await screen.findByText('O tipo de problema está em uso e não pode ser excluído.')).toBeInTheDocument()
+  })
 })

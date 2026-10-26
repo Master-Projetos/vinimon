@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { type CriarUnidade, type ListarUnidadesQuery, unidadesApi } from '@vinimon/shared'
+import { useExcluirCadastro } from '@/features/admin/excluir'
 import { chamar } from '@/lib/api'
 
 export const unidadeChaves = {
@@ -28,4 +29,8 @@ export function useSalvarUnidade(id: number | null) {
     },
     meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
   })
+}
+
+export function useExcluirUnidade() {
+  return useExcluirCadastro((id) => chamar(unidadesApi.excluir, { params: { id } }), [unidadeChaves.todas])
 }

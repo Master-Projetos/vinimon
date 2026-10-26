@@ -197,4 +197,35 @@ describe('/admin/status', () => {
     montar('/admin/status', { 'GET /status': () => json({ erro: { codigo: 'ERRO', mensagem: 'Negado.' } }, st) })
     expect(await screen.findByText(titulo)).toBeInTheDocument()
   })
+  it('excluir confirma e faz DELETE /status/2', async () => {
+    const { falsa } = montar('/admin/status', {
+      ...lista,
+      'DELETE /status/2': () => new Response(null, { status: 204 }),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Aguardando peça' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/status/2', corpo: null }),
+    )
+    expect(await screen.findByText('Status excluído')).toBeInTheDocument()
+  })
+
+  it('409 ao excluir mostra a mensagem do servidor', async () => {
+    montar('/admin/status', {
+      ...lista,
+      'DELETE /status/2': () =>
+        json({ erro: { codigo: 'REGISTRO_EM_USO', mensagem: 'O status está em uso e não pode ser excluído.' } }, 409),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Aguardando peça' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    expect(await screen.findByText('O status está em uso e não pode ser excluído.')).toBeInTheDocument()
+  })
+
+  it('status com papel tem o botão de excluir desabilitado', async () => {
+    montar('/admin/status', lista)
+    const botao = await screen.findByRole('button', { name: 'Excluir Novo' })
+    expect(botao).toBeDisabled()
+    expect(botao).toHaveAttribute('title', 'Status com papel no fluxo não pode ser excluído.')
+    expect(screen.getByRole('button', { name: 'Excluir Aguardando peça' })).toBeEnabled()
+  })
 })

@@ -237,13 +237,18 @@ export async function listar(u: UsuarioSessao, f: ChamadoFiltros, agora = new Da
   return { itens, total, pagina: f.pagina, porPagina: f.porPagina }
 }
 
-/** Um `count` por visão, numa transação só. O status ignorado (C02) não entra. */
+/**
+ * Um `count` por visão, numa transação só. O status ignorado (C02) não entra. Quem tem `chamado.verTodos` não recebe
+ * `encerrados` nem `todos`: seriam contagens da tabela inteira (D3), e o selo só importa nas filas em aberto.
+ */
 export async function contagens(u: UsuarioSessao): Promise<ChamadoContagens> {
   const escopo = escopoChamados(u)
+  const veTudo = temPermissao(u.perfil, 'chamado.verTodos')
+  const visoes = VISOES_CHAMADO.filter((v) => !(veTudo && (v === 'encerrados' || v === 'todos')))
   const contar = (visao: VisaoChamado) =>
     prisma.chamado.count({ where: { AND: [escopo, filtroVisao(u, visao), { status: { ignorado: false } }] } })
-  const totais = await prisma.$transaction(VISOES_CHAMADO.map((v) => contar(v)))
-  return Object.fromEntries(VISOES_CHAMADO.map((v, i) => [v, totais[i] ?? 0])) as ChamadoContagens
+  const totais = await prisma.$transaction(visoes.map((v) => contar(v)))
+  return Object.fromEntries(visoes.map((v, i) => [v, totais[i] ?? 0])) as ChamadoContagens
 }
 
 const TRINTA_DIAS_MS = 30 * 24 * 60 * 60 * 1000

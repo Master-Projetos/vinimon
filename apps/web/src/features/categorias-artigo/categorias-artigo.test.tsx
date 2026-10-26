@@ -106,6 +106,30 @@ describe('/admin/categorias-artigo', () => {
     )
   })
 
+  it('(b) excluir confirma e faz DELETE /categorias-artigo/:id', async () => {
+    const { falsa } = montar({
+      ...listaPadrao,
+      'DELETE /categorias-artigo/1': () => new Response(null, { status: 204 }),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Tutoriais' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/categorias-artigo/1', corpo: null }),
+    )
+    expect(await screen.findByText('Categoria excluída')).toBeInTheDocument()
+  })
+
+  it('(c) 409 ao excluir mostra a mensagem do servidor', async () => {
+    montar({
+      ...listaPadrao,
+      'DELETE /categorias-artigo/1': () =>
+        json({ erro: { codigo: 'REGISTRO_EM_USO', mensagem: 'Registro em uso e não pode ser excluído.' } }, 409),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Tutoriais' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    expect(await screen.findByText('Registro em uso e não pode ser excluído.')).toBeInTheDocument()
+  })
+
   it('(c) 400 com detalhes aparece no campo', async () => {
     montar({
       ...listaPadrao,

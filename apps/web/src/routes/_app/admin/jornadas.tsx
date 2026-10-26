@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { jornadasConsultas, useSalvarJornada } from '@/features/jornadas/queries'
+import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
+import { jornadasConsultas, useExcluirJornada, useSalvarJornada } from '@/features/jornadas/queries'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
 
 const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as const
@@ -64,6 +65,8 @@ function JornadasPagina() {
   const pagina = search.pagina ?? 1
   const { data } = useSuspenseQuery(jornadasConsultas.lista({ pagina, busca: search.busca }))
   const [editando, setEditando] = useState<Jornada | 'nova' | null>(null)
+  const [excluindo, setExcluindo] = useState<Jornada | null>(null)
+  const excluir = useExcluirJornada()
   const totalPaginas = Math.max(1, Math.ceil(data.total / data.porPagina))
 
   return (
@@ -99,14 +102,24 @@ function JornadasPagina() {
                 <Badge variant={jornada.ativo ? 'secondary' : 'outline'}>{jornada.ativo ? 'Ativa' : 'Inativa'}</Badge>
               </TableCell>
               <TableCell>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label={`Editar ${jornada.nome}`}
-                  onClick={() => setEditando(jornada)}
-                >
-                  <Pencil aria-hidden="true" />
-                </Button>
+                <div className="flex justify-end gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Editar ${jornada.nome}`}
+                    onClick={() => setEditando(jornada)}
+                  >
+                    <Pencil aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Excluir ${jornada.nome}`}
+                    onClick={() => setExcluindo(jornada)}
+                  >
+                    <Trash2 aria-hidden="true" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -142,6 +155,14 @@ function JornadasPagina() {
           ) : null}
         </SheetContent>
       </Sheet>
+      <ExcluirCadastroDialog
+        alvo={excluindo}
+        tipo="a jornada"
+        sucesso="Jornada excluída"
+        aviso="A jornada usada como padrão do SLA não pode ser excluída."
+        excluir={(id) => excluir.mutateAsync(id)}
+        aoFechar={() => setExcluindo(null)}
+      />
     </section>
   )
 }
