@@ -31,7 +31,7 @@
 ### T-13.2 — Isolamento por área configurável
 - **Depende de:** MVP · **Paralelo com:** T-13.1
 - **Requisitos:** A03; S44
-- **Arquivos:** `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `apps/api/src/lib/tempo-real.ts`, `apps/api/src/realtime/revalidacao.ts`, `apps/api/src/modules/config/service.ts`, `apps/api/test/escopo-equivalencia.test.ts`
+- **Arquivos:** `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `apps/api/src/lib/tempo-real.ts`, `apps/api/src/realtime/revalidacao.ts`, `apps/api/src/realtime/plugin.ts`, `apps/api/src/modules/config/service.ts`, `apps/api/test/escopo-equivalencia.test.ts`
 - **Passos:**
   1. Config `chamado.isolarAreas` (padrão `true`).
   2. `UsuarioSessao.verTodasAreas = perfil==='OPERADOR' && !cfg['chamado.isolarAreas']`.
