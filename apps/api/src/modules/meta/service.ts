@@ -6,49 +6,65 @@ import { destinosDaArea } from '../areas/service'
 
 /** Catálogos ativos em uma única leitura. `tags` só entram para quem atende chamados (`chamado.atender`). */
 export async function obterMeta(usuario: UsuarioSessao): Promise<Meta> {
-  const [areas, prioridades, status, problemas, canais, departamentos, unidades, tiposAtivo, jornadas, categorias] =
-    await prisma.$transaction([
-      prisma.area.findMany({
-        where: { ativo: true },
-        select: { id: true, nome: true, atende: true },
-        orderBy: { nome: 'asc' },
-      }),
-      prisma.prioridade.findMany({
-        where: { ativo: true },
-        select: { id: true, nome: true, cor: true, ordem: true, padrao: true },
-        orderBy: [{ ordem: 'asc' }, { id: 'asc' }],
-      }),
-      prisma.status.findMany({
-        where: { ativo: true },
-        select: { id: true, nome: true, tipo: true, papel: true, cor: true, ignorado: true },
-        orderBy: [{ ordem: 'asc' }, { id: 'asc' }],
-      }),
-      prisma.problema.findMany({
-        where: { ativo: true },
-        select: {
-          id: true,
-          nome: true,
-          descricao: true,
-          areaPadraoId: true,
-          areas: { select: { areaId: true }, orderBy: { areaId: 'asc' } },
-        },
-        orderBy: { nome: 'asc' },
-      }),
-      prisma.canal.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
-      prisma.departamento.findMany({
-        where: { ativo: true },
-        select: { id: true, nome: true, unidadeId: true },
-        orderBy: { nome: 'asc' },
-      }),
-      prisma.unidade.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
-      prisma.tipoAtivo.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
-      prisma.jornada.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
-      prisma.categoriaArtigo.findMany({
-        where: { ativo: true },
-        select: { id: true, nome: true },
-        orderBy: [{ ordem: 'asc' }, { nome: 'asc' }],
-      }),
-    ])
+  const [
+    areas,
+    prioridades,
+    status,
+    problemas,
+    canais,
+    departamentos,
+    unidades,
+    tiposAtivo,
+    jornadas,
+    categorias,
+    categoriasProblema,
+  ] = await prisma.$transaction([
+    prisma.area.findMany({
+      where: { ativo: true },
+      select: { id: true, nome: true, atende: true },
+      orderBy: { nome: 'asc' },
+    }),
+    prisma.prioridade.findMany({
+      where: { ativo: true },
+      select: { id: true, nome: true, cor: true, ordem: true, padrao: true },
+      orderBy: [{ ordem: 'asc' }, { id: 'asc' }],
+    }),
+    prisma.status.findMany({
+      where: { ativo: true },
+      select: { id: true, nome: true, tipo: true, papel: true, cor: true, ignorado: true },
+      orderBy: [{ ordem: 'asc' }, { id: 'asc' }],
+    }),
+    prisma.problema.findMany({
+      where: { ativo: true },
+      select: {
+        id: true,
+        nome: true,
+        descricao: true,
+        areaPadraoId: true,
+        areas: { select: { areaId: true }, orderBy: { areaId: 'asc' } },
+      },
+      orderBy: { nome: 'asc' },
+    }),
+    prisma.canal.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
+    prisma.departamento.findMany({
+      where: { ativo: true },
+      select: { id: true, nome: true, unidadeId: true },
+      orderBy: { nome: 'asc' },
+    }),
+    prisma.unidade.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
+    prisma.tipoAtivo.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
+    prisma.jornada.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
+    prisma.categoriaArtigo.findMany({
+      where: { ativo: true },
+      select: { id: true, nome: true },
+      orderBy: [{ ordem: 'asc' }, { nome: 'asc' }],
+    }),
+    prisma.categoria.findMany({
+      where: { ativo: true },
+      select: { id: true, grupo: true, nome: true },
+      orderBy: [{ grupo: 'asc' }, { nome: 'asc' }],
+    }),
+  ])
 
   const destinosPermitidos = (await destinosDaArea(prisma, usuario.areaId)).map((d) => ({
     areaId: d.areaDestinoId,
@@ -75,6 +91,7 @@ export async function obterMeta(usuario: UsuarioSessao): Promise<Meta> {
     tiposAtivo,
     jornadas,
     categorias,
+    categoriasProblema,
     destinosPermitidos,
     config: configPublica,
     ...(tags === undefined ? {} : { tags }),

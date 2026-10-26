@@ -571,15 +571,40 @@ model Problema {
   slaRespostaMin Int?    @map("sla_resposta_min")
   slaSolucaoMin  Int?    @map("sla_solucao_min")
   ativo          Boolean @default(true)
+  /// categoria N precisa ter grupo = N (service, 422)
+  categoria1Id   Int?    @map("categoria1_id")
+  categoria2Id   Int?    @map("categoria2_id")
+  categoria3Id   Int?    @map("categoria3_id")
 
   areaPadrao Area?            @relation(fields: [areaPadraoId], references: [id], onDelete: Restrict)
+  categoria1 Categoria?       @relation("ProblemaCategoria1", fields: [categoria1Id], references: [id], onDelete: Restrict)
+  categoria2 Categoria?       @relation("ProblemaCategoria2", fields: [categoria2Id], references: [id], onDelete: Restrict)
+  categoria3 Categoria?       @relation("ProblemaCategoria3", fields: [categoria3Id], references: [id], onDelete: Restrict)
   areas      ProblemaArea[]
   chamados   Chamado[]
   artigos    ArtigoProblema[]
   campos     CampoProblema[]
 
   @@index([areaPadraoId], map: "ix_problemas_area_padrao")
+  @@index([categoria1Id], map: "ix_problemas_categoria1")
+  @@index([categoria2Id], map: "ix_problemas_categoria2")
+  @@index([categoria3Id], map: "ix_problemas_categoria3")
   @@map("problemas")
+}
+
+/// Classificação opcional dos tipos de problema em até 3 grupos (B07). `grupo` é 1–3 (CHECK na migração).
+model Categoria {
+  id    Int     @id @default(autoincrement())
+  grupo Int     @db.SmallInt
+  nome  String  @db.VarChar(120)
+  ativo Boolean @default(true)
+
+  problemas1 Problema[] @relation("ProblemaCategoria1")
+  problemas2 Problema[] @relation("ProblemaCategoria2")
+  problemas3 Problema[] @relation("ProblemaCategoria3")
+
+  @@unique([grupo, nome], map: "ux_categorias_grupo_nome")
+  @@map("categorias")
 }
 
 model ProblemaArea {

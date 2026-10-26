@@ -30,6 +30,17 @@ const CAMPOS = {
   'inatividade.avaliacao': z.enum(NOTAS_AVALIACAO),
   'notificacoes.retencaoDias': z.int().min(30).max(365),
   'email.habilitado': z.boolean(),
+  /** Nomes dos três grupos de categoria exibidos na abertura (B07). */
+  'abertura.rotulosCategorias': z.tuple([
+    z.string().trim().min(1).max(40),
+    z.string().trim().min(1).max(40),
+    z.string().trim().min(1).max(40),
+  ]),
+  /** Grupos (1–3) que filtram a escolha do tipo de problema na abertura. */
+  'abertura.preFiltros': z
+    .array(z.int().min(1).max(3))
+    .max(3)
+    .refine((g) => new Set(g).size === g.length, 'Não repita grupos.'),
 }
 
 export const ConfigSchema = z.object(CAMPOS)
@@ -63,6 +74,8 @@ export const CONFIG_PADRAO: Config = {
   'inatividade.avaliacao': 'OTIMO',
   'notificacoes.retencaoDias': 180,
   'email.habilitado': false,
+  'abertura.rotulosCategorias': ['Categoria 1', 'Categoria 2', 'Categoria 3'],
+  'abertura.preFiltros': [],
 }
 
 /** PATCH /config: só as chaves enviadas; chave desconhecida = 400. */
@@ -77,4 +90,6 @@ export const CHAVES_CONFIG_PUBLICAS = [
   'chamado.permitirReabertura',
   'chamado.prazoReaberturaDias',
   'chamado.primeiraRespostaAoEncaminhar',
+  'abertura.rotulosCategorias',
+  'abertura.preFiltros',
 ] as const satisfies readonly ChaveConfig[]
