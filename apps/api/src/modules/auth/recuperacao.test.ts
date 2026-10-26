@@ -46,6 +46,15 @@ describe('recuperação de senha (SEN-10, S20)', () => {
     return m[1]
   }
 
+  it('GET /auth/recuperacao é público e informa só se o e-mail está habilitado', async () => {
+    const antes = await app.inject({ method: 'GET', url: '/api/v1/auth/recuperacao' })
+    expect(antes.statusCode).toBe(200)
+    expect(antes.json()).toEqual({ habilitada: false })
+    await habilitarEmail()
+    const depois = await app.inject({ method: 'GET', url: '/api/v1/auth/recuperacao' })
+    expect(depois.json()).toEqual({ habilitada: true })
+  })
+
   it('login inexistente e existente recebem a mesma resposta', async () => {
     await habilitarEmail()
     const u = await criarUsuario({ perfil: 'USUARIO' })

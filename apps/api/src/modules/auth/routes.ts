@@ -174,6 +174,18 @@ export const rotasAuth: FastifyPluginAsyncZod = async (app) => {
   })
 
   app.route({
+    method: c.recuperacaoHabilitada.metodo,
+    url: c.recuperacaoHabilitada.caminho,
+    schema: {
+      tags,
+      summary: 'Informa se a recuperação de senha por e-mail está disponível',
+      response: { 200: c.recuperacaoHabilitada.resposta },
+    },
+    config: { acesso: 'publico', rateLimit: { max: 60, timeWindow: '1 minute' } },
+    handler: () => recuperacao.recuperacaoHabilitada(),
+  })
+
+  app.route({
     method: c.redefinirSenha.metodo,
     url: c.redefinirSenha.caminho,
     schema: {
