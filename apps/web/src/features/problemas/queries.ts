@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { type CriarProblema, type ListarProblemasQuery, problemasApi } from '@vinimon/shared'
+import { useExcluirCadastro } from '@/features/admin/excluir'
 import { chamar } from '@/lib/api'
 
 export const problemaChaves = {
@@ -28,4 +29,8 @@ export function useSalvarProblema(id: number | null) {
     },
     meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
   })
+}
+
+export function useExcluirProblema() {
+  return useExcluirCadastro((id) => chamar(problemasApi.excluir, { params: { id } }), [problemaChaves.todos])
 }

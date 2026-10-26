@@ -187,4 +187,38 @@ describe('/admin/prioridades', () => {
     })
     expect(await screen.findByText(titulo)).toBeInTheDocument()
   })
+  it('excluir confirma e faz DELETE /prioridades/1', async () => {
+    const { falsa } = montar('/admin/prioridades', {
+      ...lista,
+      'DELETE /prioridades/1': () => new Response(null, { status: 204 }),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Alta' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/prioridades/1', corpo: null }),
+    )
+    expect(await screen.findByText('Prioridade excluída')).toBeInTheDocument()
+  })
+
+  it('409 ao excluir mostra a mensagem do servidor', async () => {
+    montar('/admin/prioridades', {
+      ...lista,
+      'DELETE /prioridades/1': () =>
+        json(
+          { erro: { codigo: 'REGISTRO_EM_USO', mensagem: 'A prioridade está em uso e não pode ser excluída.' } },
+          409,
+        ),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Alta' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    expect(await screen.findByText('A prioridade está em uso e não pode ser excluída.')).toBeInTheDocument()
+  })
+
+  it('prioridade padrão tem o botão de excluir desabilitado', async () => {
+    montar('/admin/prioridades', lista)
+    const botao = await screen.findByRole('button', { name: 'Excluir Baixa' })
+    expect(botao).toBeDisabled()
+    expect(botao).toHaveAttribute('title', 'A prioridade padrão não pode ser excluída.')
+    expect(screen.getByRole('button', { name: 'Excluir Alta' })).toBeEnabled()
+  })
 })

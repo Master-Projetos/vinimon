@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { CriarUnidadeSchema, type Unidade } from '@vinimon/shared'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { unidadesConsultas, useSalvarUnidade } from '@/features/unidades/queries'
+import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
+import { unidadesConsultas, useExcluirUnidade, useSalvarUnidade } from '@/features/unidades/queries'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
 
 const BuscaSchema = z.object({
@@ -33,6 +34,8 @@ function UnidadesPagina() {
   const pagina = search.pagina ?? 1
   const { data } = useSuspenseQuery(unidadesConsultas.lista({ pagina, busca: search.busca }))
   const [editando, setEditando] = useState<Unidade | 'nova' | null>(null)
+  const [excluindo, setExcluindo] = useState<Unidade | null>(null)
+  const excluir = useExcluirUnidade()
   const totalPaginas = Math.max(1, Math.ceil(data.total / data.porPagina))
 
   return (
@@ -66,14 +69,24 @@ function UnidadesPagina() {
                 <Badge variant={unidade.ativo ? 'secondary' : 'outline'}>{unidade.ativo ? 'Ativa' : 'Inativa'}</Badge>
               </TableCell>
               <TableCell>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label={`Editar ${unidade.nome}`}
-                  onClick={() => setEditando(unidade)}
-                >
-                  <Pencil aria-hidden="true" />
-                </Button>
+                <div className="flex justify-end gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Editar ${unidade.nome}`}
+                    onClick={() => setEditando(unidade)}
+                  >
+                    <Pencil aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Excluir ${unidade.nome}`}
+                    onClick={() => setExcluindo(unidade)}
+                  >
+                    <Trash2 aria-hidden="true" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -103,6 +116,14 @@ function UnidadesPagina() {
       </nav>
 
       <UnidadeSheet unidade={editando} aoFechar={() => setEditando(null)} />
+      <ExcluirCadastroDialog
+        alvo={excluindo}
+        tipo="a unidade"
+        sucesso="Unidade excluída"
+        aviso="Unidades que têm departamentos não podem ser excluídas."
+        excluir={(id) => excluir.mutateAsync(id)}
+        aoFechar={() => setExcluindo(null)}
+      />
     </section>
   )
 }
