@@ -137,10 +137,13 @@ function filtrosDa(u: UsuarioSessao, f: ChamadoFiltros, fuso: string, agora: Dat
   }
   if (f.solicitanteId !== undefined) filtros.push({ solicitanteId: f.solicitanteId })
 
-  if (f.tagIds?.length) {
-    // tags são internas: quem não atende não filtra por elas (S49); "contém todas"
+  if (f.tagIds?.length || f.tagIdsAlguma?.length || f.tagIdsNenhuma?.length) {
+    // tags são internas: quem não atende não filtra por elas (S49)
     if (!temPermissao(u.perfil, 'chamado.atender')) throw semPermissao()
-    for (const tagId of f.tagIds) filtros.push({ tags: { some: { tagId } } })
+    // `tagIds`: contém todas · `tagIdsAlguma`: contém ao menos uma · `tagIdsNenhuma`: não contém nenhuma
+    for (const tagId of f.tagIds ?? []) filtros.push({ tags: { some: { tagId } } })
+    if (f.tagIdsAlguma?.length) filtros.push({ tags: { some: { tagId: { in: f.tagIdsAlguma } } } })
+    if (f.tagIdsNenhuma?.length) filtros.push({ tags: { none: { tagId: { in: f.tagIdsNenhuma } } } })
   }
   if (f.sla) filtros.push(filtroSla(f.sla, agora))
   if (f.avaliacao?.length) filtros.push({ avaliacao: { is: { nota: { in: f.avaliacao } } } })
