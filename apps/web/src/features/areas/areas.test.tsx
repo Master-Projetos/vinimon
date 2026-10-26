@@ -108,7 +108,7 @@ describe('/admin/areas', () => {
       expect(falsa.chamadas).toContainEqual({
         metodo: 'POST',
         url: '/api/v1/areas',
-        corpo: { nome: 'Jurídico', atende: true, ativo: true, jornadaId: null },
+        corpo: { nome: 'Jurídico', atende: true, ativo: true, jornadaId: null, moduloInventario: true, destinos: [] },
       }),
     )
     expect(await screen.findByText('Área criada')).toBeInTheDocument()
@@ -125,7 +125,45 @@ describe('/admin/areas', () => {
       expect(falsa.chamadas).toContainEqual({
         metodo: 'PATCH',
         url: '/api/v1/areas/1',
-        corpo: { nome: 'Financeiro Geral', atende: true, ativo: true, jornadaId: null },
+        corpo: {
+          nome: 'Financeiro Geral',
+          atende: true,
+          ativo: true,
+          jornadaId: null,
+          moduloInventario: true,
+          destinos: [],
+        },
+      }),
+    )
+  })
+
+  it('(b) destinos com padrão e módulo de inventário vão no PATCH', async () => {
+    const outras = [
+      { id: 1, nome: 'Financeiro', atende: true },
+      { id: 5, nome: 'Compras', atende: true },
+    ]
+    const { falsa } = montar({
+      ...listaPadrao,
+      'GET /meta': { ...meta, areas: outras },
+      'PATCH /areas/1': () => json(area(1, 'Financeiro')),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Financeiro' }))
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Compras' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'Padrão' }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Módulo de inventário' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({
+        metodo: 'PATCH',
+        url: '/api/v1/areas/1',
+        corpo: {
+          nome: 'Financeiro',
+          atende: true,
+          ativo: true,
+          jornadaId: null,
+          moduloInventario: false,
+          destinos: [{ areaId: 5, padrao: true }],
+        },
       }),
     )
   })

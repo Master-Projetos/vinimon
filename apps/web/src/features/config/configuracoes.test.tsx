@@ -121,6 +121,36 @@ describe('/admin/configuracoes', () => {
     expect(await screen.findByText('Valor fora do limite.')).toBeInTheDocument()
   })
 
+  it('(b) seção Acesso salva só as chaves de acesso', async () => {
+    const { falsa } = montar('/admin/configuracoes', {
+      ...lista,
+      'PATCH /config': () => json({ ...CONFIG_PADRAO, 'chamado.usuarioAbreParaOutros': true }),
+    })
+    fireEvent.click(await screen.findByRole('switch', { name: 'Usuário abre chamado para outros' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar acesso' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({
+        metodo: 'PATCH',
+        url: '/api/v1/config',
+        corpo: {
+          'chamado.isolarAreas': true,
+          'chamado.operadorTrataProprio': true,
+          'chamado.usuarioAbreParaOutros': true,
+        },
+      }),
+    )
+  })
+
+  it('(b) "Testar LDAP" chama POST /config/ldap/testar e mostra o resultado', async () => {
+    const { falsa } = montar('/admin/configuracoes', {
+      ...lista,
+      'POST /config/ldap/testar': () => json({ ok: false, mensagem: 'LDAP não configurado.' }),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Testar LDAP' }))
+    expect(await screen.findByText('LDAP não configurado.')).toBeInTheDocument()
+    expect(falsa.chamadas).toContainEqual({ metodo: 'POST', url: '/api/v1/config/ldap/testar', corpo: {} })
+  })
+
   it.each([
     [403, 'Você não tem acesso a este conteúdo'],
     [404, 'Não encontrado'],
