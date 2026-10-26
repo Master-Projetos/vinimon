@@ -77,7 +77,13 @@ export async function obterArea(id: number) {
 export function criarArea(dados: CriarArea, ctx: ContextoUsuario) {
   return prisma.$transaction(async (tx) => {
     const { id } = await tx.area.create({
-      data: { nome: dados.nome, atende: dados.atende, ativo: dados.ativo, jornadaId: dados.jornadaId },
+      data: {
+        nome: dados.nome,
+        atende: dados.atende,
+        ativo: dados.ativo,
+        moduloInventario: dados.moduloInventario,
+        jornadaId: dados.jornadaId,
+      },
       select: { id: true },
     })
     await gravarDestinos(tx, id, dados.destinos ?? [])
@@ -94,7 +100,13 @@ export function atualizarArea(id: number, dados: AtualizarArea, ctx: ContextoUsu
     const antes = destinosDe(antesBruto)
     await tx.area.update({
       where: { id },
-      data: { nome: dados.nome, atende: dados.atende, ativo: dados.ativo, jornadaId: dados.jornadaId },
+      data: {
+        nome: dados.nome,
+        atende: dados.atende,
+        ativo: dados.ativo,
+        moduloInventario: dados.moduloInventario,
+        jornadaId: dados.jornadaId,
+      },
     })
     if (dados.destinos !== undefined) await gravarDestinos(tx, id, dados.destinos)
     const depois = destinosDe(await tx.area.findUniqueOrThrow({ where: { id }, select: selectAreaComDestinos }))

@@ -21,6 +21,10 @@ export interface UsuarioSessao {
   verTodasAreas?: boolean
   /** Áreas que o usuário gerencia (A04): vê os chamados dos usuários dessas áreas. Ausente = nenhuma. */
   areasGeridas?: number[]
+  /** OPERADOR com alguma área que tem o módulo de inventário (A17). Ausente = sem restrição (outros perfis). */
+  inventarioHabilitado?: boolean
+  /** `chamado.operadorTrataProprio` desligado: o operador não atende o chamado em que é solicitante (A19). Ausente = pode. */
+  operadorTrataProprio?: boolean
 }
 
 export type MotivoRevogacao =
@@ -120,6 +124,12 @@ export function verTodasAreas(perfil: Perfil, cfg: Config): boolean {
   return perfil === 'OPERADOR' && !cfg['chamado.isolarAreas']
 }
 
+/** A17: o OPERADOR só usa o inventário se ao menos uma das suas áreas tem o módulo habilitado. */
+async function temModuloInventario(areaIds: number[]): Promise<boolean> {
+  if (areaIds.length === 0) return false
+  return (await prisma.area.count({ where: { id: { in: areaIds }, moduloInventario: true } })) > 0
+}
+
 export async function carregarSessao(
   token: string | undefined,
   opcoes: { tocar?: boolean } = {},
@@ -174,6 +184,12 @@ export async function carregarSessao(
     mfaAtivo: u.mfaAtivadoEm !== null,
     verTodasAreas: verTodasAreas(u.perfil, cfg),
     areasGeridas: u.areasGeridas.map((a) => a.areaId),
+    operadorTrataProprio: cfg['chamado.operadorTrataProprio'],
+    ...(u.perfil === 'OPERADOR'
+      ? {
+          inventarioHabilitado: await temModuloInventario(u.areaId === null ? secundarias : [u.areaId, ...secundarias]),
+        }
+      : {}),
   }
 }
 

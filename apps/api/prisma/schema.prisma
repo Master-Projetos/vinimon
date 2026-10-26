@@ -262,6 +262,8 @@ model Area {
   id           Int      @id @default(autoincrement())
   nome         String   @unique @db.VarChar(120)
   atende       Boolean  @default(true)
+  /// OPERADOR sem nenhuma área com o módulo não acessa o inventário (A17)
+  moduloInventario Boolean @default(true) @map("modulo_inventario")
   /// jornada de SLA (null = config sla.jornadaPadraoId)
   jornadaId    Int?     @map("jornada_id")
   ativo        Boolean  @default(true)

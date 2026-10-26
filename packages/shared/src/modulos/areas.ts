@@ -22,6 +22,8 @@ export const AreaSchema = z.object({
   nome: z.string(),
   atende: z.boolean(),
   ativo: z.boolean(),
+  /** Sem o módulo, o OPERADOR que só tem áreas assim não acessa o inventário (A17). */
+  moduloInventario: z.boolean().default(true),
   jornadaId: z.int().nullable(),
   /** Vazio = quem é desta área pode abrir chamado para qualquer área. */
   destinos: z.array(AreaDestinoSchema).default([]),
@@ -34,6 +36,8 @@ export const CriarAreaSchema = z.strictObject({
   nome: z.string().trim().min(2, 'Informe ao menos 2 caracteres.').max(120, 'Use no máximo 120 caracteres.'),
   atende: z.boolean(),
   ativo: z.boolean(),
+  /** Omitido: na criação vale `true`; na atualização, mantém o atual. */
+  moduloInventario: z.boolean().optional(),
   jornadaId: z.int().positive().nullable(),
   /** Omitido: na criação, sem destinos; na atualização, mantém os atuais. */
   destinos: DestinosSchema.optional(),
