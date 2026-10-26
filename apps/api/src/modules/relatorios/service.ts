@@ -80,15 +80,94 @@ export function whereDoRelatorio(
   }
 }
 
+interface Acumulado {
+  total: number
+  encerrados: number
+  respSim: number
+  respNao: number
+  solSim: number
+  solNao: number
+  somaTempo: number
+  nTempo: number
+}
+
+const vazio = (): Acumulado => ({
+  total: 0,
+  encerrados: 0,
+  respSim: 0,
+  respNao: 0,
+  solSim: 0,
+  solNao: 0,
+  somaTempo: 0,
+  nTempo: 0,
+})
+
+interface GrupoBruto {
+  statusTipo: string
+  slaRespostaCumprido: boolean | null
+  slaSolucaoCumprido: boolean | null
+  _count: { _all: number; tempoSolucaoUtilMin: number }
+  _sum: { tempoSolucaoUtilMin: number | null }
+}
+
+function somarGrupo(a: Acumulado, g: GrupoBruto) {
+  const n = g._count._all
+  a.total += n
+  if (g.statusTipo === 'ENCERRADO') a.encerrados += n
+  if (g.slaRespostaCumprido === true) a.respSim += n
+  else if (g.slaRespostaCumprido === false) a.respNao += n
+  if (g.slaSolucaoCumprido === true) a.solSim += n
+  else if (g.slaSolucaoCumprido === false) a.solNao += n
+  a.somaTempo += g._sum.tempoSolucaoUtilMin ?? 0
+  a.nTempo += g._count.tempoSolucaoUtilMin
+}
+
+const indicadoresDe = (a: Acumulado) =>
+  indicadores(a.total, a.encerrados, a.solSim, a.solNao, a.nTempo === 0 ? null : a.somaTempo / a.nTempo)
+
+const AGREGADOS = {
+  _count: { _all: true, tempoSolucaoUtilMin: true },
+  _sum: { tempoSolucaoUtilMin: true },
+} as const
+
+const ordemId = (a: number | null, b: number | null) => (a === null ? 1 : b === null ? -1 : a - b)
+
+/** Uma única varredura: agrupa por `campo` + status/SLA e soma em memória (totais e dimensão saem da mesma consulta). */
+async function agregar(
+  campo: 'areaId' | 'problemaId' | 'statusId' | 'operadorId' | 'solicitanteId',
+  where: Prisma.ChamadoWhereInput,
+) {
+  const grupos = await prisma.chamado.groupBy({
+    by: [campo, 'statusTipo', 'slaRespostaCumprido', 'slaSolucaoCumprido'],
+    where,
+    ...AGREGADOS,
+  })
+  const chaveDe = (v: number | null) => (v === null ? 'sem' : String(v))
+  const porChave = new Map<string, { id: number | null; acc: Acumulado }>()
+  const geral = vazio()
+  for (const g of grupos) {
+    const id = g[campo]
+    const k = chaveDe(id)
+    const atual = porChave.get(k) ?? { id, acc: vazio() }
+    somarGrupo(atual.acc, g)
+    somarGrupo(geral, g)
+    porChave.set(k, atual)
+  }
+  const ordenadas = [...porChave.entries()]
+    .sort(([ka, a], [kb, b]) => b.acc.total - a.acc.total || ordemId(a.id, b.id) || ka.localeCompare(kb))
+    .slice(0, LIMITE_LINHAS)
+  return { geral, linhas: ordenadas.map(([chave, v]) => ({ chave, id: v.id, acc: v.acc })) }
+}
+
 async function totaisDe(where: Prisma.ChamadoWhereInput) {
-  const [total, encerrados, cumpridos, estourados, media] = await prisma.$transaction([
-    prisma.chamado.count({ where }),
-    prisma.chamado.count({ where: { AND: [where, { statusTipo: 'ENCERRADO' }] } }),
-    prisma.chamado.count({ where: { AND: [where, { slaSolucaoCumprido: true }] } }),
-    prisma.chamado.count({ where: { AND: [where, { slaSolucaoCumprido: false }] } }),
-    prisma.chamado.aggregate({ where, _avg: { tempoSolucaoUtilMin: true } }),
-  ])
-  return indicadores(total, encerrados, cumpridos, estourados, media._avg.tempoSolucaoUtilMin)
+  const grupos = await prisma.chamado.groupBy({
+    by: ['statusTipo', 'slaRespostaCumprido', 'slaSolucaoCumprido'],
+    where,
+    ...AGREGADOS,
+  })
+  const geral = vazio()
+  for (const g of grupos) somarGrupo(geral, g)
+  return indicadoresDe(geral)
 }
 
 async function nomesDe(dim: Dimensao, ids: number[]): Promise<Map<number, string>> {
@@ -107,111 +186,52 @@ async function nomesDe(dim: Dimensao, ids: number[]): Promise<Map<number, string
   return new Map((await pares()).map((p) => [p.id, p.nome]))
 }
 
-async function porDimensao(dim: Dimensao, where: Prisma.ChamadoWhereInput): Promise<LinhaRelatorio[]> {
-  const campo = CAMPO[dim]
-  const [geral, encerrados, prazo] = await Promise.all([
-    prisma.chamado.groupBy({
-      by: [campo],
-      where,
-      _count: { _all: true },
-      _avg: { tempoSolucaoUtilMin: true },
-      orderBy: { _count: { id: 'desc' } },
-      take: LIMITE_LINHAS,
-    }),
-    prisma.chamado.groupBy({
-      by: [campo],
-      where: { AND: [where, { statusTipo: 'ENCERRADO' }] },
-      _count: { _all: true },
-    }),
-    prisma.chamado.groupBy({
-      by: [campo, 'slaSolucaoCumprido'],
-      where: { AND: [where, { slaSolucaoCumprido: { not: null } }] },
-      _count: { _all: true },
-    }),
-  ])
-  const chaveDe = (v: number | null) => (v === null ? 'sem' : String(v))
-  const nEnc = new Map(encerrados.map((g) => [chaveDe(g[campo]), g._count._all]))
-  const nPrazo = new Map<string, { sim: number; nao: number }>()
-  for (const g of prazo) {
-    const k = chaveDe(g[campo])
-    const atual = nPrazo.get(k) ?? { sim: 0, nao: 0 }
-    if (g.slaSolucaoCumprido) atual.sim += g._count._all
-    else atual.nao += g._count._all
-    nPrazo.set(k, atual)
-  }
-  const ids = geral.flatMap((g) => (g[campo] === null ? [] : [g[campo] as number]))
-  const nomes = await nomesDe(dim, ids)
-  return geral.map((g) => {
-    const k = chaveDe(g[campo])
-    const p = nPrazo.get(k) ?? { sim: 0, nao: 0 }
-    const id = g[campo]
-    return {
-      chave: k,
-      nome: id === null ? SEM[dim] : (nomes.get(id) ?? `#${id}`),
-      ...indicadores(g._count._all, nEnc.get(k) ?? 0, p.sim, p.nao, g._avg.tempoSolucaoUtilMin),
-    }
-  })
+async function porDimensao(
+  dim: Dimensao,
+  where: Prisma.ChamadoWhereInput,
+  pronto?: Agregado,
+): Promise<LinhaRelatorio[]> {
+  const { linhas } = pronto ?? (await agregar(CAMPO[dim], where))
+  const nomes = await nomesDe(
+    dim,
+    linhas.flatMap((l) => (l.id === null ? [] : [l.id])),
+  )
+  return linhas.map((l) => ({
+    chave: l.chave,
+    nome: l.id === null ? SEM[dim] : (nomes.get(l.id) ?? `#${l.id}`),
+    ...indicadoresDe(l.acc),
+  }))
 }
+
+type Agregado = Awaited<ReturnType<typeof agregar>>
 
 const pct = (parte: number, base: number) => (base === 0 ? null : arredondar((parte / base) * 100))
 
 /** Percentuais de SLA agrupados por `campo`; o denominador de cada meta é só quem tem o valor não nulo. */
-async function slaPor(campo: 'areaId' | 'problemaId', where: Prisma.ChamadoWhereInput): Promise<LinhaSla[]> {
-  const [geral, resposta, solucao] = await Promise.all([
-    prisma.chamado.groupBy({
-      by: [campo],
-      where,
-      _count: { _all: true },
-      orderBy: { _count: { id: 'desc' } },
-      take: LIMITE_LINHAS,
-    }),
-    prisma.chamado.groupBy({
-      by: [campo, 'slaRespostaCumprido'],
-      where: { AND: [where, { slaRespostaCumprido: { not: null } }] },
-      _count: { _all: true },
-    }),
-    prisma.chamado.groupBy({
-      by: [campo, 'slaSolucaoCumprido'],
-      where: { AND: [where, { slaSolucaoCumprido: { not: null } }] },
-      _count: { _all: true },
-    }),
-  ])
-  const chaveDe = (v: number | null) => (v === null ? 'sem' : String(v))
-  const somar = (grupos: { id: number | null; cumprido: boolean | null; n: number }[]) => {
-    const m = new Map<string, { sim: number; nao: number }>()
-    for (const g of grupos) {
-      const k = chaveDe(g.id)
-      const atual = m.get(k) ?? { sim: 0, nao: 0 }
-      if (g.cumprido) atual.sim += g.n
-      else atual.nao += g.n
-      m.set(k, atual)
-    }
-    return m
-  }
-  const mResposta = somar(resposta.map((g) => ({ id: g[campo], cumprido: g.slaRespostaCumprido, n: g._count._all })))
-  const mSolucao = somar(solucao.map((g) => ({ id: g[campo], cumprido: g.slaSolucaoCumprido, n: g._count._all })))
-  const ids = geral.flatMap((g) => (g[campo] === null ? [] : [g[campo] as number]))
+async function slaPor(
+  campo: 'areaId' | 'problemaId',
+  where: Prisma.ChamadoWhereInput,
+  pronto?: Agregado,
+): Promise<LinhaSla[]> {
+  const { linhas } = pronto ?? (await agregar(campo, where))
   const dim: Dimensao = campo === 'areaId' ? 'por-area' : 'por-problema'
-  const nomes = await nomesDe(dim, ids)
-  return geral.map((g) => {
-    const id = g[campo]
-    const k = chaveDe(id)
-    const r = mResposta.get(k) ?? { sim: 0, nao: 0 }
-    const so = mSolucao.get(k) ?? { sim: 0, nao: 0 }
-    return {
-      chave: k,
-      nome: id === null ? SEM[dim] : (nomes.get(id) ?? `#${id}`),
-      total: g._count._all,
-      comMetaResposta: r.sim + r.nao,
-      pctRespostaNoPrazo: pct(r.sim, r.sim + r.nao),
-      comMetaSolucao: so.sim + so.nao,
-      pctSolucaoNoPrazo: pct(so.sim, so.sim + so.nao),
-    }
-  })
+  const nomes = await nomesDe(
+    dim,
+    linhas.flatMap((l) => (l.id === null ? [] : [l.id])),
+  )
+  return linhas.map((l) => ({
+    chave: l.chave,
+    nome: l.id === null ? SEM[dim] : (nomes.get(l.id) ?? `#${l.id}`),
+    total: l.acc.total,
+    comMetaResposta: l.acc.respSim + l.acc.respNao,
+    pctRespostaNoPrazo: pct(l.acc.respSim, l.acc.respSim + l.acc.respNao),
+    comMetaSolucao: l.acc.solSim + l.acc.solNao,
+    pctSolucaoNoPrazo: pct(l.acc.solSim, l.acc.solSim + l.acc.solNao),
+  }))
 }
 
-async function detalheSla(where: Prisma.ChamadoWhereInput): Promise<DetalheSla> {
-  const [porArea, porProblema] = await Promise.all([slaPor('areaId', where), slaPor('problemaId', where)])
+async function detalheSla(where: Prisma.ChamadoWhereInput, area: Agregado): Promise<DetalheSla> {
+  const [porArea, porProblema] = await Promise.all([slaPor('areaId', where, area), slaPor('problemaId', where)])
   return { porArea, porProblema }
 }
 
@@ -280,17 +300,24 @@ export async function gerarRelatorio(
 ): Promise<Relatorio> {
   const p = await periodoDe(q, agora)
   const where = whereDoRelatorio(u, q, p.inicio, p.fim)
-  const totais = await totaisDe(where)
+  // Relatórios por dimensão: totais e linhas saem da mesma varredura (agregado já cobre todas as dimensões).
+  const dim = tipo === 'visao-geral' || tipo === 'avaliacoes' ? null : tipo === 'sla' ? 'por-area' : tipo
+  const agregado = dim === null ? undefined : await agregar(CAMPO[dim], where)
+  const totais = agregado ? indicadoresDe(agregado.geral) : await totaisDe(where)
   const base = { tipo, de: p.de, ate: p.ate, totais }
   switch (tipo) {
     case 'visao-geral':
       return { ...base, linhas: [{ chave: 'geral', nome: 'Visão geral', ...totais }] }
     case 'sla':
-      return { ...base, linhas: await porDimensao('por-area', where), sla: await detalheSla(where) }
+      return {
+        ...base,
+        linhas: await porDimensao('por-area', where, agregado),
+        sla: await detalheSla(where, agregado ?? (await agregar('areaId', where))),
+      }
     case 'avaliacoes':
       return { ...base, linhas: await porDimensao('por-operador', where), avaliacoes: await detalheAvaliacoes(where) }
     default:
-      return { ...base, linhas: await porDimensao(tipo, where) }
+      return { ...base, linhas: await porDimensao(tipo, where, agregado) }
   }
 }
 
