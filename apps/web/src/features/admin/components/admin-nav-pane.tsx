@@ -17,6 +17,7 @@ interface ItemAdmin {
     | '/admin/tipos-ativo'
     | '/admin/categorias-artigo'
     | '/admin/configuracoes'
+    | '/admin/modelos-email'
     | '/admin/auditoria'
   rotulo: string
 }
@@ -54,6 +55,7 @@ const SECOES: { titulo: string; itens: ItemAdmin[] }[] = [
     titulo: 'Sistema',
     itens: [
       { to: '/admin/configuracoes', rotulo: 'Configurações' },
+      { to: '/admin/modelos-email', rotulo: 'Modelos de e-mail' },
       { to: '/admin/auditoria', rotulo: 'Auditoria' },
     ],
   },
