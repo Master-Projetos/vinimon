@@ -148,6 +148,27 @@ describe('/admin/jornadas', () => {
     expect(within(dialogo).queryByLabelText('Início da janela 1')).not.toBeInTheDocument()
   })
 
+  it('(b) excluir confirma e faz DELETE /jornadas/:id', async () => {
+    const { falsa } = montar('/admin/jornadas', { ...lista, 'DELETE /jornadas/1': () => new Response(null, { status: 204 }) })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Comercial' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/jornadas/1', corpo: null }),
+    )
+    expect(await screen.findByText('Jornada excluída')).toBeInTheDocument()
+  })
+
+  it('(c) 409 ao excluir mostra a mensagem do servidor', async () => {
+    montar('/admin/jornadas', {
+      ...lista,
+      'DELETE /jornadas/1': () =>
+        json({ erro: { codigo: 'REGISTRO_EM_USO', mensagem: 'Registro em uso e não pode ser excluído.' } }, 409),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Comercial' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    expect(await screen.findByText('Registro em uso e não pode ser excluído.')).toBeInTheDocument()
+  })
+
   it('(c) 400 com detalhes de sobreposição aparece no campo', async () => {
     montar('/admin/jornadas', {
       ...lista,

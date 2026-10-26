@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import type { Ativo, SituacaoAtivo } from '@vinimon/shared'
-import { Pencil } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ROTULOS_SITUACAO_ATIVO } from '@/lib/rotulos'
@@ -13,6 +13,9 @@ const CLASSES_SITUACAO: Record<SituacaoAtivo, string> = {
   EM_MANUTENCAO: 'bg-warning-soft text-warning-soft-foreground',
   BAIXADO: 'bg-muted text-muted-foreground',
 }
+
+/** A API recusa a exclusão de ativo com chamados (409): o botão já nasce desabilitado. */
+export const MOTIVO_COM_CHAMADOS = 'Ativos com chamados não podem ser excluídos: use a situação Baixado.'
 
 export function SituacaoAtivoBadge({ situacao }: { situacao: SituacaoAtivo }) {
   return (
@@ -30,9 +33,10 @@ export function SituacaoAtivoBadge({ situacao }: { situacao: SituacaoAtivo }) {
 export interface AtivosTableProps {
   ativos: Ativo[]
   aoEditar?: (ativo: Ativo) => void
+  aoExcluir?: (ativo: Ativo) => void
 }
 
-export function AtivosTable({ ativos, aoEditar }: AtivosTableProps) {
+export function AtivosTable({ ativos, aoEditar, aoExcluir }: AtivosTableProps) {
   return (
     <Table aria-label="Ativos">
       <TableHeader>
@@ -45,7 +49,7 @@ export function AtivosTable({ ativos, aoEditar }: AtivosTableProps) {
           <TableHead>Responsável</TableHead>
           <TableHead>Situação</TableHead>
           <TableHead className="text-right">Chamados</TableHead>
-          {aoEditar ? (
+          {aoEditar || aoExcluir ? (
             <TableHead className="w-12">
               <span className="sr-only">Ações</span>
             </TableHead>
@@ -69,11 +73,28 @@ export function AtivosTable({ ativos, aoEditar }: AtivosTableProps) {
               <SituacaoAtivoBadge situacao={a.situacao} />
             </TableCell>
             <TableCell className="text-right tabular-nums">{a.qtdChamados}</TableCell>
-            {aoEditar ? (
+            {aoEditar || aoExcluir ? (
               <TableCell>
-                <Button size="icon" variant="ghost" aria-label={`Editar ${a.etiqueta}`} onClick={() => aoEditar(a)}>
-                  <Pencil aria-hidden="true" />
-                </Button>
+                <div className="flex justify-end gap-1">
+                  {aoEditar ? (
+                    <Button size="icon" variant="ghost" aria-label={`Editar ${a.etiqueta}`} onClick={() => aoEditar(a)}>
+                      <Pencil aria-hidden="true" />
+                    </Button>
+                  ) : null}
+                  {aoExcluir ? (
+                    <span title={a.qtdChamados > 0 ? MOTIVO_COM_CHAMADOS : undefined}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label={`Excluir ${a.etiqueta}`}
+                        disabled={a.qtdChamados > 0}
+                        onClick={() => aoExcluir(a)}
+                      >
+                        <Trash2 aria-hidden="true" />
+                      </Button>
+                    </span>
+                  ) : null}
+                </div>
               </TableCell>
             ) : null}
           </TableRow>

@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { CriarTagSchema, type Tag } from '@vinimon/shared'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { tagsConsultas, useSalvarTag } from '@/features/tags/queries'
+import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
+import { tagsConsultas, useExcluirTag, useSalvarTag } from '@/features/tags/queries'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
 
 const BuscaSchema = z.object({
@@ -33,6 +34,8 @@ function TagsPagina() {
   const pagina = search.pagina ?? 1
   const { data } = useSuspenseQuery(tagsConsultas.lista({ pagina, busca: search.busca }))
   const [editando, setEditando] = useState<Tag | 'nova' | null>(null)
+  const [excluindo, setExcluindo] = useState<Tag | null>(null)
+  const excluir = useExcluirTag()
   const totalPaginas = Math.max(1, Math.ceil(data.total / data.porPagina))
 
   return (
@@ -64,9 +67,24 @@ function TagsPagina() {
                 <Badge variant={tag.ativo ? 'secondary' : 'outline'}>{tag.ativo ? 'Ativa' : 'Inativa'}</Badge>
               </TableCell>
               <TableCell>
-                <Button size="icon" variant="ghost" aria-label={`Editar ${tag.nome}`} onClick={() => setEditando(tag)}>
-                  <Pencil aria-hidden="true" />
-                </Button>
+                <div className="flex justify-end gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Editar ${tag.nome}`}
+                    onClick={() => setEditando(tag)}
+                  >
+                    <Pencil aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Excluir ${tag.nome}`}
+                    onClick={() => setExcluindo(tag)}
+                  >
+                    <Trash2 aria-hidden="true" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -96,6 +114,14 @@ function TagsPagina() {
       </nav>
 
       <TagSheet tag={editando} aoFechar={() => setEditando(null)} />
+      <ExcluirCadastroDialog
+        alvo={excluindo}
+        tipo="a tag"
+        sucesso="Tag excluída"
+        aviso="Tags usadas em chamados não podem ser excluídas."
+        excluir={(id) => excluir.mutateAsync(id)}
+        aoFechar={() => setExcluindo(null)}
+      />
     </section>
   )
 }
