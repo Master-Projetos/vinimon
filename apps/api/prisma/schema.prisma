@@ -198,6 +198,28 @@ enum CanalEmail {
   @@map("canal_email")
 }
 
+enum TipoCampo {
+  TEXTO
+  NUMERO
+  SELECAO
+  SELECAO_MULTIPLA
+  DATA
+  HORA
+  DATA_HORA
+  AREA_TEXTO
+  CHECKBOX
+
+  @@map("tipo_campo")
+}
+
+enum VisibilidadeCampo {
+  ABERTURA
+  SO_EDICAO
+  OCULTO_SOLICITANTE
+
+  @@map("visibilidade_campo")
+}
+
 // ═════════════════════════ ORGANIZAÇÃO ═════════════════════════
 
 model Unidade {
@@ -508,6 +530,7 @@ model Problema {
   areas      ProblemaArea[]
   chamados   Chamado[]
   artigos    ArtigoProblema[]
+  campos     CampoProblema[]
 
   @@index([areaPadraoId], map: "ix_problemas_area_padrao")
   @@map("problemas")
@@ -523,6 +546,56 @@ model ProblemaArea {
   @@id([problemaId, areaId])
   @@index([areaId], map: "ix_problema_areas_area")
   @@map("problema_areas")
+}
+
+/// Campo personalizado (definição). chave: ^[a-z][a-z0-9_]{1,59}$ (CHECK)
+model CampoPersonalizado {
+  id           Int               @id @default(autoincrement())
+  chave        String            @unique @db.VarChar(60)
+  rotulo       String            @db.VarChar(120)
+  tipo         TipoCampo
+  opcoes       String[]
+  obrigatorio  Boolean           @default(false)
+  regex        String?           @db.VarChar(100)
+  ajuda        String?           @db.VarChar(300)
+  visibilidade VisibilidadeCampo @default(ABERTURA)
+  ordem        Int               @default(0)
+  ativo        Boolean           @default(true)
+
+  problemas CampoProblema[]
+  valores   ChamadoCampoValor[]
+
+  @@map("campos_personalizados")
+}
+
+/// Vincula o campo a problemas; sem vínculos = vale para todos. obrigatorio != null sobrepõe o do campo
+model CampoProblema {
+  campoId     Int      @map("campo_id")
+  problemaId  Int      @map("problema_id")
+  obrigatorio Boolean?
+
+  campo    CampoPersonalizado @relation(fields: [campoId], references: [id], onDelete: Cascade)
+  problema Problema           @relation(fields: [problemaId], references: [id], onDelete: Cascade)
+
+  @@id([campoId, problemaId])
+  @@index([problemaId], map: "ix_campo_problemas_problema")
+  @@map("campo_problemas")
+}
+
+model ChamadoCampoValor {
+  chamadoId   Int       @map("chamado_id")
+  campoId     Int       @map("campo_id")
+  valorTexto  String?   @map("valor_texto") @db.Text
+  valorNumero Decimal?  @map("valor_numero") @db.Decimal(18, 4)
+  valorData   DateTime? @map("valor_data") @db.Timestamptz(3)
+  valorOpcoes String[]  @map("valor_opcoes")
+
+  chamado Chamado            @relation(fields: [chamadoId], references: [id], onDelete: Cascade)
+  campo   CampoPersonalizado @relation(fields: [campoId], references: [id], onDelete: Restrict)
+
+  @@id([chamadoId, campoId])
+  @@index([campoId], map: "ix_chamado_campo_valores_campo")
+  @@map("chamado_campo_valores")
 }
 
 model Canal {
@@ -696,6 +769,7 @@ model Chamado {
   anexos        Anexo[]
   avaliacao     AvaliacaoChamado?
   notificacoes  Notificacao[]
+  camposValores ChamadoCampoValor[]
 
   @@index([solicitanteId, id(sort: Desc)], map: "ix_chamados_solicitante")
   @@index([abertoPorId], map: "ix_chamados_aberto_por")
