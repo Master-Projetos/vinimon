@@ -702,6 +702,7 @@ model Chamado {
   @@index([areaId, statusTipo, id(sort: Desc)], map: "ix_chamados_area_tipo")
   @@index([operadorId, statusTipo, id(sort: Desc)], map: "ix_chamados_operador_tipo")
   @@index([statusId, id(sort: Desc)], map: "ix_chamados_status")
+  @@index([statusTipo, id(sort: Desc)], map: "ix_chamados_status_tipo")
   @@index([areaId, id(sort: Desc)], map: "ix_chamados_area_em_aberto", where: raw("concluido_em IS NULL"))
   @@index([operadorId, id(sort: Desc)], map: "ix_chamados_operador_em_aberto", where: raw("concluido_em IS NULL"))
   @@index([areaId, abertoEm], map: "ix_chamados_fila", where: raw("concluido_em IS NULL AND operador_id IS NULL"))
