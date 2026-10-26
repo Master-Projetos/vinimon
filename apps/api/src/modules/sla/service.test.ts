@@ -135,15 +135,16 @@ describe('serviço de SLA (§4.6)', () => {
     await expect(transicao(999_999, 0, 'EM_ATENDIMENTO', new Date())).rejects.toMatchObject({ status: 404 })
   })
 
+  // datas bem à frente do relógio real: o estágio aberto na criação (agora) não pode terminar antes de começar
   it('ajusta datas e operador conforme o tipo novo', async () => {
     const operador = await criarUsuario({ perfil: 'OPERADOR' })
     const c = await novoChamado({ operadorId: operador.id, papel: 'EM_ATENDIMENTO' })
-    const t1 = z('2026-10-26T12:00:00Z')
+    const t1 = z('2036-10-27T12:00:00Z')
 
-    await transicao(c.id, 0, 'AGENDADO', t1, { agendadoPara: z('2026-10-27T12:00:00Z') })
+    await transicao(c.id, 0, 'AGENDADO', t1, { agendadoPara: z('2036-10-28T12:00:00Z') })
     let atual = await prisma.chamado.findUniqueOrThrow({ where: { id: c.id } })
     expect(atual).toMatchObject({ statusTipo: 'AGENDADO', slaPausado: true, operadorId: operador.id })
-    expect(atual.agendadoPara).toEqual(z('2026-10-27T12:00:00Z'))
+    expect(atual.agendadoPara).toEqual(z('2036-10-28T12:00:00Z'))
 
     await transicao(c.id, 1, 'INICIAL', t1) // ABERTO: limpa o operador e o agendamento
     atual = await prisma.chamado.findUniqueOrThrow({ where: { id: c.id } })
@@ -155,12 +156,12 @@ describe('serviço de SLA (§4.6)', () => {
       encerradoEm: null,
     })
 
-    await transicao(c.id, 2, 'ENCERRADO', z('2026-10-26T13:00:00Z'), { solucao: 'ok' })
+    await transicao(c.id, 2, 'ENCERRADO', z('2036-10-27T13:00:00Z'), { solucao: 'ok' })
     atual = await prisma.chamado.findUniqueOrThrow({ where: { id: c.id } })
-    expect(atual.concluidoEm).toEqual(z('2026-10-26T13:00:00Z'))
-    expect(atual.encerradoEm).toEqual(z('2026-10-26T13:00:00Z'))
+    expect(atual.concluidoEm).toEqual(z('2036-10-27T13:00:00Z'))
+    expect(atual.encerradoEm).toEqual(z('2036-10-27T13:00:00Z'))
 
-    await transicao(c.id, 3, 'EM_ATENDIMENTO', z('2026-10-27T13:00:00Z')) // reabertura limpa as datas
+    await transicao(c.id, 3, 'EM_ATENDIMENTO', z('2036-10-28T13:00:00Z')) // reabertura limpa as datas
     atual = await prisma.chamado.findUniqueOrThrow({ where: { id: c.id } })
     expect(atual).toMatchObject({ concluidoEm: null, encerradoEm: null, validacaoLimiteEm: null })
   })
@@ -168,12 +169,12 @@ describe('serviço de SLA (§4.6)', () => {
   it('CONCLUIDO mantém o `concluidoEm` que já existia (`??=`)', async () => {
     const c = await novoChamado({ papel: 'EM_ATENDIMENTO' })
     await prisma.chamado.update({ where: { id: c.id }, data: { slaSolucaoMin: 60 } })
-    await transicao(c.id, 0, 'CONCLUIDO', z('2026-10-26T12:00:00Z'), { solucao: 'a' })
+    await transicao(c.id, 0, 'CONCLUIDO', z('2036-10-27T12:00:00Z'), { solucao: 'a' })
     const antes = await prisma.chamado.findUniqueOrThrow({ where: { id: c.id } })
-    await transicao(c.id, 1, 'ENCERRADO', z('2026-10-27T12:00:00Z'))
+    await transicao(c.id, 1, 'ENCERRADO', z('2036-10-28T12:00:00Z'))
     const depois = await prisma.chamado.findUniqueOrThrow({ where: { id: c.id } })
     expect(depois.concluidoEm).toEqual(antes.concluidoEm)
-    expect(depois.encerradoEm).toEqual(z('2026-10-27T12:00:00Z'))
+    expect(depois.encerradoEm).toEqual(z('2036-10-28T12:00:00Z'))
   })
 
   describe('snapshotSla', () => {
