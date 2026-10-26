@@ -41,6 +41,8 @@ export const MetaSchema = z.object({
   tiposAtivo: z.array(ItemNomeSchema),
   jornadas: z.array(ItemNomeSchema),
   categorias: z.array(ItemNomeSchema),
+  /** Categorias ativas dos tipos de problema (B07), por grupo 1–3. */
+  categoriasProblema: z.array(z.object({ id: z.int(), grupo: z.int(), nome: z.string() })).optional(),
   /** Áreas para onde o usuário pode abrir chamado; vazio = todas (A05). Sempre presente na resposta da API. */
   destinosPermitidos: z.array(z.object({ areaId: z.int(), padrao: z.boolean() })).optional(),
   config: ConfigPublicaSchema,
