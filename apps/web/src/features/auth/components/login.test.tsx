@@ -204,11 +204,33 @@ describe('/login', () => {
     await waitFor(() => expect(screen.queryByText('Caps Lock está ligado.')).not.toBeInTheDocument())
   })
 
-  it('campos vazios mostram os erros e não chamam a API', async () => {
+  it('campos vazios mostram os erros e não chamam a API de entrada', async () => {
     const { falsa } = montar('/login', {})
     fireEvent.click(await screen.findByRole('button', { name: 'Entrar' }))
     expect(await screen.findByText('Informe o login.')).toBeInTheDocument()
     expect(screen.getByText('Informe a senha.')).toBeInTheDocument()
-    expect(falsa.chamadas).toEqual([])
+    expect(falsa.chamadas.filter((c) => c.metodo === 'POST')).toEqual([])
+  })
+
+  it('link "Esqueci minha senha" aparece só com GET /auth/recuperacao habilitada=true', async () => {
+    const { falsa } = montar('/login', { 'GET /auth/recuperacao': { habilitada: true } })
+    expect(await screen.findByRole('link', { name: 'Esqueci minha senha' })).toHaveAttribute('href', '/recuperar-senha')
+    expect(falsa.chamadas.map((c) => `${c.metodo} ${c.url}`)).toContain('GET /api/v1/auth/recuperacao')
+  })
+
+  it('sem link quando habilitada=false', async () => {
+    const { falsa } = montar('/login', { 'GET /auth/recuperacao': { habilitada: false } })
+    await waitFor(() => expect(falsa.chamadas.some((c) => c.url.includes('/auth/recuperacao'))).toBe(true))
+    await screen.findByRole('button', { name: 'Entrar' })
+    expect(screen.queryByRole('link', { name: 'Esqueci minha senha' })).not.toBeInTheDocument()
+  })
+
+  it('sem link quando a consulta falha', async () => {
+    const { falsa } = montar('/login', {
+      'GET /auth/recuperacao': () => json({ erro: { codigo: 'INTERNO', mensagem: 'Falha.' } }, 500),
+    })
+    await waitFor(() => expect(falsa.chamadas.some((c) => c.url.includes('/auth/recuperacao'))).toBe(true))
+    await screen.findByRole('button', { name: 'Entrar' })
+    expect(screen.queryByRole('link', { name: 'Esqueci minha senha' })).not.toBeInTheDocument()
   })
 })
