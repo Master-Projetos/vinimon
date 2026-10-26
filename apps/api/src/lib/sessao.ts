@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import type { CookieSerializeOptions } from '@fastify/cookie'
-import type { EstadoSessao, Perfil } from '@vinimon/shared'
+import type { Config, EstadoSessao, Perfil } from '@vinimon/shared'
 import { env } from '../env'
 import { obterConfig } from './config'
 import { prisma, type Tx } from './prisma'
@@ -17,6 +17,8 @@ export interface UsuarioSessao {
   sessaoId: string
   estado: EstadoSessao
   mfaAtivo: boolean
+  /** OPERADOR com `chamado.isolarAreas` desligado: vê chamados de todas as áreas (só vê; atender continua por área). Ausente = isolado. */
+  verTodasAreas?: boolean
 }
 
 export type MotivoRevogacao =
@@ -111,6 +113,11 @@ export async function promoverSessao(sessaoId: string, estado: EstadoSessao, ago
   return { token, expiraEm }
 }
 
+/** Passo 2 da T-13.2: só o OPERADOR é afetado; USUARIO segue no próprio escopo e ADMIN já vê tudo. */
+export function verTodasAreas(perfil: Perfil, cfg: Config): boolean {
+  return perfil === 'OPERADOR' && !cfg['chamado.isolarAreas']
+}
+
 export async function carregarSessao(
   token: string | undefined,
   opcoes: { tocar?: boolean } = {},
@@ -140,7 +147,8 @@ export async function carregarSessao(
     },
   })
   if (!s || s.revogadaEm !== null || s.expiraEm.getTime() <= agora.getTime() || !s.usuario.ativo) return null
-  const limite = s.estado === 'ATIVA' ? (await obterConfig())['sessao.minutosInatividade'] * 60_000 : PENDENTE_MS
+  const cfg = await obterConfig()
+  const limite = s.estado === 'ATIVA' ? cfg['sessao.minutosInatividade'] * 60_000 : PENDENTE_MS
   const ocioso = agora.getTime() - s.ultimoUsoEm.getTime()
   if (ocioso > limite) {
     await revogarSessao(s.id, 'inatividade')
@@ -161,6 +169,7 @@ export async function carregarSessao(
     sessaoId: s.id,
     estado: s.estado,
     mfaAtivo: u.mfaAtivadoEm !== null,
+    verTodasAreas: verTodasAreas(u.perfil, cfg),
   }
 }
 

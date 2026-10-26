@@ -76,6 +76,7 @@ export const tempoRealPlugin = fp(
       encerrarSessoesDoUsuario: revogacao.encerrarSessoesDoUsuario,
       revalidarUsuario: revogacao.revalidarUsuario,
       revalidarChamado: revogacao.revalidarChamado,
+      revalidarTodos: revogacao.revalidarTodos,
     })
     revogacao.iniciar(env.SOCKET_REVALIDAR_MS)
 

@@ -5,6 +5,7 @@ import { invalidarConfig, obterConfig } from '../../lib/config'
 import type { ContextoUsuario } from '../../lib/contexto'
 import { ErroApp, regraNegocio } from '../../lib/erros'
 import { prisma } from '../../lib/prisma'
+import { tempoReal } from '../../lib/tempo-real'
 
 const MENSAGEM_JORNADA_INATIVA = 'A jornada padrão precisa estar ativa.'
 
@@ -65,5 +66,6 @@ export async function atualizarConfig(dados: AtualizarConfig, ctx: ContextoUsuar
 
   // Efeito fora da transação: só depois do commit.
   invalidarConfig()
+  if (dados['chamado.isolarAreas'] !== undefined) tempoReal.revalidarTodos()
   return obterConfig()
 }
