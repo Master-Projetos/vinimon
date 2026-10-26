@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { TIPOS_NOTIFICACAO } from '../enums'
+import { CANAIS_EMAIL, TIPOS_NOTIFICACAO } from '../enums'
 import { contrato, IdParamsSchema, zId } from '../http'
 import { NotificacaoDTOSchema, TIPOS_INAPP_FIXOS } from '../notificacoes'
 
@@ -30,6 +30,8 @@ export const PreferenciaItemSchema = z.strictObject({
   tipo: z.enum(TIPOS_NOTIFICACAO),
   inApp: z.boolean(),
   desktop: z.boolean(),
+  /** Canal de e-mail (T-12.5). Omitido no PUT = mantém o valor atual. */
+  email: z.enum(CANAIS_EMAIL).optional(),
 })
 export type PreferenciaItem = z.output<typeof PreferenciaItemSchema>
 
@@ -49,7 +51,7 @@ export const AtualizarPreferenciasSchema = z.strictObject({
 export type AtualizarPreferencias = z.output<typeof AtualizarPreferenciasSchema>
 
 export const PreferenciasNotificacaoSchema = z.object({
-  itens: z.array(PreferenciaItemSchema.extend({ fixo: z.boolean() })),
+  itens: z.array(PreferenciaItemSchema.extend({ fixo: z.boolean(), email: z.enum(CANAIS_EMAIL) })),
 })
 export type PreferenciasNotificacao = z.output<typeof PreferenciasNotificacaoSchema>
 

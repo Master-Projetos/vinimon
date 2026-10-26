@@ -21,7 +21,7 @@ describe('S81: mapas de código não são servidos', () => {
   beforeEach(async () => {
     pasta = await mkdtemp(join(tmpdir(), 'vinimon-spa-'))
     await writeFile(join(pasta, 'index.html'), '<!doctype html><title>app</title>')
-    await writeFile(join(pasta, 'app.js'), 'console.log(1)')
+    await writeFile(join(pasta, 'app.js'), 'var a=1')
     await writeFile(join(pasta, 'app.js.map'), '{"version":3,"sources":["src/segredo.ts"]}')
   })
   afterEach(async () => {

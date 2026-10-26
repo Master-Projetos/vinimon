@@ -17,6 +17,12 @@ const VALIDADE_MS = 30 * 60_000
 const hashDoToken = (token: string) => createHash('sha256').update(token).digest('hex')
 const linkInvalido = () => new ErroApp(400, 'REQUISICAO_INVALIDA', 'Link inválido ou expirado')
 
+/** GET /auth/recuperacao: só a chave `email.habilitado`, para a tela anônima de login decidir o link. */
+export async function recuperacaoHabilitada(): Promise<{ habilitada: boolean }> {
+  const cfg = await obterConfig()
+  return { habilitada: cfg['email.habilitado'] === true }
+}
+
 /**
  * POST /auth/esqueci-senha (SEN-10). A resposta é a mesma para qualquer login: este código nunca sinaliza
  * se o usuário existe. Só envia para usuário ativo, com e-mail, e com `email.habilitado` ligado.

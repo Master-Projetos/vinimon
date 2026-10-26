@@ -67,6 +67,8 @@ export const EsqueciSenhaBodySchema = z.strictObject({
 export type EsqueciSenhaBody = z.output<typeof EsqueciSenhaBodySchema>
 export const EsqueciSenhaRespostaSchema = z.object({ mensagem: z.string() })
 
+export const RecuperacaoHabilitadaSchema = z.object({ habilitada: z.boolean() })
+
 export const RedefinirSenhaBodySchema = z.strictObject({
   token: z.string().min(1).max(128),
   novaSenha: z.string().min(1).max(128),
@@ -138,6 +140,11 @@ export const authApi = {
     caminho: '/auth/esqueci-senha',
     body: EsqueciSenhaBodySchema,
     resposta: EsqueciSenhaRespostaSchema,
+  }),
+  recuperacaoHabilitada: contrato({
+    metodo: 'GET',
+    caminho: '/auth/recuperacao',
+    resposta: RecuperacaoHabilitadaSchema,
   }),
   redefinirSenha: contrato({
     metodo: 'POST',
