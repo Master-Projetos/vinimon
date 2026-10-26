@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { type CriarJornada, jornadasApi, type ListarJornadasQuery } from '@vinimon/shared'
+import { useExcluirCadastro } from '@/features/admin/excluir'
 import { chamar } from '@/lib/api'
 
 export const jornadaChaves = {
@@ -28,4 +29,8 @@ export function useSalvarJornada(id: number | null) {
     },
     meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
   })
+}
+
+export function useExcluirJornada() {
+  return useExcluirCadastro((id) => chamar(jornadasApi.excluir, { params: { id } }), [jornadaChaves.todas])
 }

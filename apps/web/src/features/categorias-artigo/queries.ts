@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { type CriarCategoriaArtigo, categoriasArtigoApi, type ListarCategoriasArtigoQuery } from '@vinimon/shared'
+import { useExcluirCadastro } from '@/features/admin/excluir'
 import { chamar } from '@/lib/api'
 
 export const categoriaArtigoChaves = {
@@ -28,4 +29,8 @@ export function useSalvarCategoriaArtigo(id: number | null) {
     },
     meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
   })
+}
+
+export function useExcluirCategoriaArtigo() {
+  return useExcluirCadastro((id) => chamar(categoriasArtigoApi.excluir, { params: { id } }), [categoriaArtigoChaves.todas])
 }
