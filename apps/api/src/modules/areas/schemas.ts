@@ -8,6 +8,7 @@ export const selectArea = {
   nome: true,
   atende: true,
   ativo: true,
+  moduloInventario: true,
   jornadaId: true,
   criadoEm: true,
   atualizadoEm: true,

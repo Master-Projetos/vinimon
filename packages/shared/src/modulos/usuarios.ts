@@ -133,6 +133,12 @@ export const usuariosApi = {
     query: BuscarUsuariosQuerySchema,
     resposta: z.array(UsuarioBuscaSchema),
   }),
+  mesmoDepartamento: contrato({
+    metodo: 'GET',
+    caminho: '/usuarios/mesmo-departamento',
+    query: BuscarUsuariosQuerySchema,
+    resposta: z.array(z.object({ id: z.int(), nome: z.string() })),
+  }),
   obter: contrato({
     metodo: 'GET',
     caminho: '/usuarios/:id',

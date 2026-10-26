@@ -80,6 +80,8 @@ export function podeVerInterno(u: UsuarioSessao, c: ChamadoEscopo): boolean {
 /** Atuar como atendente: operador da área do chamado, responsável atual ou admin (auxiliar não atende). Ignora `verTodasAreas` (T-13.2). */
 export function podeAtender(u: UsuarioSessao, c: ChamadoEscopo): boolean {
   if (!temPermissao(u.perfil, 'chamado.atender')) return false
+  // A19: com `chamado.operadorTrataProprio` desligado, ninguém atende o chamado que abriu para si
+  if (c.solicitanteId === u.id && u.operadorTrataProprio === false) return false
   return temPermissao(u.perfil, 'chamado.verTodos') || u.areaIds.includes(c.areaId) || c.operadorId === u.id
 }
 

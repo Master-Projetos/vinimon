@@ -29,6 +29,19 @@ export const rotasUsuarios: FastifyPluginAsyncZod = async (app) => {
   })
 
   app.route({
+    method: c.mesmoDepartamento.metodo,
+    url: c.mesmoDepartamento.caminho,
+    schema: {
+      tags,
+      summary: 'Busca pessoas do mesmo departamento (abrir chamado em nome de outro)',
+      querystring: c.mesmoDepartamento.query,
+      response: { 200: c.mesmoDepartamento.resposta },
+    },
+    config: { acesso: 'autenticado' },
+    handler: (req) => service.buscarMesmoDepartamento(req.query, contextoDe(req)),
+  })
+
+  app.route({
     method: c.obter.metodo,
     url: c.obter.caminho,
     schema: { tags, summary: 'Obtém usuário', params: c.obter.params, response: { 200: c.obter.resposta } },

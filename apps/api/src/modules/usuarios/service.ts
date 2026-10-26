@@ -9,6 +9,7 @@ import type {
 import { normalizarBusca } from '@vinimon/shared'
 import type { Prisma } from '../../generated/prisma/client'
 import { auditar } from '../../lib/auditoria'
+import { obterConfig } from '../../lib/config'
 import type { ContextoUsuario } from '../../lib/contexto'
 import { conflito, naoEncontrado, regraNegocio } from '../../lib/erros'
 import { escaparLike } from '../../lib/like'
@@ -75,6 +76,29 @@ async function areasGeridasValidas(
     )
   }
   return validas
+}
+
+/**
+ * B03: pessoas ativas do mesmo departamento de quem pergunta (USUARIO), para abrir chamado em nome de outro.
+ * Lista vazia com a regra desligada, sem departamento ou com menos de 2 caracteres; até 20, sem o próprio usuário.
+ */
+export async function buscarMesmoDepartamento(q: BuscarUsuariosQuery, ctx: ContextoUsuario) {
+  const termo = normalizarBusca(q.q)
+  if (termo.length < 2 || !(await obterConfig())['chamado.usuarioAbreParaOutros']) return []
+  const eu = await prisma.usuario.findUnique({ where: { id: ctx.usuario.id }, select: { departamentoId: true } })
+  if (eu?.departamentoId == null) return []
+  return prisma.usuario.findMany({
+    where: {
+      ativo: true,
+      perfil: 'USUARIO',
+      departamentoId: eu.departamentoId,
+      id: { not: ctx.usuario.id },
+      buscaNorm: { contains: escaparLike(termo) },
+    },
+    select: { id: true, nome: true },
+    orderBy: [{ nome: 'asc' }, { id: 'asc' }],
+    take: 20,
+  })
 }
 
 export async function listarUsuarios(q: ListarUsuariosQuery) {

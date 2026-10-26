@@ -171,7 +171,12 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
   if (ehUsuario) {
     if (dados.areaId !== undefined) throw invalido('areaId', 'A área é definida pelo problema.')
     if (dados.canalId !== undefined) throw invalido('canalId', 'O canal é definido pelo sistema.')
-    if (dados.solicitanteId !== undefined && dados.solicitanteId !== u.id)
+    // B03: com `chamado.usuarioAbreParaOutros`, USUARIO pode informar alguém do mesmo departamento (conferido abaixo)
+    if (
+      dados.solicitanteId !== undefined &&
+      dados.solicitanteId !== u.id &&
+      !(await obterConfig())['chamado.usuarioAbreParaOutros']
+    )
       throw semPermissao('Você só pode abrir chamado em seu nome.')
   }
   if (!ehEquipe && dados.tags !== undefined) throw invalido('tags', 'Só a equipe informa tags.')
@@ -185,9 +190,27 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
   const emNomeDeOutro = solicitanteId !== u.id
   const solicitante = await prisma.usuario.findFirst({
     where: { id: solicitanteId, ...(emNomeDeOutro ? {} : { ativo: true }) },
-    select: { id: true, nome: true, email: true, telefone: true, perfil: true, ativo: true, areaId: true },
+    select: {
+      id: true,
+      nome: true,
+      email: true,
+      telefone: true,
+      perfil: true,
+      ativo: true,
+      areaId: true,
+      departamentoId: true,
+    },
   })
-  if (emNomeDeOutro) {
+  if (emNomeDeOutro && ehUsuario) {
+    // sem revelar se o alvo existe: qualquer falha é a mesma recusa
+    const eu = await prisma.usuario.findUnique({ where: { id: u.id }, select: { departamentoId: true } })
+    const mesmoDepartamento =
+      eu?.departamentoId != null &&
+      solicitante?.ativo === true &&
+      solicitante.perfil === 'USUARIO' &&
+      solicitante.departamentoId === eu.departamentoId
+    if (!mesmoDepartamento) throw semPermissao('Você só pode abrir chamado em nome de alguém do seu departamento.')
+  } else if (emNomeDeOutro) {
     if (!temPermissao(u.perfil, 'chamado.abrirEmNome')) throw semPermissao()
     if (!solicitante || !solicitante.ativo) throw invalido('solicitanteId', 'Usuário inexistente ou inativo.')
     if (u.perfil === 'OPERADOR' && solicitante.perfil === 'ADMIN')
@@ -216,7 +239,7 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
   }
 
   const agora = new Date()
-  const canalNome = emNomeDeOutro ? 'Telefone' : 'Sistema Web'
+  const canalNome = emNomeDeOutro && !ehUsuario ? 'Telefone' : 'Sistema Web'
   const efeitos = await prisma.$transaction(async (tx) => {
     const canal =
       !ehUsuario && dados.canalId !== undefined
