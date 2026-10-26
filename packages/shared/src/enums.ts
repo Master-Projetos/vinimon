@@ -97,3 +97,19 @@ export type StatusEmail = (typeof STATUS_EMAIL)[number]
 /** Canal de e-mail por tipo de notificação: nunca, na hora (IMEDIATO) ou no resumo diário (RESUMO). */
 export const CANAIS_EMAIL = ['NUNCA', 'IMEDIATO', 'RESUMO'] as const
 export type CanalEmail = (typeof CANAIS_EMAIL)[number]
+
+export const TIPOS_CAMPO = [
+  'TEXTO',
+  'NUMERO',
+  'SELECAO',
+  'SELECAO_MULTIPLA',
+  'DATA',
+  'HORA',
+  'DATA_HORA',
+  'AREA_TEXTO',
+  'CHECKBOX',
+] as const
+export type TipoCampo = (typeof TIPOS_CAMPO)[number]
+
+export const VISIBILIDADES_CAMPO = ['ABERTURA', 'SO_EDICAO', 'OCULTO_SOLICITANTE'] as const
+export type VisibilidadeCampo = (typeof VISIBILIDADES_CAMPO)[number]
