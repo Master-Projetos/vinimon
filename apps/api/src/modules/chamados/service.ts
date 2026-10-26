@@ -1,5 +1,14 @@
 import { type ChamadoDetalhe, type CriarChamado, temPermissao } from '@vinimon/shared'
-import { acoesDoUsuario, podeVerInterno } from '../../autorizacao/chamados'
+import {
+  acoesDoUsuario,
+  comAuxiliarIds,
+  escopoChamados,
+  podeAtender,
+  podeVerChamado,
+  podeVerInterno,
+  selectEscopo,
+} from '../../autorizacao/chamados'
+import type { Prisma } from '../../generated/prisma/client'
 import { auditar } from '../../lib/auditoria'
 import { obterConfig } from '../../lib/config'
 import type { ContextoUsuario } from '../../lib/contexto'
@@ -12,6 +21,7 @@ import { aposCommitChamado, type LogErro, registrarEvento, registrarSistema } fr
 import { selectChamadoDetalhe } from './schemas'
 
 const DEZ_MINUTOS_MS = 10 * 60 * 1000
+const MAX_FILHOS = 100
 
 const invalido = (campo: string, mensagem: string) =>
   new ErroApp(400, 'REQUISICAO_INVALIDA', 'Dados inválidos.', [{ campo, mensagem }])
@@ -37,11 +47,26 @@ export async function montarDetalhe(
   const verInterno = podeVerInterno(u, escopo)
   const ehEquipe = temPermissao(u.perfil, 'chamado.atender')
 
-  const [qtdAnexos, leitura] = await Promise.all([
+  // pai e filhos: só os que `u` pode ver (S44); a lista de filhos é limitada
+  const visiveis = (extra: Prisma.ChamadoWhereInput): Prisma.ChamadoWhereInput => ({
+    AND: [escopoChamados(u), extra],
+  })
+  const selectSub = { id: true, assunto: true, statusTipo: true } satisfies Prisma.ChamadoSelect
+
+  const [qtdAnexos, leitura, pai, filhos] = await Promise.all([
     tx.anexo.count({ where: { chamadoId: id, ...(verInterno ? {} : { interno: false }) } }),
     tx.chamadoLeitura.findUnique({
       where: { chamadoId_usuarioId: { chamadoId: id, usuarioId: u.id } },
       select: { ultimoAssentamentoLidoId: true },
+    }),
+    c.chamadoPaiId === null
+      ? null
+      : tx.chamado.findFirst({ where: visiveis({ id: c.chamadoPaiId }), select: selectSub }),
+    tx.chamado.findMany({
+      where: visiveis({ chamadoPaiId: id }),
+      select: selectSub,
+      orderBy: { id: 'asc' },
+      take: MAX_FILHOS,
     }),
   ])
   // quem vê interno compara com o último assentamento qualquer; os demais, só com o último público
@@ -119,6 +144,8 @@ export async function montarDetalhe(
     ...(ehEquipe ? { tags: c.tags.map((t) => t.tag).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')) } : {}),
     avaliacao: c.avaliacao,
     seguindo: c.seguidores.some((s) => s.usuarioId === u.id && s.silenciadoEm === null),
+    pai,
+    filhos,
     acoes,
   }
 }
@@ -191,6 +218,20 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
     ) {
       throw invalido('ativoId', 'Ativo não encontrado.')
     }
+    // subchamado: quem abre precisa ver e atender o pai (404/403 só dizem o que `u` já pode saber)
+    let paiId: number | null = null
+    if (dados.paiId !== undefined) {
+      const pai = comAuxiliarIds(
+        await tx.chamado.findUnique({
+          where: { id: dados.paiId },
+          select: { id: true, statusTipo: true, ...selectEscopo },
+        }),
+      )
+      if (!pai || !podeVerChamado(u, pai)) throw invalido('paiId', 'Chamado pai não encontrado.')
+      if (!podeAtender(u, pai)) throw semPermissao('Você precisa atender o chamado pai para abrir um subchamado.')
+      if (pai.statusTipo === 'ENCERRADO') throw regraNegocio('O chamado pai está encerrado.')
+      paiId = pai.id
+    }
     const inicial = await tx.status.findFirst({
       where: { papel: 'INICIAL', ativo: true },
       select: { id: true, tipo: true, pausaSla: true },
@@ -222,6 +263,7 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
         jornadaId: sla.jornadaId,
         slaRespostaMin: sla.slaRespostaMin,
         slaSolucaoMin: sla.slaSolucaoMin,
+        chamadoPaiId: paiId,
       },
       select: { id: true },
     })
@@ -258,6 +300,25 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
       assentamentoId,
       dados: { emNomeDeOutro, areaId, problemaId: problema.id, prioridadeId: prioridade.id },
     })
+    // subchamado: um evento interno em cada chamado (o id do outro não aparece para quem não vê interno)
+    let eventoPaiId: number | null = null
+    if (paiId !== null) {
+      const dadosVinculo = { paiId, filhoId: criado.id }
+      await registrarEvento(tx, {
+        chamadoId: criado.id,
+        tipo: 'SUBCHAMADO_VINCULADO',
+        atorId: u.id,
+        interno: true,
+        dados: dadosVinculo,
+      })
+      eventoPaiId = await registrarEvento(tx, {
+        chamadoId: paiId,
+        tipo: 'SUBCHAMADO_VINCULADO',
+        atorId: u.id,
+        interno: true,
+        dados: dadosVinculo,
+      })
+    }
     await recalcularChamado(tx, criado.id, agora)
     if (emNomeDeOutro) {
       await auditar(tx, ctx, {
@@ -267,7 +328,7 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
         dados: { solicitanteId: solicitante.id },
       })
     }
-    return { chamadoId: criado.id, eventoId, assentamentoId }
+    return { chamadoId: criado.id, eventoId, assentamentoId, paiId, eventoPaiId }
   })
 
   await aposCommitChamado({
@@ -279,5 +340,16 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
     fila: 'criado',
     ...(log ? { log } : {}),
   })
+  if (efeitos.paiId !== null && efeitos.eventoPaiId !== null) {
+    await aposCommitChamado({
+      chamadoId: efeitos.paiId,
+      eventoIds: [efeitos.eventoPaiId],
+      assentamentoIds: [],
+      campos: ['classificacao'],
+      acessoMudou: false,
+      fila: null,
+      ...(log ? { log } : {}),
+    })
+  }
   return montarDetalhe(u, efeitos.chamadoId, agora)
 }

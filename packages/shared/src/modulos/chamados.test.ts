@@ -219,6 +219,7 @@ describe('chamadosApi', () => {
       'solicitarRetorno POST /chamados/:id/solicitar-retorno',
       'reabrir POST /chamados/:id/reabrir',
       'cancelar POST /chamados/:id/cancelar',
+      'definirPai POST /chamados/:id/pai',
       'adicionarAuxiliar POST /chamados/:id/auxiliares',
       'removerAuxiliar DELETE /chamados/:id/auxiliares/:usuarioId',
       'seguir PUT /chamados/:id/seguir',

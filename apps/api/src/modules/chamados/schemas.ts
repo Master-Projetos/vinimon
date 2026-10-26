@@ -14,6 +14,7 @@ export const selectChamadoDetalhe = {
   telefone: true,
   solicitanteId: true,
   operadorId: true,
+  chamadoPaiId: true,
   areaId: true,
   statusTipo: true,
   statusDesde: true,

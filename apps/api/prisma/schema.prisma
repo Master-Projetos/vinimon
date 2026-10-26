@@ -121,6 +121,8 @@ enum TipoEvento {
   SLA_RESPOSTA_ESTOURADO
   AUXILIAR_ADICIONADO
   AUXILIAR_REMOVIDO
+  SUBCHAMADO_VINCULADO
+  SUBCHAMADO_DESVINCULADO
 
   @@map("tipo_evento")
 }
@@ -755,7 +757,11 @@ model Chamado {
   atualizadoEm                DateTime   @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
   /// trigger: lower(f_unaccent(assunto + left(descricao, 2000)))
   buscaNorm                   String?    @map("busca_norm") @db.Text
+  /// subchamado: CHECK chamado_pai_id <> id (T-15.4)
+  chamadoPaiId                Int?       @map("chamado_pai_id")
 
+  pai          Chamado?      @relation("Subchamados", fields: [chamadoPaiId], references: [id], onDelete: Restrict)
+  filhos       Chamado[]     @relation("Subchamados")
   solicitante  Usuario       @relation("ChamadoSolicitante", fields: [solicitanteId], references: [id], onDelete: Restrict)
   abertoPor    Usuario       @relation("ChamadoAbertoPor", fields: [abertoPorId], references: [id], onDelete: Restrict)
   operador     Usuario?      @relation("ChamadoOperador", fields: [operadorId], references: [id], onDelete: Restrict)
@@ -799,6 +805,7 @@ model Chamado {
   @@index([abertoEm], map: "ix_chamados_aberto_em")
   @@index([encerradoEm], map: "ix_chamados_encerrado_em", where: raw("encerrado_em IS NOT NULL"))
   @@index([problemaId], map: "ix_chamados_problema")
+  @@index([chamadoPaiId], map: "ix_chamados_pai", where: raw("chamado_pai_id IS NOT NULL"))
   @@index([ativoId, id(sort: Desc)], map: "ix_chamados_ativo", where: raw("ativo_id IS NOT NULL"))
   @@index([buscaNorm(ops: raw("gin_trgm_ops"))], type: Gin, map: "ix_chamados_busca_norm_trgm")
   @@map("chamados")

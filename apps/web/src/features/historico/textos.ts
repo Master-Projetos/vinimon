@@ -13,6 +13,11 @@ function nomeDe(valor: unknown): string | null {
   return null
 }
 
+/** Número de chamado vindo de `dados`; sem número conhecido cai para um traço. */
+function numeroDe(valor: unknown): string {
+  return typeof valor === 'number' ? String(valor) : '—'
+}
+
 function listaDe(valor: unknown): string {
   if (!Array.isArray(valor)) return 'nenhuma'
   const nomes = valor.filter((item): item is string => typeof item === 'string')
@@ -71,6 +76,9 @@ const TEXTO_POR_TIPO: Record<TipoEvento, (dados: Dados) => string> = {
   SLA_RISCO: () => 'SLA de solução em risco',
   SLA_ESTOURADO: () => 'SLA de solução estourado',
   SLA_RESPOSTA_ESTOURADO: () => 'SLA de resposta estourado',
+  SUBCHAMADO_VINCULADO: (dados) => `Subchamado vinculado (#${numeroDe(dados.filhoId)} em #${numeroDe(dados.paiId)})`,
+  SUBCHAMADO_DESVINCULADO: (dados) =>
+    `Subchamado desvinculado (#${numeroDe(dados.filhoId)} de #${numeroDe(dados.paiId)})`,
   AUXILIAR_ADICIONADO: (dados) =>
     `Operador auxiliar adicionado${nomeDe(dados.auxiliar) ? `: ${nomeDe(dados.auxiliar)}` : ''}`,
   AUXILIAR_REMOVIDO: (dados) =>

@@ -61,6 +61,8 @@ export const TIPOS_EVENTO = [
   'SLA_RESPOSTA_ESTOURADO',
   'AUXILIAR_ADICIONADO',
   'AUXILIAR_REMOVIDO',
+  'SUBCHAMADO_VINCULADO',
+  'SUBCHAMADO_DESVINCULADO',
 ] as const
 export type TipoEvento = (typeof TIPOS_EVENTO)[number]
 

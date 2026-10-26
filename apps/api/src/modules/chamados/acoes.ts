@@ -7,6 +7,7 @@ import {
   type ChamadoDetalhe,
   type ClassificacaoChamado,
   type ConcluirChamado,
+  type DefinirPai,
   type EncaminharChamado,
   type PrioridadeChamadoBody,
   type ReabrirChamado,
@@ -51,6 +52,7 @@ const selectParaAcao = {
   areaId: true,
   operadorId: true,
   solicitanteId: true,
+  chamadoPaiId: true,
   statusId: true,
   statusTipo: true,
   cancelado: true,
@@ -401,6 +403,102 @@ export async function encaminhar(
 
   await limparNotificacoes(id, r.perderamAcesso, agora, log)
   return concluirAcao(u, r, agora, log)
+}
+
+// ───────── subchamados ─────────
+
+const MAX_NIVEIS_SUBCHAMADO = 50
+/** Serializa os vínculos: duas transações cruzadas (A→B e B→A) não enxergariam o ciclo uma da outra. */
+const LOCK_SUBCHAMADOS = 15_004
+
+/** Sobe os ancestrais de `inicio`; true se `procurado` está entre eles (ou se a cadeia passa de 50 níveis). */
+async function ancestralOuLimite(tx: Tx, inicio: number | null, procurado: number): Promise<boolean> {
+  let atual = inicio
+  for (let nivel = 0; atual !== null; nivel++) {
+    if (atual === procurado || nivel >= MAX_NIVEIS_SUBCHAMADO) return true
+    const linha = await tx.chamado.findUnique({ where: { id: atual }, select: { chamadoPaiId: true } })
+    atual = linha?.chamadoPaiId ?? null
+  }
+  return false
+}
+
+/**
+ * `POST /chamados/:id/pai`: vincula (`paiId`) ou desvincula (`null`) o subchamado. Quem chama atende o filho e, ao
+ * vincular, vê e atende o pai. O vínculo não pode formar ciclo (sobe até 50 níveis). Um evento interno em cada chamado
+ * (SUBCHAMADO_VINCULADO / SUBCHAMADO_DESVINCULADO); trocar de pai desvincula o antigo antes.
+ */
+export async function definirPai(
+  id: number,
+  dados: DefinirPai,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(
+    async (
+      tx,
+    ): Promise<{
+      chamadoId: number
+      extras: Array<{ chamadoId: number; eventoIds: number[] }>
+      eventoIds: number[]
+    }> => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${LOCK_SUBCHAMADOS})`
+      const c = await carregarParaAcao(tx, id)
+      if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
+      if (!podeAtender(u, c)) throw semPermissao('Esta ação não está disponível para o chamado neste momento.')
+      if (c.statusTipo === 'ENCERRADO') throw regraNegocio('O chamado está encerrado.')
+      if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+
+      const novoPaiId = dados.paiId
+      if (novoPaiId === c.chamadoPaiId) {
+        throw regraNegocio(novoPaiId === null ? 'Este chamado não tem pai.' : 'Este chamado já é subchamado desse pai.')
+      }
+      if (novoPaiId === id) throw regraNegocio('Um chamado não pode ser pai de si mesmo.')
+      if (novoPaiId !== null) {
+        const pai = comAuxiliarIds(
+          await tx.chamado.findUnique({ where: { id: novoPaiId }, select: { statusTipo: true, ...selectEscopo } }),
+        )
+        if (!pai || !podeVerChamado(u, pai)) throw naoEncontrado('Chamado pai não encontrado.')
+        if (!podeAtender(u, pai)) throw semPermissao('Você precisa atender o chamado pai para vinculá-lo.')
+        if (pai.statusTipo === 'ENCERRADO') throw regraNegocio('O chamado pai está encerrado.')
+        if (await ancestralOuLimite(tx, novoPaiId, id)) {
+          throw regraNegocio('O vínculo criaria um ciclo ou ultrapassaria 50 níveis de subchamados.')
+        }
+      }
+
+      await atualizarComVersao(tx, id, dados.versao, { chamadoPaiId: novoPaiId })
+
+      const extras = new Map<number, number[]>()
+      const eventosFilho: number[] = []
+      const registrar = async (tipo: 'SUBCHAMADO_VINCULADO' | 'SUBCHAMADO_DESVINCULADO', paiId: number) => {
+        const dadosVinculo = { paiId, filhoId: id }
+        const base = { tipo, atorId: u.id, interno: true, dados: dadosVinculo } as const
+        eventosFilho.push(await registrarEvento(tx, { chamadoId: id, ...base }))
+        const doPai = extras.get(paiId) ?? []
+        doPai.push(await registrarEvento(tx, { chamadoId: paiId, ...base }))
+        extras.set(paiId, doPai)
+      }
+      if (c.chamadoPaiId !== null) await registrar('SUBCHAMADO_DESVINCULADO', c.chamadoPaiId)
+      if (novoPaiId !== null) await registrar('SUBCHAMADO_VINCULADO', novoPaiId)
+      return {
+        chamadoId: id,
+        eventoIds: eventosFilho,
+        extras: [...extras].map(([chamadoId, eventoIds]) => ({ chamadoId, eventoIds })),
+      }
+    },
+  )
+  for (const x of [{ chamadoId: r.chamadoId, eventoIds: r.eventoIds }, ...r.extras]) {
+    await aposCommitChamado({
+      ...x,
+      assentamentoIds: [],
+      campos: ['classificacao'],
+      acessoMudou: false,
+      fila: null,
+      ...(log ? { log } : {}),
+    })
+  }
+  return montarDetalhe(u, id, agora)
 }
 
 // ───────── operadores auxiliares ─────────
@@ -940,6 +1038,8 @@ export async function concluir(
   const r = await prisma.$transaction(async (tx): Promise<Resultado> => {
     const c = await exigirAcao(tx, u, id, 'concluir', agora)
     if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+    const subchamadosAbertos = await tx.chamado.count({ where: { chamadoPaiId: id, statusTipo: { not: 'ENCERRADO' } } })
+    if (subchamadosAbertos > 0) throw regraNegocio('Conclua os subchamados antes.')
 
     const operadorId = c.operadorId ?? u.id
     if (c.operadorId === null) await seguirComo(tx, id, u.id, 'ATRIBUIDO')
