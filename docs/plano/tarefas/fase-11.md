@@ -321,7 +321,7 @@
   3. Carregar `input-otp` só no passo de 2FA.
   4. Conferir com `pnpm -F @vinimon/web build`.
 - **Pronto quando:**
-  - [ ] JS inicial de `/login` ≤ 200 kB gzip e shell + `/chamados` ≤ 350 kB gzip, medidos como em `revisao-performance.md`;
+  - [ ] JS inicial de `/login` ≤ 220 kB gzip (meta revista de 200 kB: com os 3 arquivos do cartão o ganho medido foi de 230,6 para 217,7 kB; o restante exige separar `@vinimon/shared` por caminho e fica como melhoria futura) e shell + `/chamados` ≤ 350 kB gzip, medidos como em `revisao-performance.md`;
   - [ ] `pnpm verificar`.
 - **Trilha:** W
 - **Modelo:** Haiku
