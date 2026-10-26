@@ -30,7 +30,7 @@ const CABECALHO = [
   'SLA de solução cumprido',
 ]
 
-/** Só o que a planilha mostra. Sem descrição, solução, tags, comentários nem contatos. */
+/** Só o que a planilha mostra. Sem descrição, solução, tags, comentários nem contatos. Relações entram só como ids. */
 const selectExportacao = {
   id: true,
   assunto: true,
@@ -39,16 +39,50 @@ const selectExportacao = {
   primeiraRespostaEm: true,
   concluidoEm: true,
   prazoSolucaoEm: true,
-  status: { select: { nome: true } },
-  prioridade: { select: { nome: true } },
-  area: { select: { nome: true } },
-  problema: { select: { nome: true } },
-  solicitante: { select: { nome: true } },
-  operador: { select: { nome: true } },
-  canal: { select: { nome: true } },
+  statusId: true,
+  prioridadeId: true,
+  areaId: true,
+  problemaId: true,
+  solicitanteId: true,
+  operadorId: true,
+  canalId: true,
 } satisfies Prisma.ChamadoSelect
 
 type LinhaExportacao = Prisma.ChamadoGetPayload<{ select: typeof selectExportacao }>
+
+type Nomes = Map<number, string>
+
+/** Nomes das relações, carregados uma vez por exportação (D4) em vez de um `select` de relação por lote. */
+interface MapasDeNomes {
+  status: Nomes
+  prioridades: Nomes
+  areas: Nomes
+  problemas: Nomes
+  canais: Nomes
+  pessoas: Nomes
+}
+
+const comoMapa = (linhas: { id: number; nome: string }[]): Nomes => new Map(linhas.map((l) => [l.id, l.nome]))
+
+async function carregarMapas(): Promise<MapasDeNomes> {
+  const nome = { select: { id: true, nome: true } } as const
+  const [status, prioridades, areas, problemas, canais, pessoas] = await Promise.all([
+    prisma.status.findMany(nome),
+    prisma.prioridade.findMany(nome),
+    prisma.area.findMany(nome),
+    prisma.problema.findMany(nome),
+    prisma.canal.findMany(nome),
+    prisma.usuario.findMany(nome),
+  ])
+  return {
+    status: comoMapa(status),
+    prioridades: comoMapa(prioridades),
+    areas: comoMapa(areas),
+    problemas: comoMapa(problemas),
+    canais: comoMapa(canais),
+    pessoas: comoMapa(pessoas),
+  }
+}
 
 /** Data no fuso do sistema, `dd/MM/yyyy HH:mm`; ausente vira célula vazia. */
 const data = (d: Date | null, fuso: string): string =>
@@ -56,17 +90,17 @@ const data = (d: Date | null, fuso: string): string =>
 
 const sim = (v: boolean | null): string => (v === null ? '' : v ? 'Sim' : 'Não')
 
-const linhaDe = (c: LinhaExportacao, fuso: string): string =>
+const linhaDe = (c: LinhaExportacao, fuso: string, m: MapasDeNomes): string =>
   linhaCsv([
     c.id,
     c.assunto,
-    c.status.nome,
-    c.prioridade.nome,
-    c.area.nome,
-    c.problema?.nome ?? '',
-    c.solicitante?.nome ?? '',
-    c.operador?.nome ?? '',
-    c.canal.nome,
+    m.status.get(c.statusId) ?? '',
+    m.prioridades.get(c.prioridadeId) ?? '',
+    m.areas.get(c.areaId) ?? '',
+    (c.problemaId === null ? undefined : m.problemas.get(c.problemaId)) ?? '',
+    m.pessoas.get(c.solicitanteId) ?? '',
+    (c.operadorId === null ? undefined : m.pessoas.get(c.operadorId)) ?? '',
+    m.canais.get(c.canalId) ?? '',
     data(c.abertoEm, fuso),
     data(c.primeiraRespostaEm, fuso),
     data(c.concluidoEm, fuso),
@@ -106,6 +140,7 @@ export async function exportarChamados(
     let cursor = 0
     try {
       yield BOM_CSV + linhaCsv(CABECALHO)
+      const mapas = await carregarMapas()
       while (emitidas < limite) {
         const linhas = await prisma.chamado.findMany({
           where: { AND: [where, { id: { gt: cursor } }] },
@@ -116,7 +151,7 @@ export async function exportarChamados(
         const ultimo = linhas.at(-1)
         if (ultimo === undefined) break
         for (const c of linhas) {
-          yield linhaDe(c, fuso)
+          yield linhaDe(c, fuso, mapas)
           emitidas += 1
         }
         cursor = ultimo.id
