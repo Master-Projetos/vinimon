@@ -39,7 +39,7 @@
 ### T-14.3 — Campos personalizados: valores no chamado
 - **Depende de:** T-14.2 · **Paralelo com:** T-14.4
 - **Requisitos:** B11, C22
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enum), `packages/shared/src/{modulos/chamados.ts,enums.ts}`, `apps/api/src/lib/enums-check.ts`, `apps/api/src/modules/chamados/{service.ts,acoes.ts,consultas.ts,routes.ts,campos-valores.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enum), `packages/shared/src/{modulos/chamados.ts,enums.ts}`, `apps/api/src/lib/enums-check.ts`, `apps/api/src/modules/chamados/{service.ts,acoes.ts,consultas.ts,routes.ts,campos-valores.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato), `packages/shared/src/modulos/chamados.test.ts` (rota nova na lista exata), `apps/web/src/features/historico/textos.ts` (mapa exaustivo de TipoEvento)
 - **Passos:**
   1. `CriarChamadoSchema.campos?: z.record(z.string(), z.unknown())`, validado no service com `schemaDosCampos`.
   2. `PUT /chamados/:id/campos {versao, campos}` (`podeAtender`).
