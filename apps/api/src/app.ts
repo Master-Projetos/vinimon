@@ -43,6 +43,7 @@ import { rotasPainel } from './modules/painel/routes'
 import { rotasPresenca } from './modules/presenca/routes'
 import { rotasPrioridades } from './modules/prioridades/routes'
 import { rotasProblemas } from './modules/problemas/routes'
+import { rotasProjetos } from './modules/projetos/routes'
 import { rotasRelatorios } from './modules/relatorios/routes'
 import { rotasSaude } from './modules/saude/routes'
 import { rotasSeguranca } from './modules/seguranca/routes'
@@ -220,6 +221,7 @@ export async function buildApp(opcoes: OpcoesApp = {}) {
       await api.register(rotasPresenca)
       await api.register(rotasPrioridades)
       await api.register(rotasProblemas)
+      await api.register(rotasProjetos)
       await api.register(rotasTiposAtivo)
       await api.register(rotasUnidades)
       await api.register(rotasUsuarios)
