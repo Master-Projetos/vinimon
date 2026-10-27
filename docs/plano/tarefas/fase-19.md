@@ -42,7 +42,7 @@
 ### T-19.3 — Auto-cadastro com aprovação
 - **Depende de:** T-12.1 · **Paralelo com:** T-19.2
 - **Requisitos:** A14
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{config.ts,modulos/cadastro.ts}`, `apps/api/src/modules/cadastro/{service.ts,routes.ts,cadastro.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/{config.ts,modulos/cadastro.ts}`, `apps/api/src/modules/cadastro/{schemas.ts,service.ts,routes.ts,cadastro.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Config `cadastro.habilitado` (padrão `false`) e `cadastro.dominiosPermitidos: string[]`.
   2. Model `CadastroPendente {id, login, nome, email, departamentoId?, tokenHash, confirmadoEm?, criadoEm}`.
