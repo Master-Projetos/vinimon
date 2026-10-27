@@ -1267,8 +1267,21 @@ model ModeloEmail {
   corpoTexto   String   @map("corpo_texto") @db.Text
   ativo        Boolean
   atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+  /// Listas de distribuição extras (T-19.5). Sem FK: `ListaEmail` exclui o id dos modelos na mesma transação.
+  listaIds     Int[]   @default([]) @map("lista_ids")
 
   @@map("modelos_email")
+}
+
+/// Lista de distribuição: e-mails extras que recebem os modelos vinculados (T-19.5, E05).
+model ListaEmail {
+  id           Int      @id @default(autoincrement())
+  nome         String   @unique @db.VarChar(120)
+  emails       String[] @db.VarChar(254)
+  criadoEm     DateTime @default(now()) @map("criado_em") @db.Timestamptz(3)
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(3)
+
+  @@map("listas_email")
 }
 
 // ═════════════════════════ PROJETOS (F3) ═════════════════════════
