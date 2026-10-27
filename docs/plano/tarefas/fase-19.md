@@ -74,7 +74,7 @@
 ### T-19.5 — Listas de distribuição
 - **Depende de:** T-12.2 · **Paralelo com:** T-19.1, T-19.4
 - **Requisitos:** E05
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/modules/listas-email/{service.ts,routes.ts,listas.test.ts}`, `apps/api/src/modules/modelos-email/service.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/modules/listas-email/{schemas.ts,service.ts,routes.ts,listas.test.ts}`, `packages/shared/src/modulos/listas-email.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato), `apps/api/src/modules/modelos-email/service.ts`
 - **Passos:**
   1. Model `ListaEmail {id, nome @unique, emails String[] (≤ 100, z.email)}`.
   2. `ModeloEmail.listaIds Int[]` como destinatários extras, só para eventos sem conteúdo interno.
