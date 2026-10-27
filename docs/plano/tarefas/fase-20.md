@@ -5,7 +5,7 @@
 ### T-20.1 — Projetos
 - **Depende de:** T-15.4 · **Paralelo com:** T-20.2
 - **Requisitos:** C21
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/projetos.ts`, `apps/api/src/modules/projetos/{service.ts,routes.ts,projetos.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/projetos.ts`, `apps/api/src/modules/projetos/{schemas.ts,service.ts,routes.ts,projetos.test.ts}`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
 - **Passos:**
   1. Model `Projeto {id, nome, descricao?, chamadoRaizId @unique, criadoPorId, criadoEm}`.
   2. `GET /projetos/:id` com a árvore de subchamados visíveis (recursivo até 5 níveis via `findMany` iterativo).
