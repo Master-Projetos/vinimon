@@ -77,6 +77,7 @@ const TEXTO_POR_TIPO: Record<TipoEvento, (dados: Dados) => string> = {
   SLA_ESTOURADO: () => 'SLA de solução estourado',
   SLA_RESPOSTA_ESTOURADO: () => 'SLA de resposta estourado',
   SUBCHAMADO_VINCULADO: (dados) => `Subchamado vinculado (#${numeroDe(dados.filhoId)} em #${numeroDe(dados.paiId)})`,
+  CAMPOS_ALTERADOS: () => 'Campos alterados',
   SUBCHAMADO_DESVINCULADO: (dados) =>
     `Subchamado desvinculado (#${numeroDe(dados.filhoId)} de #${numeroDe(dados.paiId)})`,
   AUXILIAR_ADICIONADO: (dados) =>

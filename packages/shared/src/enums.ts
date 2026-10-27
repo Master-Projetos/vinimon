@@ -66,6 +66,7 @@ export const TIPOS_EVENTO = [
   'AUXILIAR_REMOVIDO',
   'SUBCHAMADO_VINCULADO',
   'SUBCHAMADO_DESVINCULADO',
+  'CAMPOS_ALTERADOS',
 ] as const
 export type TipoEvento = (typeof TIPOS_EVENTO)[number]
 

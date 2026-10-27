@@ -211,6 +211,7 @@ describe('chamadosApi', () => {
       'status POST /chamados/:id/status',
       'prioridade POST /chamados/:id/prioridade',
       'classificacao POST /chamados/:id/classificacao',
+      'campos PUT /chamados/:id/campos',
       'tags PUT /chamados/:id/tags',
       'agendar POST /chamados/:id/agendar',
       'concluir POST /chamados/:id/concluir',

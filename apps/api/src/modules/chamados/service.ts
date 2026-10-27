@@ -1,4 +1,11 @@
-import { type ChamadoDetalhe, type CriarChamado, temPermissao } from '@vinimon/shared'
+import {
+  type ChamadoDetalhe,
+  type CriarChamado,
+  type DefinicaoCampo,
+  schemaDosCampos,
+  type TipoCampo,
+  temPermissao,
+} from '@vinimon/shared'
 import {
   acoesDoUsuario,
   comEscopo,
@@ -26,6 +33,141 @@ const MAX_FILHOS = 100
 
 const invalido = (campo: string, mensagem: string) =>
   new ErroApp(400, 'REQUISICAO_INVALIDA', 'Dados inválidos.', [{ campo, mensagem }])
+
+// ───────── campos personalizados no chamado (B11, T-14.3) ─────────
+
+/** Definição que vale para o problema, com `obrigatorio` já resolvido pelo vínculo (`CampoProblema`). */
+export interface CampoAplicavel extends DefinicaoCampo {
+  id: number
+}
+
+/**
+ * Campos ativos que valem para o problema (sem vínculo = vale para todos). `ocultarSolicitante`: quem abre como
+ * USUARIO não recebe os OCULTO_SOLICITANTE (mesma regra de `listarAplicaveis`).
+ */
+export async function camposAplicaveis(
+  tx: Tx,
+  problemaId: number | null,
+  ocultarSolicitante: boolean,
+): Promise<CampoAplicavel[]> {
+  const campos = await tx.campoPersonalizado.findMany({
+    where: {
+      ativo: true,
+      ...(ocultarSolicitante ? { visibilidade: { not: 'OCULTO_SOLICITANTE' as const } } : {}),
+      OR: [{ problemas: { none: {} } }, ...(problemaId === null ? [] : [{ problemas: { some: { problemaId } } }])],
+    },
+    select: {
+      id: true,
+      chave: true,
+      rotulo: true,
+      tipo: true,
+      opcoes: true,
+      obrigatorio: true,
+      regex: true,
+      visibilidade: true,
+      problemas: { select: { problemaId: true, obrigatorio: true } },
+    },
+    orderBy: [{ ordem: 'asc' }, { id: 'asc' }],
+  })
+  return campos.map(({ problemas, ...c }) => ({
+    ...c,
+    obrigatorio: problemas.find((p) => p.problemaId === problemaId)?.obrigatorio ?? c.obrigatorio,
+  }))
+}
+
+/** Colunas de `ChamadoCampoValor`: uma por forma de valor. Vazio vira tudo nulo (ou lista vazia). */
+export interface ColunasValor {
+  valorTexto: string | null
+  valorNumero: number | null
+  valorData: Date | null
+  valorOpcoes: string[]
+}
+
+/** Valor já validado por `schemaDosCampos` → colunas. */
+export function colunasDoValor(tipo: TipoCampo, v: unknown): ColunasValor {
+  const vazio: ColunasValor = { valorTexto: null, valorNumero: null, valorData: null, valorOpcoes: [] }
+  switch (tipo) {
+    case 'TEXTO':
+    case 'AREA_TEXTO':
+    case 'SELECAO':
+    case 'HORA':
+      return { ...vazio, valorTexto: typeof v === 'string' && v.trim() !== '' ? v : null }
+    case 'NUMERO':
+      return { ...vazio, valorNumero: typeof v === 'number' ? v : null }
+    case 'DATA':
+      return { ...vazio, valorData: typeof v === 'string' ? new Date(`${v}T00:00:00.000Z`) : null }
+    case 'DATA_HORA':
+      return { ...vazio, valorData: typeof v === 'string' ? new Date(v) : null }
+    case 'SELECAO_MULTIPLA':
+      return { ...vazio, valorOpcoes: Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [] }
+    case 'CHECKBOX':
+      return { ...vazio, valorTexto: v === true ? 'true' : v === false ? 'false' : null }
+  }
+}
+
+/** Colunas gravadas → valor como a API o devolve (data em `AAAA-MM-DD` ou ISO; `null` quando não há valor). */
+export function valorDasColunas(tipo: TipoCampo, c: ColunasValor): unknown {
+  switch (tipo) {
+    case 'TEXTO':
+    case 'AREA_TEXTO':
+    case 'SELECAO':
+    case 'HORA':
+      return c.valorTexto
+    case 'NUMERO':
+      return c.valorNumero
+    case 'DATA':
+      return c.valorData === null ? null : c.valorData.toISOString().slice(0, 10)
+    case 'DATA_HORA':
+      return c.valorData === null ? null : c.valorData.toISOString()
+    case 'SELECAO_MULTIPLA':
+      return c.valorOpcoes.length === 0 ? null : c.valorOpcoes
+    case 'CHECKBOX':
+      return c.valorTexto === null ? null : c.valorTexto === 'true'
+  }
+}
+
+/** Linha do banco → colunas (o `Decimal` vira número). */
+export function colunasDeLinha(l: {
+  valorTexto: string | null
+  valorNumero: { toNumber(): number } | null
+  valorData: Date | null
+  valorOpcoes: string[]
+}): ColunasValor {
+  return {
+    valorTexto: l.valorTexto,
+    valorNumero: l.valorNumero === null ? null : l.valorNumero.toNumber(),
+    valorData: l.valorData,
+    valorOpcoes: l.valorOpcoes,
+  }
+}
+
+/** Valor "canônico" para comparar antes/depois: passa pelas mesmas colunas que serão gravadas. */
+export const canonico = (tipo: TipoCampo, v: unknown): unknown => valorDasColunas(tipo, colunasDoValor(tipo, v))
+
+/** Erro 400 dos valores: `detalhes[].campo` é `campos.<chave>` (chave ausente no corpo cai em `campos`). */
+export function erroDeCampos(erro: { issues: ReadonlyArray<{ path: PropertyKey[]; message: string }> }): ErroApp {
+  return new ErroApp(
+    400,
+    'REQUISICAO_INVALIDA',
+    'Dados inválidos.',
+    erro.issues.map((i) => ({ campo: ['campos', ...i.path.map(String)].join('.'), mensagem: i.message })),
+  )
+}
+
+/** Grava só os valores preenchidos. `valores` já passou por `schemaDosCampos`. */
+export async function gravarValoresCampos(
+  tx: Tx,
+  chamadoId: number,
+  campos: readonly CampoAplicavel[],
+  valores: Record<string, unknown>,
+): Promise<void> {
+  const linhas = campos.flatMap((c) => {
+    const v = valores[c.chave]
+    if (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) return []
+    return [{ chamadoId, campoId: c.id, ...colunasDoValor(c.tipo, v) }]
+  })
+  if (linhas.length > 0) await tx.chamadoCampoValor.createMany({ data: linhas })
+}
 
 /**
  * Monta o `ChamadoDetalhe` do ponto de vista de `u`. NÃO confere o escopo: a rota de leitura (T-5.6) chama
@@ -55,8 +197,19 @@ export async function montarDetalhe(
   })
   const selectSub = { id: true, assunto: true, statusTipo: true } satisfies Prisma.ChamadoSelect
 
-  const [qtdAnexos, leitura, pai, filhos] = await Promise.all([
+  const [qtdAnexos, valoresCampos, leitura, pai, filhos] = await Promise.all([
     tx.anexo.count({ where: { chamadoId: id, ...(verInterno ? {} : { interno: false }) } }),
+    tx.chamadoCampoValor.findMany({
+      where: { chamadoId: id },
+      select: {
+        valorTexto: true,
+        valorNumero: true,
+        valorData: true,
+        valorOpcoes: true,
+        campo: { select: { chave: true, rotulo: true, tipo: true, visibilidade: true, ordem: true } },
+      },
+      orderBy: [{ campo: { ordem: 'asc' } }, { campoId: 'asc' }],
+    }),
     tx.chamadoLeitura.findUnique({
       where: { chamadoId_usuarioId: { chamadoId: id, usuarioId: u.id } },
       select: { ultimoAssentamentoLidoId: true },
@@ -91,6 +244,16 @@ export async function montarDetalhe(
     cfg,
     agora,
   )
+
+  // campos OCULTO_SOLICITANTE só para quem vê interno (B11)
+  const campos = valoresCampos
+    .filter((v) => verInterno || v.campo.visibilidade !== 'OCULTO_SOLICITANTE')
+    .map((v) => ({
+      chave: v.campo.chave,
+      rotulo: v.campo.rotulo,
+      tipo: v.campo.tipo,
+      valor: valorDasColunas(v.campo.tipo, colunasDeLinha(v)),
+    }))
 
   return {
     id: c.id,
@@ -144,6 +307,7 @@ export async function montarDetalhe(
     versao: c.versao,
     participantes,
     ...(ehEquipe ? { tags: c.tags.map((t) => t.tag).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')) } : {}),
+    campos,
     avaliacao: c.avaliacao,
     seguindo: c.seguidores.some((s) => s.usuarioId === u.id && s.silenciadoEm === null),
     pai,
@@ -238,6 +402,11 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
     }
   }
 
+  // B11: valores validados pela definição dos campos aplicáveis; obrigatório ausente dá 400 em `campos.<chave>`
+  const camposDoProblema = await camposAplicaveis(prisma, problema.id, ehUsuario)
+  const valoresCampos = schemaDosCampos(camposDoProblema, 'abertura').safeParse(dados.campos ?? {})
+  if (!valoresCampos.success) throw erroDeCampos(valoresCampos.error)
+
   const agora = new Date()
   const canalNome = emNomeDeOutro && !ehUsuario ? 'Telefone' : 'Sistema Web'
   const efeitos = await prisma.$transaction(async (tx) => {
@@ -312,6 +481,7 @@ export async function abrirChamado(dados: CriarChamado, ctx: ContextoUsuario, lo
       },
       select: { id: true },
     })
+    await gravarValoresCampos(tx, criado.id, camposDoProblema, valoresCampos.data)
 
     await tx.chamadoSeguidor.createMany({
       data: [

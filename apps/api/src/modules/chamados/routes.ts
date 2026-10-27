@@ -47,7 +47,8 @@ export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
     config: { acesso: 'chamado.abrir' },
     handler: (req) => {
       if (!req.usuario) throw naoAutenticado()
-      return consultas.listar(req.usuario, req.query)
+      // `campo.<chave>` não cabe no schema da querystring (o zod descarta chaves extras): lido da URL
+      return consultas.listar(req.usuario, req.query, new Date(), consultas.filtrosCampoDaUrl(req.url))
     },
   })
 
@@ -181,6 +182,20 @@ export const rotasChamados: FastifyPluginAsyncZod = async (app) => {
     },
     config: { acesso: 'chamado.atender' },
     handler: (req) => acoes.classificar(req.params.id, req.body, contextoDe(req), req.log),
+  })
+
+  app.route({
+    method: c.campos.metodo,
+    url: c.campos.caminho,
+    schema: {
+      tags,
+      summary: 'Substitui os valores dos campos personalizados do chamado',
+      params: c.campos.params,
+      body: c.campos.body,
+      response: { 200: c.campos.resposta },
+    },
+    config: { acesso: 'chamado.atender' },
+    handler: (req) => acoes.atualizarCampos(req.params.id, req.body, contextoDe(req), req.log),
   })
 
   app.route({
