@@ -6,7 +6,15 @@ import { type DetalheErro, ErroApp, naoEncontrado, regraNegocio } from '../../li
 import { escaparLike } from '../../lib/like'
 import { paginar } from '../../lib/paginacao'
 import { prisma, type Tx } from '../../lib/prisma'
-import { selectProblema } from './schemas'
+import { selectProblema as selectBase } from './schemas'
+
+/** A projeção do módulo mais as três categorias (B07). */
+const selectProblema = {
+  ...selectBase,
+  categoria1Id: true,
+  categoria2Id: true,
+  categoria3Id: true,
+} satisfies Prisma.ProblemaSelect
 
 type LinhaProblema = Prisma.ProblemaGetPayload<{ select: typeof selectProblema }>
 
@@ -21,6 +29,22 @@ async function validarAreasQueAtendem(tx: Tx, areaIds: number[]): Promise<void> 
   const naoAtendem = areas.filter((a) => !a.atende).map((a) => a.nome)
   if (naoAtendem.length > 0) {
     throw regraNegocio(`Estas áreas não atendem chamados: ${naoAtendem.join(', ')}.`)
+  }
+}
+
+type IdsCategoria = { categoria1Id?: number | null; categoria2Id?: number | null; categoria3Id?: number | null }
+
+/** Categoria N precisa existir e ser do grupo N (senão 422). */
+async function validarCategorias(tx: Tx, ids: IdsCategoria): Promise<void> {
+  const pares = [
+    [1, ids.categoria1Id],
+    [2, ids.categoria2Id],
+    [3, ids.categoria3Id],
+  ] as const
+  for (const [grupo, id] of pares) {
+    if (id === null || id === undefined) continue
+    const ok = await tx.categoria.count({ where: { id, grupo } })
+    if (ok === 0) throw regraNegocio(`A categoria ${grupo} precisa ser uma categoria do grupo ${grupo}.`)
   }
 }
 
@@ -51,6 +75,7 @@ export async function obterProblema(id: number) {
 export function criarProblema(dados: CriarProblema, ctx: ContextoUsuario) {
   return prisma.$transaction(async (tx) => {
     await validarAreasQueAtendem(tx, dados.areaIds)
+    await validarCategorias(tx, dados)
     const criado = await tx.problema.create({
       data: {
         nome: dados.nome,
@@ -59,6 +84,9 @@ export function criarProblema(dados: CriarProblema, ctx: ContextoUsuario) {
         slaRespostaMin: dados.slaRespostaMin,
         slaSolucaoMin: dados.slaSolucaoMin,
         ativo: dados.ativo,
+        categoria1Id: dados.categoria1Id,
+        categoria2Id: dados.categoria2Id,
+        categoria3Id: dados.categoria3Id,
         areas: { create: dados.areaIds.map((areaId) => ({ areaId })) },
       },
       select: selectProblema,
@@ -90,6 +118,7 @@ export function atualizarProblema(id: number, dados: AtualizarProblema, ctx: Con
       throw new ErroApp(400, 'VALIDACAO', 'Verifique os campos informados.', detalhes)
     }
 
+    await validarCategorias(tx, dados)
     if (dados.areaIds !== undefined) {
       await validarAreasQueAtendem(tx, dados.areaIds)
       await tx.problemaArea.deleteMany({ where: { problemaId: id } })
@@ -106,6 +135,9 @@ export function atualizarProblema(id: number, dados: AtualizarProblema, ctx: Con
           slaRespostaMin: dados.slaRespostaMin,
           slaSolucaoMin: dados.slaSolucaoMin,
           ativo: dados.ativo,
+          categoria1Id: dados.categoria1Id,
+          categoria2Id: dados.categoria2Id,
+          categoria3Id: dados.categoria3Id,
         },
         select: selectProblema,
       }),

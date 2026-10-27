@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
-import { type AtualizarConfig, configApi } from '@vinimon/shared'
+import { type AtualizarConfig, configApi, contrato, usuariosApi } from '@vinimon/shared'
+import { z } from 'zod'
 import { chamar } from '@/lib/api'
 
 export const configChaves = {
@@ -26,3 +27,22 @@ export function useSalvarConfig() {
     meta: { silenciarErro: true }, // o formulário trata (erro nos campos)
   })
 }
+
+/** POST /config/ldap/testar (config.gerenciar): confere conexão, CA e bind de serviço. */
+export const testarLdapApi = contrato({
+  metodo: 'POST',
+  caminho: '/config/ldap/testar',
+  body: z.strictObject({}),
+  resposta: z.object({ ok: z.boolean(), mensagem: z.string() }),
+})
+
+export function useTestarLdap() {
+  return useMutation({
+    mutationFn: () => chamar(testarLdapApi, { body: {} }),
+    meta: { silenciarErro: true },
+  })
+}
+
+/** Colegas do mesmo departamento para "Para outro colega" (B03); vazio com a regra desligada. */
+export const buscarColegas = (termo: string, signal: AbortSignal) =>
+  chamar(usuariosApi.mesmoDepartamento, { query: { q: termo.trim() } }, signal)

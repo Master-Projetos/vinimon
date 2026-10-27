@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { type CriarTag, type ListarTagsQuery, tagsApi } from '@vinimon/shared'
+import { useExcluirCadastro } from '@/features/admin/excluir'
 import { chamar } from '@/lib/api'
 
 export const tagChaves = {
@@ -26,4 +27,8 @@ export function useSalvarTag(id: number | null) {
     },
     meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
   })
+}
+
+export function useExcluirTag() {
+  return useExcluirCadastro((id) => chamar(tagsApi.excluir, { params: { id } }), [tagChaves.todas])
 }

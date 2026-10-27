@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { type CriarTipoAtivo, type ListarTiposAtivoQuery, tiposAtivoApi } from '@vinimon/shared'
+import { useExcluirCadastro } from '@/features/admin/excluir'
 import { chamar } from '@/lib/api'
 
 export const tipoAtivoChaves = {
@@ -28,4 +29,8 @@ export function useSalvarTipoAtivo(id: number | null) {
     },
     meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
   })
+}
+
+export function useExcluirTipoAtivo() {
+  return useExcluirCadastro((id) => chamar(tiposAtivoApi.excluir, { params: { id } }), [tipoAtivoChaves.todas])
 }

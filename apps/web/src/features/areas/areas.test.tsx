@@ -108,7 +108,7 @@ describe('/admin/areas', () => {
       expect(falsa.chamadas).toContainEqual({
         metodo: 'POST',
         url: '/api/v1/areas',
-        corpo: { nome: 'Jurídico', atende: true, ativo: true, jornadaId: null },
+        corpo: { nome: 'Jurídico', atende: true, ativo: true, jornadaId: null, moduloInventario: true, destinos: [] },
       }),
     )
     expect(await screen.findByText('Área criada')).toBeInTheDocument()
@@ -125,9 +125,68 @@ describe('/admin/areas', () => {
       expect(falsa.chamadas).toContainEqual({
         metodo: 'PATCH',
         url: '/api/v1/areas/1',
-        corpo: { nome: 'Financeiro Geral', atende: true, ativo: true, jornadaId: null },
+        corpo: {
+          nome: 'Financeiro Geral',
+          atende: true,
+          ativo: true,
+          jornadaId: null,
+          moduloInventario: true,
+          destinos: [],
+        },
       }),
     )
+  })
+
+  it('(b) destinos com padrão e módulo de inventário vão no PATCH', async () => {
+    const outras = [
+      { id: 1, nome: 'Financeiro', atende: true },
+      { id: 5, nome: 'Compras', atende: true },
+    ]
+    const { falsa } = montar({
+      ...listaPadrao,
+      'GET /meta': { ...meta, areas: outras },
+      'PATCH /areas/1': () => json(area(1, 'Financeiro')),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Financeiro' }))
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Compras' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'Padrão' }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Módulo de inventário' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({
+        metodo: 'PATCH',
+        url: '/api/v1/areas/1',
+        corpo: {
+          nome: 'Financeiro',
+          atende: true,
+          ativo: true,
+          jornadaId: null,
+          moduloInventario: false,
+          destinos: [{ areaId: 5, padrao: true }],
+        },
+      }),
+    )
+  })
+
+  it('(b) excluir confirma e faz DELETE /areas/:id', async () => {
+    const { falsa } = montar({ ...listaPadrao, 'DELETE /areas/1': () => new Response(null, { status: 204 }) })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Financeiro' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    await waitFor(() =>
+      expect(falsa.chamadas).toContainEqual({ metodo: 'DELETE', url: '/api/v1/areas/1', corpo: null }),
+    )
+    expect(await screen.findByText('Área excluída')).toBeInTheDocument()
+  })
+
+  it('(c) 409 ao excluir área em uso mostra a mensagem do servidor', async () => {
+    montar({
+      ...listaPadrao,
+      'DELETE /areas/1': () =>
+        json({ erro: { codigo: 'REGISTRO_EM_USO', mensagem: 'A área está em uso e não pode ser excluída.' } }, 409),
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Financeiro' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }))
+    expect(await screen.findByText('A área está em uso e não pode ser excluída.')).toBeInTheDocument()
   })
 
   it('(c) 400 com detalhes aparece no campo', async () => {

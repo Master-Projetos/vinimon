@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { enviarAnexosEmSequencia, mensagemDeFalhaDeAnexos } from '@/features/anexos/queries'
+import { buscarColegas } from '@/features/config/queries'
 import { useDebounce } from '@/hooks/use-debounce'
 import { aplicarErrosDoServidor, useZodForm } from '@/lib/form'
 import { gravar, ler, remover } from '@/lib/storage'
@@ -79,6 +80,12 @@ async function opcoesDeUsuarios(termo: string, signal: AbortSignal): Promise<Com
   }))
 }
 
+async function opcoesDeColegas(termo: string, signal: AbortSignal): Promise<ComboboxOpcao[]> {
+  if (termo.trim().length < 2) return []
+  const colegas = await buscarColegas(termo, signal)
+  return colegas.map((u) => ({ valor: String(u.id), rotulo: u.nome }))
+}
+
 async function opcoesDeAtivos(termo: string, signal: AbortSignal): Promise<ComboboxOpcao[]> {
   if (termo.trim().length < 3) return []
   const ativos = await buscarAtivos(termo, signal)
@@ -94,6 +101,8 @@ export function NovoChamadoForm({ meta, usuario, problemaInicial, equipamento }:
   const criar = useCriarChamado()
   const equipe = temPermissao(usuario.perfil, 'chamado.atender')
   const podeEmNome = temPermissao(usuario.perfil, 'chamado.abrirEmNome')
+  // USUARIO: a API devolve lista vazia quando 'chamado.usuarioAbreParaOutros' está desligada (B03).
+  const paraColega = usuario.perfil === 'USUARIO'
   const idPrioridade = useId()
   const problemaSemente = meta.problemas.find((p) => p.id === problemaInicial)
   const prioridadePadrao = meta.prioridades.find((p) => p.padrao)?.id
@@ -466,7 +475,7 @@ export function NovoChamadoForm({ meta, usuario, problemaInicial, equipamento }:
         </CampoForm>
       </section>
 
-      {equipe || podeEmNome ? (
+      {equipe || podeEmNome || paraColega ? (
         <section aria-labelledby="secao-equipe" className="space-y-4">
           <h2 id="secao-equipe" className="text-sm font-semibold">
             Atendimento
@@ -486,6 +495,29 @@ export function NovoChamadoForm({ meta, usuario, problemaInicial, equipamento }:
                   buscar={opcoesDeUsuarios}
                   placeholder="Eu mesmo"
                   placeholderBusca="Buscar usuário (2+ letras)..."
+                  textoVazio="Digite ao menos 2 letras."
+                  limpavel
+                  aria-invalid={controle['aria-invalid']}
+                  aria-describedby={controle['aria-describedby']}
+                />
+              )}
+            </CampoForm>
+          ) : null}
+          {paraColega ? (
+            <CampoForm
+              control={form.control}
+              name="solicitanteId"
+              rotulo="Para outro colega"
+              descricao="Do seu departamento. Deixe vazio para abrir para você."
+            >
+              {(field, controle) => (
+                <ComboboxField
+                  id={controle.id}
+                  valor={paraTexto(field.value)}
+                  aoMudar={(v) => field.onChange(paraNumero(v))}
+                  buscar={opcoesDeColegas}
+                  placeholder="Para mim"
+                  placeholderBusca="Buscar colega (2+ letras)..."
                   textoVazio="Digite ao menos 2 letras."
                   limpavel
                   aria-invalid={controle['aria-invalid']}

@@ -1,4 +1,4 @@
-import type { PreferenciaItem, PreferenciasNotificacao } from '@vinimon/shared'
+import { CANAIS_EMAIL, type CanalEmail, type PreferenciaItem, type PreferenciasNotificacao } from '@vinimon/shared'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ROTULOS_TIPO_NOTIFICACAO } from '@/lib/rotulos'
 
@@ -23,7 +23,17 @@ export function aplicarMudanca(
   })
 }
 
-/** Matriz tipo × {No aplicativo, Área de trabalho}. */
+const ROTULOS_CANAL_EMAIL: Record<CanalEmail, string> = {
+  NUNCA: 'Nunca',
+  IMEDIATO: 'Imediato',
+  RESUMO: 'Resumo diário',
+}
+
+export function aplicarEmail(itens: LinhaPreferencia[], tipo: PreferenciaItem['tipo'], email: CanalEmail) {
+  return itens.map((i) => (i.tipo === tipo ? { ...i, email } : i))
+}
+
+/** Matriz tipo × {No aplicativo, Área de trabalho, E-mail}. */
 export function PreferenciasNotificacaoTable({ itens, aoMudar }: PreferenciasNotificacaoTableProps) {
   return (
     <div className="overflow-x-auto rounded-md border">
@@ -38,6 +48,9 @@ export function PreferenciasNotificacaoTable({ itens, aoMudar }: PreferenciasNot
             </th>
             <th scope="col" className="px-3 py-2 text-center font-medium">
               Área de trabalho
+            </th>
+            <th scope="col" className="px-3 py-2 text-center font-medium">
+              E-mail
             </th>
           </tr>
         </thead>
@@ -67,6 +80,23 @@ export function PreferenciasNotificacaoTable({ itens, aoMudar }: PreferenciasNot
                     disabled={!i.inApp}
                     onCheckedChange={(v) => aoMudar(aplicarMudanca(itens, i.tipo, 'desktop', v === true))}
                   />
+                </td>
+                <td className="px-3 py-2 text-center">
+                  <select
+                    aria-label={`${rotulo}, por e-mail`}
+                    className="rounded-md border bg-background px-2 py-1 text-sm"
+                    value={i.email}
+                    onChange={(e) => {
+                      const valor = CANAIS_EMAIL.find((c) => c === e.target.value)
+                      if (valor) aoMudar(aplicarEmail(itens, i.tipo, valor))
+                    }}
+                  >
+                    {CANAIS_EMAIL.map((c) => (
+                      <option key={c} value={c}>
+                        {ROTULOS_CANAL_EMAIL[c]}
+                      </option>
+                    ))}
+                  </select>
                 </td>
               </tr>
             )

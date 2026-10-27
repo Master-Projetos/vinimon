@@ -1,5 +1,5 @@
 import type { Leitura, LeituraMarcada } from '@vinimon/shared'
-import { podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
+import { comEscopo, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
 import { naoEncontrado, regraNegocio } from '../../lib/erros'
 import { prisma } from '../../lib/prisma'
 import type { UsuarioSessao } from '../../lib/sessao'
@@ -7,10 +7,19 @@ import { tempoReal } from '../../lib/tempo-real'
 import { contarNaoLidas } from '../notificacoes/service'
 
 async function carregarVisivel(id: number, u: UsuarioSessao) {
-  const c = await prisma.chamado.findUnique({
-    where: { id },
-    select: { id: true, areaId: true, operadorId: true, solicitanteId: true },
-  })
+  const c = comEscopo(
+    await prisma.chamado.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        areaId: true,
+        operadorId: true,
+        solicitanteId: true,
+        solicitante: { select: { areaId: true } },
+        auxiliares: { select: { usuarioId: true } },
+      },
+    }),
+  )
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
   return c
 }

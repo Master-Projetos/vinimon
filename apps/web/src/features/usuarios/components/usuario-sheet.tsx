@@ -1,10 +1,12 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { type AtualizarUsuario, CriarUsuarioSchema, PERFIS, type Usuario } from '@vinimon/shared'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { CampoForm } from '@/components/form/campo-form'
 import { MultiComboboxField } from '@/components/form/multi-combobox-field'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
@@ -27,6 +29,10 @@ export function UsuarioSheet({ usuario, aoFechar, aoCriar }: UsuarioSheetProps) 
   const existente = usuario !== null && usuario !== 'novo' ? usuario : null
   const { data: meta } = useSuspenseQuery(metaConsultas.tudo())
   const salvar = useSalvarUsuario(existente?.id ?? null)
+  // `areasGeridasIds` só existe no PATCH; fica fora do formulário de criação. null = sem alteração.
+  const [edicaoGeridas, setEdicaoGeridas] = useState<{ usuarioId: number | undefined; ids: number[] } | null>(null)
+  const geridas = edicaoGeridas !== null && edicaoGeridas.usuarioId === existente?.id ? edicaoGeridas.ids : null
+  const geridasAtuais = geridas ?? existente?.areasGeridasIds ?? []
   const form = useZodForm(CriarUsuarioSchema, {
     values: {
       login: existente?.login ?? '',
@@ -51,6 +57,7 @@ export function UsuarioSheet({ usuario, aoFechar, aoCriar }: UsuarioSheetProps) 
           telefone: dados.telefone ?? null,
           areaId: dados.areaId ?? null,
           departamentoId: dados.departamentoId ?? null,
+          ...(geridas === null ? {} : { areasGeridasIds: geridas }),
         }
         await salvar.mutateAsync({ atualizar: corpo })
         toast.success('Usuário atualizado')
@@ -158,6 +165,18 @@ export function UsuarioSheet({ usuario, aoFechar, aoCriar }: UsuarioSheetProps) 
               />
             )}
           </CampoForm>
+          {existente ? (
+            <div className="grid gap-2">
+              <Label htmlFor="areas-geridas">Áreas geridas</Label>
+              <MultiComboboxField
+                id="areas-geridas"
+                opcoes={meta.areas.map((a) => ({ valor: String(a.id), rotulo: a.nome }))}
+                valores={geridasAtuais.map(String)}
+                placeholder="Escolha as áreas"
+                aoMudar={(v) => setEdicaoGeridas({ usuarioId: existente.id, ids: v.map(Number) })}
+              />
+            </div>
+          ) : null}
           <CampoForm control={form.control} name="departamentoId" rotulo="Departamento">
             {(field, controle) => (
               <Select

@@ -1,5 +1,6 @@
 import { keepPreviousData, queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { type AtualizarAtivo, ativosApi, type CriarAtivo, type ListarAtivosQuery } from '@vinimon/shared'
+import { useExcluirCadastro } from '@/features/admin/excluir'
 import { chamar } from '@/lib/api'
 
 export const ativoChaves = {
@@ -40,4 +41,9 @@ export function useSalvarAtivo(id: number | null) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ativoChaves.todos }),
     meta: { silenciarErro: true }, // o formulário trata (aplicarErrosDoServidor)
   })
+}
+
+/** Só relê as listas: o detalhe do ativo excluído não pode ser recarregado (daria 404). */
+export function useExcluirAtivo() {
+  return useExcluirCadastro((id) => chamar(ativosApi.excluir, { params: { id } }), [['ativos', 'lista']])
 }

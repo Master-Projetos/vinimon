@@ -5,7 +5,7 @@
 ### T-15.1 — Operadores auxiliares
 - **Depende de:** MVP · **Paralelo com:** T-15.2, T-15.5
 - **Requisitos:** C08; S44, S53
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `packages/shared/src/modulos/chamados.ts`, `apps/api/src/modules/chamados/{acoes.ts,routes.ts,auxiliares.test.ts}`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `packages/shared/src/modulos/chamados.ts`, `apps/api/src/modules/chamados/{acoes.ts,routes.ts,auxiliares.test.ts}`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato), `packages/shared/src/{enums.ts,modulos/chamados.test.ts}` (eventos AUXILIAR_ADICIONADO e AUXILIAR_REMOVIDO e linhas das novas rotas), `apps/api/src/modules/chamados/{consultas.ts,schemas.ts,service.ts}` e `apps/api/src/modules/{anexos,assentamentos,leituras,mencoes}/service.ts`, `apps/api/src/modules/mencoes/mencoes.test.ts`, `apps/api/src/modules/notificacoes/{fanout.ts,regras.ts,service.ts}`, `apps/api/src/realtime/{handlers.ts,revalidacao.ts}` (todo ponto de escopo carrega os auxiliares), `apps/web/src/features/historico/{textos.ts,components/historico-timeline.tsx}` (texto dos novos eventos)
 - **Passos:**
   1. Model `ChamadoAuxiliar {chamadoId, usuarioId, criadoEm, @@id}`. `Usuario.podeEncaminhar` e `podeReceber`, ambos com padrão `true`.
   2. `ChamadoEscopo.auxiliarIds`. O escopo acrescenta `{ auxiliares: { some: { usuarioId: u.id } } }`.
@@ -61,7 +61,7 @@
 ### T-15.4 — Subchamados
 - **Depende de:** MVP · **Paralelo com:** T-15.3
 - **Requisitos:** C20
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enum), `packages/shared/src/modulos/chamados.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (eventos SUBCHAMADO_*), `apps/api/src/modules/chamados/{acoes.ts,service.ts,consultas.ts,subchamados.test.ts}`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração (enum), `packages/shared/src/modulos/chamados.ts`, `packages/shared/src/enums.ts`, `apps/api/src/lib/enums-check.ts` (eventos SUBCHAMADO_*), `apps/api/src/modules/chamados/{acoes.ts,service.ts,consultas.ts,subchamados.test.ts}`, `apps/api/src/modules/chamados/{routes.ts,schemas.ts}` (rota e seleção do detalhe), `packages/shared/src/modulos/chamados.test.ts` (linha da nova rota), `apps/web/src/features/historico/{textos.ts,components/historico-timeline.tsx}` (texto dos novos eventos)
 - **Passos:**
   1. `Chamado.chamadoPaiId Int?` com autorrelação, índice parcial `IS NOT NULL` e CHECK `<> id`.
   2. `POST /chamados` aceita `paiId` (precisa ver e atender o pai).

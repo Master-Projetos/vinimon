@@ -31,7 +31,7 @@
 ### T-13.2 — Isolamento por área configurável
 - **Depende de:** MVP · **Paralelo com:** T-13.1
 - **Requisitos:** A03; S44
-- **Arquivos:** `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `apps/api/src/lib/tempo-real.ts`, `apps/api/src/realtime/revalidacao.ts`, `apps/api/src/modules/config/service.ts`, `apps/api/test/escopo-equivalencia.test.ts`
+- **Arquivos:** `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/{chamados.ts,chamados.test.ts}`, `apps/api/src/lib/tempo-real.ts`, `apps/api/src/realtime/revalidacao.ts`, `apps/api/src/realtime/plugin.ts`, `apps/api/src/modules/config/service.ts`, `apps/api/test/escopo-equivalencia.test.ts`
 - **Passos:**
   1. Config `chamado.isolarAreas` (padrão `true`).
   2. `UsuarioSessao.verTodasAreas = perfil==='OPERADOR' && !cfg['chamado.isolarAreas']`.
@@ -50,7 +50,7 @@
 ### T-13.3 — Gerente de área
 - **Depende de:** T-13.2 · **Paralelo com:** T-13.4
 - **Requisitos:** A04
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/chamados.ts`, `apps/api/src/modules/areas-geridas/{service.ts,routes.ts,areas-geridas.test.ts}`, `packages/shared/src/modulos/areas-geridas.ts`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato)
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/chamados.ts`, `apps/api/src/modules/areas-geridas/{service.ts,routes.ts,areas-geridas.test.ts}`, `packages/shared/src/modulos/areas-geridas.ts`, `apps/api/test/escopo-equivalencia.test.ts`, `apps/api/src/app.ts` (registro do módulo), `packages/shared/src/index.ts` (export do contrato), `apps/api/src/autorizacao/chamados.test.ts`, `packages/shared/src/modulos/{chamados.ts,usuarios.ts}` (visão `areas-geridas` e `areasGeridasIds`), `apps/api/src/modules/usuarios/{schemas.ts,service.ts}` (PATCH com `areasGeridasIds`), `apps/api/src/modules/chamados/{acoes.ts,consultas.ts,schemas.ts,service.ts}`, `apps/api/src/modules/{anexos,assentamentos,leituras,mencoes}/service.ts`, `apps/api/src/modules/mencoes/mencoes.test.ts`, `apps/api/src/modules/notificacoes/{fanout.ts,service.ts}`, `apps/api/src/realtime/{handlers.ts,revalidacao.ts}` (todo ponto de escopo carrega a área do solicitante)
 - **Passos:**
   1. Model `AreaGerente {areaId, usuarioId, @@id}`. USUARIO só gerencia área com `atende=false`; OPERADOR e ADMIN só áreas entre as suas `areaIds` (validado no PATCH de usuário: `areasGeridasIds`).
   2. `UsuarioSessao.areasGeridas`. O escopo acrescenta `{ solicitante: { areaId: { in: areasGeridas } } }` dentro do `OR`; `podeVerChamado` recebe `solicitanteAreaId` em `ChamadoEscopo`.
@@ -68,7 +68,7 @@
 ### T-13.4 — Áreas destino por área solicitante
 - **Depende de:** MVP · **Paralelo com:** T-13.3
 - **Requisitos:** A05
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/areas.ts`, `apps/api/src/modules/areas/{service.ts,areas-destino.test.ts}`, `apps/api/src/modules/chamados/service.ts`, `apps/api/src/modules/meta/service.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/modulos/areas.ts`, `apps/api/src/modules/areas/{service.ts,areas-destino.test.ts}`, `apps/api/src/modules/chamados/service.ts`, `apps/api/src/modules/meta/service.ts`, `packages/shared/src/modulos/meta.ts` (campo `destinosPermitidos`)
 - **Passos:**
   1. Model `AreaDestino {areaOrigemId, areaDestinoId, padrao Boolean, @@id([areaOrigemId, areaDestinoId])}`, com no máximo uma padrão por origem.
   2. Body de área ganha `destinos: {areaId, padrao}[]`.
@@ -85,7 +85,7 @@
 ### T-13.5 — Módulo de inventário por área, A19 e B03
 - **Depende de:** T-13.2 · **Paralelo com:** T-13.4
 - **Requisitos:** A17, A19, B03
-- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/chamados.ts`, `apps/api/src/modules/{ativos/routes.ts,chamados/service.ts,usuarios/routes.ts}`, `apps/api/test/regras-f2.test.ts`
+- **Arquivos:** `apps/api/prisma/schema.prisma` + migração, `packages/shared/src/config.ts`, `apps/api/src/lib/sessao.ts`, `apps/api/src/autorizacao/chamados.ts`, `apps/api/src/modules/{ativos/routes.ts,chamados/service.ts,usuarios/routes.ts}`, `apps/api/test/regras-f2.test.ts`, `packages/shared/src/modulos/{areas.ts,usuarios.ts}`, `apps/api/src/modules/areas/{schemas.ts,service.ts}` (campo `moduloInventario` no cadastro de área), `apps/api/src/modules/usuarios/service.ts` (busca do mesmo departamento)
 - **Passos:**
   1. `Area.moduloInventario Boolean @default(true)`. OPERADOR sem nenhuma área com o módulo recebe 403 nas rotas `inventario.*` (`UsuarioSessao.inventarioHabilitado`); ADMIN sempre acessa.
   2. Config `chamado.operadorTrataProprio` (padrão `true`): com `false`, `podeAtender` é `false` quando o operador é o solicitante.
@@ -100,7 +100,7 @@
 ### T-13.6 — Telas: configurações de acesso
 - **Depende de:** T-13.1, T-13.2, T-13.4, T-13.5 · **Paralelo com:** T-13.7
 - **Requisitos:** A05, A12, A17, A19, B03
-- **Arquivos:** `apps/web/src/routes/_app/admin/{configuracoes.tsx,areas.tsx}`, `apps/web/src/features/config/queries.ts`, `apps/web/src/features/chamados/components/novo-chamado-form.tsx`, `apps/web/src/routes/_app/admin/{configuracoes.test.tsx,areas.test.tsx}`
+- **Arquivos:** `apps/web/src/routes/_app/admin/{configuracoes.tsx,areas.tsx}`, `apps/web/src/features/config/queries.ts`, `apps/web/src/features/chamados/components/novo-chamado-form.tsx`, `apps/web/src/routes/_app/admin/{configuracoes.test.tsx,areas.test.tsx}`, `apps/web/src/features/areas/areas.test.tsx`, `apps/web/src/features/config/configuracoes.test.tsx`, `apps/web/src/test/render-rota.test.tsx`
 - **Passos:**
   1. Seção "Acesso": isolar áreas, operador trata o próprio chamado, usuário abre para outros, "Testar LDAP".
   2. Sheet de área: destinos com padrão, módulo de inventário.
@@ -115,7 +115,7 @@
 ### T-13.7 — Telas: áreas geridas
 - **Depende de:** T-13.3 · **Paralelo com:** T-13.6
 - **Requisitos:** A04
-- **Arquivos:** `apps/web/src/routes/_app/areas-geridas.tsx`, `apps/web/src/features/areas-geridas/{queries.ts,components/usuarios-area-table.tsx}`, `apps/web/src/features/chamados/components/visoes-pane.tsx`, `apps/web/src/routes/_app/admin/usuarios.tsx`, `apps/web/src/routes/_app/areas-geridas.test.tsx`
+- **Arquivos:** `apps/web/src/routes/_app/areas-geridas.tsx`, `apps/web/src/features/areas-geridas/{queries.ts,components/usuarios-area-table.tsx}`, `apps/web/src/features/chamados/components/visoes-pane.tsx`, `apps/web/src/features/usuarios/components/usuario-sheet.tsx`, `apps/web/src/routes/_app/areas-geridas.test.tsx`
 - **Passos:**
   1. Visão "Áreas geridas".
   2. Página com os usuários da área e edição de telefone, departamento e ativo.

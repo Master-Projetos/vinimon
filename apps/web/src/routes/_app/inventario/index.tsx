@@ -8,9 +8,10 @@ import { EmptyState } from '@/components/feedback/empty-state'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ExcluirCadastroDialog } from '@/features/admin/components/excluir-cadastro-dialog'
 import { AtivoSheet } from '@/features/inventario/components/ativo-sheet'
 import { AtivosTable } from '@/features/inventario/components/ativos-table'
-import { ativosConsultas } from '@/features/inventario/queries'
+import { ativosConsultas, useExcluirAtivo } from '@/features/inventario/queries'
 import { metaConsultas } from '@/features/meta/queries'
 import { ROTULOS_SITUACAO_ATIVO } from '@/lib/rotulos'
 
@@ -35,8 +36,11 @@ function InventarioPagina() {
   const { data } = useSuspenseQuery(ativosConsultas.lista(search))
   const { data: meta } = useSuspenseQuery(metaConsultas.tudo())
   const [editando, setEditando] = useState<Ativo | 'novo' | null>(null)
+  const [excluindo, setExcluindo] = useState<Ativo | null>(null)
+  const excluir = useExcluirAtivo()
   const perfil = sessao.usuario?.perfil
   const podeGerenciar = perfil !== undefined && temPermissao(perfil, 'inventario.gerenciar')
+  const podeExcluir = perfil !== undefined && temPermissao(perfil, 'cadastro.gerenciar')
   const totalPaginas = Math.max(1, Math.ceil(data.total / data.porPagina))
   const filtrado = search.busca !== undefined || search.situacao !== undefined || search.departamentoId !== undefined
 
@@ -129,7 +133,11 @@ function InventarioPagina() {
           descricao={filtrado ? 'Ajuste os filtros para ver outros resultados.' : undefined}
         />
       ) : (
-        <AtivosTable ativos={data.itens} aoEditar={podeGerenciar ? (a) => setEditando(a) : undefined} />
+        <AtivosTable
+          ativos={data.itens}
+          aoEditar={podeGerenciar ? (a) => setEditando(a) : undefined}
+          aoExcluir={podeExcluir ? (a) => setExcluindo(a) : undefined}
+        />
       )}
 
       <nav aria-label="Paginação" className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
@@ -155,6 +163,14 @@ function InventarioPagina() {
       </nav>
 
       <AtivoSheet ativo={editando} aoFechar={() => setEditando(null)} />
+      <ExcluirCadastroDialog
+        alvo={excluindo ? { id: excluindo.id, nome: excluindo.etiqueta } : null}
+        tipo="o ativo"
+        sucesso="Ativo excluído"
+        aviso="Ativos que já têm chamados não podem ser excluídos: use a situação Baixado."
+        excluir={(id) => excluir.mutateAsync(id)}
+        aoFechar={() => setExcluindo(null)}
+      />
     </section>
   )
 }

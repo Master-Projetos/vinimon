@@ -52,6 +52,22 @@ export function VisoesPane({ perfil, busca }: VisoesPaneProps) {
               </li>
             )
           })}
+          {contagens.data?.['areas-geridas'] === undefined ? null : (
+            <li className="shrink-0">
+              <Link
+                to="/areas-geridas"
+                className={cn(
+                  'flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm whitespace-nowrap outline-none',
+                  'hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50',
+                )}
+              >
+                <span>Áreas geridas</span>
+                <Badge variant="secondary" aria-label={`${contagens.data['areas-geridas']} chamados`}>
+                  {contagens.data['areas-geridas']}
+                </Badge>
+              </Link>
+            </li>
+          )}
         </ul>
       )}
     </nav>

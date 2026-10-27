@@ -1,4 +1,5 @@
 import {
+  type AdicionarAuxiliar,
   type AgendarChamado,
   type AprovarChamado,
   type AssumirChamado,
@@ -6,6 +7,7 @@ import {
   type ChamadoDetalhe,
   type ClassificacaoChamado,
   type ConcluirChamado,
+  type DefinirPai,
   type EncaminharChamado,
   type PrioridadeChamadoBody,
   type ReabrirChamado,
@@ -17,7 +19,15 @@ import {
   temPermissao,
 } from '@vinimon/shared'
 import { DateTime } from 'luxon'
-import { acoesDoUsuario, type ChamadoParaAcoes, podeVerChamado } from '../../autorizacao/chamados'
+import {
+  acoesDoUsuario,
+  type ChamadoEscopo,
+  type ChamadoParaAcoes,
+  comEscopo,
+  podeAtender,
+  podeVerChamado,
+  selectEscopo,
+} from '../../autorizacao/chamados'
 import { env } from '../../env'
 import type { Prisma } from '../../generated/prisma/client'
 import { obterConfig } from '../../lib/config'
@@ -42,6 +52,7 @@ const selectParaAcao = {
   areaId: true,
   operadorId: true,
   solicitanteId: true,
+  chamadoPaiId: true,
   statusId: true,
   statusTipo: true,
   cancelado: true,
@@ -55,13 +66,15 @@ const selectParaAcao = {
   area: { select: { nome: true } },
   operador: { select: { nome: true } },
   prioridade: { select: { nome: true } },
+  solicitante: { select: { areaId: true } },
+  auxiliares: { select: { usuarioId: true } },
 } satisfies Prisma.ChamadoSelect
 
 type ChamadoCarregado = NonNullable<Awaited<ReturnType<typeof carregarParaAcao>>>
 
 /** Passo 1 do padrão de ação: carrega o que as regras precisam. Inexistente dá 404. */
 async function carregarParaAcao(tx: Tx, id: number) {
-  return tx.chamado.findUnique({ where: { id }, select: selectParaAcao })
+  return comEscopo(await tx.chamado.findUnique({ where: { id }, select: selectParaAcao }))
 }
 
 /**
@@ -235,11 +248,7 @@ export async function assumir(
 // ───────── encaminhar ─────────
 
 /** Candidatos com notificação aberta no chamado e que deixam de vê-lo depois do encaminhamento (em memória, S53). */
-async function quemPerdeuAcesso(
-  tx: Tx,
-  chamadoId: number,
-  novoEscopo: { areaId: number; operadorId: number | null; solicitanteId: number },
-): Promise<number[]> {
+async function quemPerdeuAcesso(tx: Tx, chamadoId: number, novoEscopo: ChamadoEscopo): Promise<number[]> {
   const pendentes = await tx.notificacao.findMany({
     where: { chamadoId, lidaEm: null },
     select: { usuarioId: true },
@@ -255,6 +264,7 @@ async function quemPerdeuAcesso(
       perfil: true,
       areaId: true,
       areasSecundarias: { select: { areaId: true } },
+      areasGeridas: { select: { areaId: true } },
     },
   })
   return usuarios
@@ -270,6 +280,7 @@ async function quemPerdeuAcesso(
         sessaoId: '',
         estado: 'ATIVA',
         mfaAtivo: false,
+        areasGeridas: x.areasGeridas.map((a) => a.areaId),
       }
       return !podeVerChamado(candidato, novoEscopo)
     })
@@ -322,11 +333,13 @@ export async function encaminhar(
     if (!destino) throw regraNegocio('A área de destino não existe, está inativa ou não atende chamados.')
     let operador: { id: number; nome: string } | null = null
     if (dados.operadorId !== undefined) {
+      const ator = await tx.usuario.findUnique({ where: { id: u.id }, select: { podeEncaminhar: true } })
+      if (!ator?.podeEncaminhar) throw semPermissao('Você não tem permissão para encaminhar chamados a um operador.')
       const o = await tx.usuario.findFirst({
-        where: { id: dados.operadorId, ativo: true, perfil: { in: ['OPERADOR', 'ADMIN'] } },
+        where: { id: dados.operadorId, ativo: true, podeReceber: true, perfil: { in: ['OPERADOR', 'ADMIN'] } },
         select: { id: true, nome: true, perfil: true, areaId: true, areasSecundarias: { select: { areaId: true } } },
       })
-      if (!o) throw regraNegocio('O operador de destino não existe, está inativo ou não atende chamados.')
+      if (!o) throw regraNegocio('O operador de destino não existe, está inativo, não atende ou não recebe chamados.')
       const areasDele = [...(o.areaId === null ? [] : [o.areaId]), ...o.areasSecundarias.map((a) => a.areaId)]
       if (o.perfil !== 'ADMIN' && !areasDele.includes(destino.id))
         throw regraNegocio('A área de destino não está entre as áreas do operador.')
@@ -376,6 +389,8 @@ export async function encaminhar(
       areaId: destino.id,
       operadorId: operador?.id ?? null,
       solicitanteId: c.solicitanteId,
+      solicitanteAreaId: c.solicitanteAreaId,
+      auxiliarIds: c.auxiliarIds,
     })
     return {
       chamadoId: id,
@@ -390,6 +405,219 @@ export async function encaminhar(
     }
   })
 
+  await limparNotificacoes(id, r.perderamAcesso, agora, log)
+  return concluirAcao(u, r, agora, log)
+}
+
+// ───────── subchamados ─────────
+
+const MAX_NIVEIS_SUBCHAMADO = 50
+/** Serializa os vínculos: duas transações cruzadas (A→B e B→A) não enxergariam o ciclo uma da outra. */
+const LOCK_SUBCHAMADOS = 15_004
+
+/** Sobe os ancestrais de `inicio`; true se `procurado` está entre eles (ou se a cadeia passa de 50 níveis). */
+async function ancestralOuLimite(tx: Tx, inicio: number | null, procurado: number): Promise<boolean> {
+  let atual = inicio
+  for (let nivel = 0; atual !== null; nivel++) {
+    if (atual === procurado || nivel >= MAX_NIVEIS_SUBCHAMADO) return true
+    const linha = await tx.chamado.findUnique({ where: { id: atual }, select: { chamadoPaiId: true } })
+    atual = linha?.chamadoPaiId ?? null
+  }
+  return false
+}
+
+/**
+ * `POST /chamados/:id/pai`: vincula (`paiId`) ou desvincula (`null`) o subchamado. Quem chama atende o filho e, ao
+ * vincular, vê e atende o pai. O vínculo não pode formar ciclo (sobe até 50 níveis). Um evento interno em cada chamado
+ * (SUBCHAMADO_VINCULADO / SUBCHAMADO_DESVINCULADO); trocar de pai desvincula o antigo antes.
+ */
+export async function definirPai(
+  id: number,
+  dados: DefinirPai,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(
+    async (
+      tx,
+    ): Promise<{
+      chamadoId: number
+      extras: Array<{ chamadoId: number; eventoIds: number[] }>
+      eventoIds: number[]
+    }> => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${LOCK_SUBCHAMADOS})`
+      const c = await carregarParaAcao(tx, id)
+      if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
+      if (!podeAtender(u, c)) throw semPermissao('Esta ação não está disponível para o chamado neste momento.')
+      if (c.statusTipo === 'ENCERRADO') throw regraNegocio('O chamado está encerrado.')
+      if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+
+      const novoPaiId = dados.paiId
+      if (novoPaiId === c.chamadoPaiId) {
+        throw regraNegocio(novoPaiId === null ? 'Este chamado não tem pai.' : 'Este chamado já é subchamado desse pai.')
+      }
+      if (novoPaiId === id) throw regraNegocio('Um chamado não pode ser pai de si mesmo.')
+      if (novoPaiId !== null) {
+        const pai = comEscopo(
+          await tx.chamado.findUnique({ where: { id: novoPaiId }, select: { statusTipo: true, ...selectEscopo } }),
+        )
+        if (!pai || !podeVerChamado(u, pai)) throw naoEncontrado('Chamado pai não encontrado.')
+        if (!podeAtender(u, pai)) throw semPermissao('Você precisa atender o chamado pai para vinculá-lo.')
+        if (pai.statusTipo === 'ENCERRADO') throw regraNegocio('O chamado pai está encerrado.')
+        if (await ancestralOuLimite(tx, novoPaiId, id)) {
+          throw regraNegocio('O vínculo criaria um ciclo ou ultrapassaria 50 níveis de subchamados.')
+        }
+      }
+
+      await atualizarComVersao(tx, id, dados.versao, { chamadoPaiId: novoPaiId })
+
+      const extras = new Map<number, number[]>()
+      const eventosFilho: number[] = []
+      const registrar = async (tipo: 'SUBCHAMADO_VINCULADO' | 'SUBCHAMADO_DESVINCULADO', paiId: number) => {
+        const dadosVinculo = { paiId, filhoId: id }
+        const base = { tipo, atorId: u.id, interno: true, dados: dadosVinculo } as const
+        eventosFilho.push(await registrarEvento(tx, { chamadoId: id, ...base }))
+        const doPai = extras.get(paiId) ?? []
+        doPai.push(await registrarEvento(tx, { chamadoId: paiId, ...base }))
+        extras.set(paiId, doPai)
+      }
+      if (c.chamadoPaiId !== null) await registrar('SUBCHAMADO_DESVINCULADO', c.chamadoPaiId)
+      if (novoPaiId !== null) await registrar('SUBCHAMADO_VINCULADO', novoPaiId)
+      return {
+        chamadoId: id,
+        eventoIds: eventosFilho,
+        extras: [...extras].map(([chamadoId, eventoIds]) => ({ chamadoId, eventoIds })),
+      }
+    },
+  )
+  for (const x of [{ chamadoId: r.chamadoId, eventoIds: r.eventoIds }, ...r.extras]) {
+    await aposCommitChamado({
+      ...x,
+      assentamentoIds: [],
+      campos: ['classificacao'],
+      acessoMudou: false,
+      fila: null,
+      ...(log ? { log } : {}),
+    })
+  }
+  return montarDetalhe(u, id, agora)
+}
+
+// ───────── operadores auxiliares ─────────
+
+/**
+ * `POST /chamados/:id/auxiliares`: o auxiliar vê e comenta como equipe, mas só o responsável atende e conclui.
+ * Quem chama precisa passar em `podeAtender`; o alvo, ativo e com `podeReceber`, não pode ser o responsável.
+ * Vira seguidor ATRIBUIDO e recebe a notificação ATRIBUIDO (fanout do evento).
+ */
+export async function adicionarAuxiliar(
+  id: number,
+  dados: AdicionarAuxiliar,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado> => {
+    const c = await carregarParaAcao(tx, id)
+    if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
+    if (!podeAtender(u, c)) throw semPermissao('Esta ação não está disponível para o chamado neste momento.')
+    if (c.statusTipo === 'ENCERRADO') throw regraNegocio('O chamado está encerrado.')
+    const alvo = await tx.usuario.findFirst({
+      where: { id: dados.usuarioId, ativo: true, podeReceber: true, perfil: { in: ['OPERADOR', 'ADMIN'] } },
+      select: { id: true, nome: true },
+    })
+    if (!alvo) throw regraNegocio('O operador não existe, está inativo ou não recebe chamados.')
+    if (alvo.id === c.operadorId) throw regraNegocio('O responsável pelo chamado não pode ser auxiliar.')
+    if (c.auxiliarIds.includes(alvo.id)) throw conflito('Este operador já é auxiliar do chamado.')
+
+    await tx.chamadoAuxiliar.create({ data: { chamadoId: id, usuarioId: alvo.id } })
+    await seguirComo(tx, id, alvo.id, 'ATRIBUIDO')
+    const dadosEvento = { auxiliar: { id: alvo.id, nome: alvo.nome } }
+    const sistema = await registrarSistema(
+      tx,
+      id,
+      'AUXILIAR_ADICIONADO',
+      `Operador auxiliar adicionado: ${alvo.nome}`,
+      dadosEvento,
+    )
+    const evento = await registrarEvento(tx, {
+      chamadoId: id,
+      tipo: 'AUXILIAR_ADICIONADO',
+      atorId: u.id,
+      assentamentoId: sistema,
+      dados: dadosEvento,
+    })
+    return {
+      chamadoId: id,
+      efeitos: {
+        eventoIds: [evento],
+        assentamentoIds: [sistema],
+        campos: ['operador'],
+        acessoMudou: true,
+        fila: 'atribuido',
+      },
+    }
+  })
+  return concluirAcao(u, r, agora, log)
+}
+
+/** `DELETE /chamados/:id/auxiliares/:usuarioId`: quem deixa de ver o chamado perde as salas e as notificações abertas (S53). */
+export async function removerAuxiliar(
+  id: number,
+  usuarioId: number,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado & { perderamAcesso: number[] }> => {
+    const c = await carregarParaAcao(tx, id)
+    if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
+    if (!podeAtender(u, c)) throw semPermissao('Esta ação não está disponível para o chamado neste momento.')
+    const alvo = await tx.chamadoAuxiliar.findUnique({
+      where: { chamadoId_usuarioId: { chamadoId: id, usuarioId } },
+      select: { usuario: { select: { id: true, nome: true } } },
+    })
+    if (!alvo) throw naoEncontrado('Este operador não é auxiliar do chamado.')
+
+    await tx.chamadoAuxiliar.delete({ where: { chamadoId_usuarioId: { chamadoId: id, usuarioId } } })
+    const dadosEvento = { auxiliar: { id: alvo.usuario.id, nome: alvo.usuario.nome } }
+    const sistema = await registrarSistema(
+      tx,
+      id,
+      'AUXILIAR_REMOVIDO',
+      `Operador auxiliar removido: ${alvo.usuario.nome}`,
+      dadosEvento,
+    )
+    const evento = await registrarEvento(tx, {
+      chamadoId: id,
+      tipo: 'AUXILIAR_REMOVIDO',
+      atorId: u.id,
+      assentamentoId: sistema,
+      dados: dadosEvento,
+    })
+    const perderamAcesso = await quemPerdeuAcesso(tx, id, {
+      areaId: c.areaId,
+      operadorId: c.operadorId,
+      solicitanteId: c.solicitanteId,
+      solicitanteAreaId: c.solicitanteAreaId,
+      auxiliarIds: c.auxiliarIds.filter((x) => x !== usuarioId),
+    })
+    return {
+      chamadoId: id,
+      perderamAcesso,
+      efeitos: {
+        eventoIds: [evento],
+        assentamentoIds: [sistema],
+        campos: ['operador'],
+        acessoMudou: true,
+        fila: 'atribuido',
+      },
+    }
+  })
   await limparNotificacoes(id, r.perderamAcesso, agora, log)
   return concluirAcao(u, r, agora, log)
 }
@@ -634,7 +862,13 @@ export async function classificar(
       dados: { de, para },
     })
     const perderamAcesso = areaMudou
-      ? await quemPerdeuAcesso(tx, id, { areaId, operadorId: c.operadorId, solicitanteId: c.solicitanteId })
+      ? await quemPerdeuAcesso(tx, id, {
+          areaId,
+          operadorId: c.operadorId,
+          solicitanteId: c.solicitanteId,
+          solicitanteAreaId: c.solicitanteAreaId,
+          auxiliarIds: c.auxiliarIds,
+        })
       : []
     return {
       chamadoId: id,
@@ -810,6 +1044,8 @@ export async function concluir(
   const r = await prisma.$transaction(async (tx): Promise<Resultado> => {
     const c = await exigirAcao(tx, u, id, 'concluir', agora)
     if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+    const subchamadosAbertos = await tx.chamado.count({ where: { chamadoPaiId: id, statusTipo: { not: 'ENCERRADO' } } })
+    if (subchamadosAbertos > 0) throw regraNegocio('Conclua os subchamados antes.')
 
     const operadorId = c.operadorId ?? u.id
     if (c.operadorId === null) await seguirComo(tx, id, u.id, 'ATRIBUIDO')
@@ -1094,10 +1330,7 @@ export async function cancelar(
 }
 
 async function exigirVisivel(id: number, u: UsuarioSessao): Promise<void> {
-  const c = await prisma.chamado.findUnique({
-    where: { id },
-    select: { areaId: true, operadorId: true, solicitanteId: true },
-  })
+  const c = comEscopo(await prisma.chamado.findUnique({ where: { id }, select: selectEscopo }))
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
 }
 

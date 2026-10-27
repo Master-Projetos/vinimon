@@ -48,7 +48,7 @@ const ATORES = {
   admin,
 }
 
-const chamado: ChamadoEscopo = { areaId: 10, operadorId: 6, solicitanteId: 1 }
+const chamado: ChamadoEscopo = { areaId: 10, operadorId: 6, solicitanteId: 1, solicitanteAreaId: null, auxiliarIds: [] }
 
 describe('escopo e políticas de chamado (T33, S44, S46, S49)', () => {
   it('podeVerChamado: solicitante, equipe da área (primária ou secundária), responsável e ADMIN; o resto não', () => {
@@ -80,7 +80,13 @@ describe('escopo e políticas de chamado (T33, S44, S46, S49)', () => {
   })
 
   it('operador que é o solicitante do próprio chamado não vê o conteúdo interno (F10 da v1)', () => {
-    const meu = { areaId: 10, operadorId: null, solicitanteId: operadorDaArea.id }
+    const meu = {
+      areaId: 10,
+      operadorId: null,
+      solicitanteId: operadorDaArea.id,
+      solicitanteAreaId: null,
+      auxiliarIds: [],
+    }
     expect(podeVerChamado(operadorDaArea, meu)).toBe(true)
     expect(podeVerInterno(operadorDaArea, meu)).toBe(false)
   })
@@ -102,15 +108,71 @@ describe('escopo e políticas de chamado (T33, S44, S46, S49)', () => {
   it('escopoChamados: ADMIN sem filtro; operador com OR de área, responsável e solicitante; USUARIO só o próprio', () => {
     expect(escopoChamados(admin)).toEqual({})
     expect(escopoChamados(operadorAreaSecundaria)).toEqual({
-      OR: [{ areaId: { in: [20, 10] } }, { operadorId: 4 }, { solicitanteId: 4 }],
+      OR: [
+        { areaId: { in: [20, 10] } },
+        { operadorId: 4 },
+        { solicitanteId: 4 },
+        { auxiliares: { some: { usuarioId: 4 } } },
+      ],
     })
     expect(escopoChamados(solicitante)).toEqual({ solicitanteId: 1 })
     expect(escopoChamados(outroUsuario)).toEqual({ solicitanteId: 2 })
   })
 
+  it('gerente (A04) vê os chamados dos usuários da área gerida, mas só a equipe vê o interno', () => {
+    const doSetor = { ...chamado, solicitanteAreaId: 50 }
+    const gerenteUsuario = { ...usuario(10, 'USUARIO', [50]), areasGeridas: [50] }
+    const gerenteOperador = { ...usuario(11, 'OPERADOR', [30]), areasGeridas: [50] }
+    const outroSetor = { ...usuario(12, 'USUARIO', [51]), areasGeridas: [51] }
+    expect(podeVerChamado(gerenteUsuario, doSetor)).toBe(true)
+    expect(podeVerInterno(gerenteUsuario, doSetor)).toBe(false)
+    expect(podeAtender(gerenteUsuario, doSetor)).toBe(false)
+    expect(podeVerChamado(gerenteOperador, doSetor)).toBe(true)
+    expect(podeVerInterno(gerenteOperador, doSetor)).toBe(true)
+    expect(podeAtender(gerenteOperador, doSetor)).toBe(false)
+    expect(podeVerChamado(outroSetor, doSetor)).toBe(false)
+    expect(podeVerChamado(usuario(13, 'USUARIO', [50]), doSetor)).toBe(false) // sem gerir, nada muda
+    expect(escopoChamados(gerenteUsuario)).toEqual({
+      OR: [{ solicitanteId: 10 }, { solicitante: { areaId: { in: [50] } } }],
+    })
+    expect(escopoChamados({ ...gerenteUsuario, areasGeridas: [] })).toEqual({ solicitanteId: 10 })
+  })
+
+  it('auxiliar de outra área vê o chamado e o conteúdo interno, mas não atende (T-15.1)', () => {
+    const auxiliar = usuario(9, 'OPERADOR', [40])
+    const comAuxiliar = { ...chamado, auxiliarIds: [9] }
+    expect(podeVerChamado(auxiliar, chamado)).toBe(false)
+    expect(podeVerChamado(auxiliar, comAuxiliar)).toBe(true)
+    expect(podeVerInterno(auxiliar, comAuxiliar)).toBe(true)
+    expect(podeAtender(auxiliar, comAuxiliar)).toBe(false)
+  })
+
+  it('auxiliar não conclui, mas comenta como equipe (T-15.1)', () => {
+    const auxiliar = usuario(9, 'OPERADOR', [40])
+    const a = acoesDoUsuario(
+      auxiliar,
+      {
+        ...chamado,
+        auxiliarIds: [9],
+        statusTipo: 'EM_ATENDIMENTO',
+        papel: 'EM_ATENDIMENTO',
+        cancelado: false,
+        encerradoEm: null,
+      },
+      CONFIG_PADRAO,
+      new Date(),
+    )
+    expect(a.concluir).toBe(false)
+    expect(a.assumir).toBe(false)
+    expect(a.comentar).toBe(true)
+    expect(a.comentarInterno).toBe(true)
+  })
+
   it('o escopo nunca depende de dados do chamado alheio: operador sem áreas só enxerga o que é dele', () => {
     const semArea = usuario(8, 'OPERADOR', [])
-    expect(escopoChamados(semArea)).toEqual({ OR: [{ areaId: { in: [] } }, { operadorId: 8 }, { solicitanteId: 8 }] })
+    expect(escopoChamados(semArea)).toEqual({
+      OR: [{ areaId: { in: [] } }, { operadorId: 8 }, { solicitanteId: 8 }, { auxiliares: { some: { usuarioId: 8 } } }],
+    })
     expect(podeVerChamado(semArea, chamado)).toBe(false)
   })
 })
@@ -256,5 +318,26 @@ describe('acoesDoUsuario (§3.5, camada 3)', () => {
       expect(reabre(solicitante, base('CONCLUIDO'))).toBe(false)
       expect(reabre(solicitante, base('EM_ATENDIMENTO'))).toBe(false)
     })
+  })
+})
+
+describe('chamado.isolarAreas desligado (T-13.2)', () => {
+  const semIsolamento: UsuarioSessao = { ...operadorOutraArea, verTodasAreas: true }
+
+  it('o operador vê chamado de qualquer área, inclusive o interno, e o escopo Prisma fica sem filtro', () => {
+    expect(podeVerChamado(semIsolamento, chamado)).toBe(true)
+    expect(podeVerInterno(semIsolamento, chamado)).toBe(true)
+    expect(escopoChamados(semIsolamento)).toEqual({})
+  })
+
+  it('podeAtender não muda: só as áreas do operador ou o chamado de que é responsável', () => {
+    expect(podeAtender(semIsolamento, chamado)).toBe(false)
+    expect(podeAtender(semIsolamento, { ...chamado, areaId: 30 })).toBe(true)
+  })
+
+  it('verTodasAreas não vale para USUARIO (só OPERADOR, por permissão)', () => {
+    const u: UsuarioSessao = { ...outroUsuario, verTodasAreas: true }
+    expect(podeVerChamado(u, chamado)).toBe(false)
+    expect(escopoChamados(u)).toEqual({ solicitanteId: u.id })
   })
 })

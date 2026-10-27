@@ -18,6 +18,11 @@ const CAMPOS = {
   'chamado.avaliacaoAutomatica': z.enum(NOTAS_AVALIACAO),
   'chamado.permitirReabertura': z.boolean(),
   'chamado.prazoReaberturaDias': z.int().min(0).max(365),
+  'chamado.isolarAreas': z.boolean(),
+  /** Com false, o operador não atende o chamado em que ele mesmo é o solicitante (A19). */
+  'chamado.operadorTrataProprio': z.boolean(),
+  /** Com true, USUARIO pode abrir chamado em nome de alguém do mesmo departamento (B03). */
+  'chamado.usuarioAbreParaOutros': z.boolean(),
   'inatividade.statusIds': z.array(z.int().positive()).max(50),
   'inatividade.dias': z.int().min(1).max(365),
   'inatividade.diasUteis': z.boolean(),
@@ -25,6 +30,17 @@ const CAMPOS = {
   'inatividade.avaliacao': z.enum(NOTAS_AVALIACAO),
   'notificacoes.retencaoDias': z.int().min(30).max(365),
   'email.habilitado': z.boolean(),
+  /** Nomes dos três grupos de categoria exibidos na abertura (B07). */
+  'abertura.rotulosCategorias': z.tuple([
+    z.string().trim().min(1).max(40),
+    z.string().trim().min(1).max(40),
+    z.string().trim().min(1).max(40),
+  ]),
+  /** Grupos (1–3) que filtram a escolha do tipo de problema na abertura. */
+  'abertura.preFiltros': z
+    .array(z.int().min(1).max(3))
+    .max(3)
+    .refine((g) => new Set(g).size === g.length, 'Não repita grupos.'),
 }
 
 export const ConfigSchema = z.object(CAMPOS)
@@ -48,6 +64,9 @@ export const CONFIG_PADRAO: Config = {
   'chamado.avaliacaoAutomatica': 'OTIMO',
   'chamado.permitirReabertura': true,
   'chamado.prazoReaberturaDias': 0,
+  'chamado.isolarAreas': true,
+  'chamado.operadorTrataProprio': true,
+  'chamado.usuarioAbreParaOutros': false,
   'inatividade.statusIds': [],
   'inatividade.dias': 7,
   'inatividade.diasUteis': false,
@@ -55,6 +74,8 @@ export const CONFIG_PADRAO: Config = {
   'inatividade.avaliacao': 'OTIMO',
   'notificacoes.retencaoDias': 180,
   'email.habilitado': false,
+  'abertura.rotulosCategorias': ['Categoria 1', 'Categoria 2', 'Categoria 3'],
+  'abertura.preFiltros': [],
 }
 
 /** PATCH /config: só as chaves enviadas; chave desconhecida = 400. */
@@ -69,4 +90,6 @@ export const CHAVES_CONFIG_PUBLICAS = [
   'chamado.permitirReabertura',
   'chamado.prazoReaberturaDias',
   'chamado.primeiraRespostaAoEncaminhar',
+  'abertura.rotulosCategorias',
+  'abertura.preFiltros',
 ] as const satisfies readonly ChaveConfig[]

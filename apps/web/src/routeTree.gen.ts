@@ -12,9 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as Configurar2faRouteImport } from './routes/configurar-2fa'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as TrocarSenhaRouteImport } from './routes/trocar-senha'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
+import { Route as AppAreasGeridasRouteImport } from './routes/_app/areas-geridas'
 import { Route as AppAtividadeRouteImport } from './routes/_app/atividade'
 import { Route as AppChamadosRouteRouteImport } from './routes/_app/chamados/route'
 import { Route as AppConhecimentoRouteRouteImport } from './routes/_app/conhecimento/route'
@@ -32,6 +35,7 @@ import { Route as AppAdminConfiguracoesRouteImport } from './routes/_app/admin/c
 import { Route as AppAdminDepartamentosRouteImport } from './routes/_app/admin/departamentos'
 import { Route as AppAdminFeriadosRouteImport } from './routes/_app/admin/feriados'
 import { Route as AppAdminJornadasRouteImport } from './routes/_app/admin/jornadas'
+import { Route as AppAdminModelosEmailRouteImport } from './routes/_app/admin/modelos-email'
 import { Route as AppAdminPrioridadesRouteImport } from './routes/_app/admin/prioridades'
 import { Route as AppAdminProblemasRouteImport } from './routes/_app/admin/problemas'
 import { Route as AppAdminStatusRouteImport } from './routes/_app/admin/status'
@@ -75,6 +79,16 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrocarSenhaRoute = TrocarSenhaRouteImport.update({
   id: '/trocar-senha',
   path: '/trocar-senha',
@@ -88,6 +102,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAreasGeridasRoute = AppAreasGeridasRouteImport.update({
+  id: '/areas-geridas',
+  path: '/areas-geridas',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAtividadeRoute = AppAtividadeRouteImport.update({
@@ -174,6 +193,11 @@ const AppAdminFeriadosRoute = AppAdminFeriadosRouteImport.update({
 const AppAdminJornadasRoute = AppAdminJornadasRouteImport.update({
   id: '/jornadas',
   path: '/jornadas',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminModelosEmailRoute = AppAdminModelosEmailRouteImport.update({
+  id: '/modelos-email',
+  path: '/modelos-email',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminPrioridadesRoute = AppAdminPrioridadesRouteImport.update({
@@ -329,6 +353,8 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/configurar-2fa': typeof Configurar2faRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/trocar-senha': typeof TrocarSenhaRoute
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/chamados': typeof AppChamadosRouteRouteWithChildren
@@ -336,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/inventario': typeof AppInventarioRouteRouteWithChildren
   '/perfil': typeof AppPerfilRouteRouteWithChildren
   '/relatorios': typeof AppRelatoriosRouteRouteWithChildren
+  '/areas-geridas': typeof AppAreasGeridasRoute
   '/atividade': typeof AppAtividadeRoute
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
@@ -348,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/admin/departamentos': typeof AppAdminDepartamentosRoute
   '/admin/feriados': typeof AppAdminFeriadosRoute
   '/admin/jornadas': typeof AppAdminJornadasRoute
+  '/admin/modelos-email': typeof AppAdminModelosEmailRoute
   '/admin/prioridades': typeof AppAdminPrioridadesRoute
   '/admin/problemas': typeof AppAdminProblemasRoute
   '/admin/status': typeof AppAdminStatusRoute
@@ -380,7 +408,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/configurar-2fa': typeof Configurar2faRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/trocar-senha': typeof TrocarSenhaRoute
+  '/areas-geridas': typeof AppAreasGeridasRoute
   '/atividade': typeof AppAtividadeRoute
   '/painel': typeof AppPainelRoute
   '/sem-permissao': typeof AppSemPermissaoRoute
@@ -393,6 +424,7 @@ export interface FileRoutesByTo {
   '/admin/departamentos': typeof AppAdminDepartamentosRoute
   '/admin/feriados': typeof AppAdminFeriadosRoute
   '/admin/jornadas': typeof AppAdminJornadasRoute
+  '/admin/modelos-email': typeof AppAdminModelosEmailRoute
   '/admin/prioridades': typeof AppAdminPrioridadesRoute
   '/admin/problemas': typeof AppAdminProblemasRoute
   '/admin/status': typeof AppAdminStatusRoute
@@ -427,6 +459,8 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/configurar-2fa': typeof Configurar2faRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/trocar-senha': typeof TrocarSenhaRoute
   '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/chamados': typeof AppChamadosRouteRouteWithChildren
@@ -434,6 +468,7 @@ export interface FileRoutesById {
   '/_app/inventario': typeof AppInventarioRouteRouteWithChildren
   '/_app/perfil': typeof AppPerfilRouteRouteWithChildren
   '/_app/relatorios': typeof AppRelatoriosRouteRouteWithChildren
+  '/_app/areas-geridas': typeof AppAreasGeridasRoute
   '/_app/atividade': typeof AppAtividadeRoute
   '/_app/painel': typeof AppPainelRoute
   '/_app/sem-permissao': typeof AppSemPermissaoRoute
@@ -447,6 +482,7 @@ export interface FileRoutesById {
   '/_app/admin/departamentos': typeof AppAdminDepartamentosRoute
   '/_app/admin/feriados': typeof AppAdminFeriadosRoute
   '/_app/admin/jornadas': typeof AppAdminJornadasRoute
+  '/_app/admin/modelos-email': typeof AppAdminModelosEmailRoute
   '/_app/admin/prioridades': typeof AppAdminPrioridadesRoute
   '/_app/admin/problemas': typeof AppAdminProblemasRoute
   '/_app/admin/status': typeof AppAdminStatusRoute
@@ -482,6 +518,8 @@ export interface FileRouteTypes {
     | '/'
     | '/configurar-2fa'
     | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
     | '/trocar-senha'
     | '/admin'
     | '/chamados'
@@ -489,6 +527,7 @@ export interface FileRouteTypes {
     | '/inventario'
     | '/perfil'
     | '/relatorios'
+    | '/areas-geridas'
     | '/atividade'
     | '/painel'
     | '/sem-permissao'
@@ -501,6 +540,7 @@ export interface FileRouteTypes {
     | '/admin/departamentos'
     | '/admin/feriados'
     | '/admin/jornadas'
+    | '/admin/modelos-email'
     | '/admin/prioridades'
     | '/admin/problemas'
     | '/admin/status'
@@ -533,7 +573,10 @@ export interface FileRouteTypes {
   to:
     | '/configurar-2fa'
     | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
     | '/trocar-senha'
+    | '/areas-geridas'
     | '/atividade'
     | '/painel'
     | '/sem-permissao'
@@ -546,6 +589,7 @@ export interface FileRouteTypes {
     | '/admin/departamentos'
     | '/admin/feriados'
     | '/admin/jornadas'
+    | '/admin/modelos-email'
     | '/admin/prioridades'
     | '/admin/problemas'
     | '/admin/status'
@@ -579,6 +623,8 @@ export interface FileRouteTypes {
     | '/_app'
     | '/configurar-2fa'
     | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
     | '/trocar-senha'
     | '/_app/admin'
     | '/_app/chamados'
@@ -586,6 +632,7 @@ export interface FileRouteTypes {
     | '/_app/inventario'
     | '/_app/perfil'
     | '/_app/relatorios'
+    | '/_app/areas-geridas'
     | '/_app/atividade'
     | '/_app/painel'
     | '/_app/sem-permissao'
@@ -599,6 +646,7 @@ export interface FileRouteTypes {
     | '/_app/admin/departamentos'
     | '/_app/admin/feriados'
     | '/_app/admin/jornadas'
+    | '/_app/admin/modelos-email'
     | '/_app/admin/prioridades'
     | '/_app/admin/problemas'
     | '/_app/admin/status'
@@ -633,6 +681,8 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   Configurar2faRoute: typeof Configurar2faRoute
   LoginRoute: typeof LoginRoute
+  RecuperarSenhaRoute: typeof RecuperarSenhaRoute
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   TrocarSenhaRoute: typeof TrocarSenhaRoute
 }
 
@@ -659,6 +709,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trocar-senha': {
       id: '/trocar-senha'
       path: '/trocar-senha'
@@ -678,6 +742,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AppAdminRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/areas-geridas': {
+      id: '/_app/areas-geridas'
+      path: '/areas-geridas'
+      fullPath: '/areas-geridas'
+      preLoaderRoute: typeof AppAreasGeridasRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/atividade': {
@@ -797,6 +868,13 @@ declare module '@tanstack/react-router' {
       path: '/jornadas'
       fullPath: '/admin/jornadas'
       preLoaderRoute: typeof AppAdminJornadasRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/modelos-email': {
+      id: '/_app/admin/modelos-email'
+      path: '/modelos-email'
+      fullPath: '/admin/modelos-email'
+      preLoaderRoute: typeof AppAdminModelosEmailRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/prioridades': {
@@ -1007,6 +1085,7 @@ interface AppAdminRouteRouteChildren {
   AppAdminDepartamentosRoute: typeof AppAdminDepartamentosRoute
   AppAdminFeriadosRoute: typeof AppAdminFeriadosRoute
   AppAdminJornadasRoute: typeof AppAdminJornadasRoute
+  AppAdminModelosEmailRoute: typeof AppAdminModelosEmailRoute
   AppAdminPrioridadesRoute: typeof AppAdminPrioridadesRoute
   AppAdminProblemasRoute: typeof AppAdminProblemasRoute
   AppAdminStatusRoute: typeof AppAdminStatusRoute
@@ -1026,6 +1105,7 @@ const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
   AppAdminDepartamentosRoute: AppAdminDepartamentosRoute,
   AppAdminFeriadosRoute: AppAdminFeriadosRoute,
   AppAdminJornadasRoute: AppAdminJornadasRoute,
+  AppAdminModelosEmailRoute: AppAdminModelosEmailRoute,
   AppAdminPrioridadesRoute: AppAdminPrioridadesRoute,
   AppAdminProblemasRoute: AppAdminProblemasRoute,
   AppAdminStatusRoute: AppAdminStatusRoute,
@@ -1147,6 +1227,7 @@ interface AppRouteChildren {
   AppInventarioRouteRoute: typeof AppInventarioRouteRouteWithChildren
   AppPerfilRouteRoute: typeof AppPerfilRouteRouteWithChildren
   AppRelatoriosRouteRoute: typeof AppRelatoriosRouteRouteWithChildren
+  AppAreasGeridasRoute: typeof AppAreasGeridasRoute
   AppAtividadeRoute: typeof AppAtividadeRoute
   AppPainelRoute: typeof AppPainelRoute
   AppSemPermissaoRoute: typeof AppSemPermissaoRoute
@@ -1160,6 +1241,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInventarioRouteRoute: AppInventarioRouteRouteWithChildren,
   AppPerfilRouteRoute: AppPerfilRouteRouteWithChildren,
   AppRelatoriosRouteRoute: AppRelatoriosRouteRouteWithChildren,
+  AppAreasGeridasRoute: AppAreasGeridasRoute,
   AppAtividadeRoute: AppAtividadeRoute,
   AppPainelRoute: AppPainelRoute,
   AppSemPermissaoRoute: AppSemPermissaoRoute,
@@ -1172,6 +1254,8 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   Configurar2faRoute: Configurar2faRoute,
   LoginRoute: LoginRoute,
+  RecuperarSenhaRoute: RecuperarSenhaRoute,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
   TrocarSenhaRoute: TrocarSenhaRoute,
 }
 export const routeTree = rootRouteImport

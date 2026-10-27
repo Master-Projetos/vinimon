@@ -6,7 +6,14 @@ import {
   type Mencao as MencaoTexto,
   temPermissao,
 } from '@vinimon/shared'
-import { acoesDoUsuario, type ChamadoParaAcoes, podeVerChamado, podeVerInterno } from '../../autorizacao/chamados'
+import {
+  acoesDoUsuario,
+  type ChamadoEscopo,
+  type ChamadoParaAcoes,
+  comEscopo,
+  podeVerChamado,
+  podeVerInterno,
+} from '../../autorizacao/chamados'
 import { Prisma } from '../../generated/prisma/client'
 import { obterConfig } from '../../lib/config'
 import type { ContextoUsuario } from '../../lib/contexto'
@@ -37,11 +44,13 @@ const selectParaComentar = {
   versao: true,
   primeiraRespostaEm: true,
   status: { select: { papel: true } },
+  solicitante: { select: { areaId: true } },
+  auxiliares: { select: { usuarioId: true } },
 } satisfies Prisma.ChamadoSelect
 
 /** Fora do escopo é 404, igual a inexistente (S46). */
 async function carregarVisivel(id: number, u: UsuarioSessao) {
-  const c = await prisma.chamado.findUnique({ where: { id }, select: selectParaComentar })
+  const c = comEscopo(await prisma.chamado.findUnique({ where: { id }, select: selectParaComentar }))
   if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
   return c
 }
@@ -80,7 +89,7 @@ export async function listarAssentamentos(
 /** Menções que valem: ativo, com acesso ao chamado e, em comentário interno, também ao conteúdo interno (S100). */
 async function resolverMencoes(
   mencoes: MencaoTexto[],
-  c: Pick<Prisma.ChamadoGetPayload<{ select: typeof selectParaComentar }>, 'areaId' | 'operadorId' | 'solicitanteId'>,
+  c: ChamadoEscopo,
   interno: boolean,
   autorId: number,
 ): Promise<{ validas: number[]; ignoradas: MencaoTexto[] }> {

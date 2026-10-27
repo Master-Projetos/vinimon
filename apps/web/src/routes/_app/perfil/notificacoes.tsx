@@ -38,7 +38,7 @@ function Notificacoes() {
 
   function aoSalvar() {
     salvar.mutate(
-      { itens: itens.map(({ tipo, inApp, desktop }) => ({ tipo, inApp, desktop })) },
+      { itens: itens.map(({ tipo, inApp, desktop, email }) => ({ tipo, inApp, desktop, email })) },
       {
         onSuccess: () => {
           setRascunho(null)

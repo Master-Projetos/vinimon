@@ -14,6 +14,7 @@ export const selectChamadoDetalhe = {
   telefone: true,
   solicitanteId: true,
   operadorId: true,
+  chamadoPaiId: true,
   areaId: true,
   statusTipo: true,
   statusDesde: true,
@@ -43,7 +44,7 @@ export const selectChamadoDetalhe = {
   prioridade: { select: { id: true, nome: true, cor: true, ordem: true } },
   area: { select: { id: true, nome: true } },
   problema: { select: { id: true, nome: true } },
-  solicitante: { select: { id: true, nome: true } },
+  solicitante: { select: { id: true, nome: true, areaId: true } },
   abertoPor: { select: { id: true, nome: true } },
   operador: { select: { id: true, nome: true } },
   canal: { select: { id: true, nome: true } },
@@ -52,4 +53,5 @@ export const selectChamadoDetalhe = {
   avaliacao: { select: { nota: true, comentario: true, automatica: true, criadoEm: true } },
   seguidores: { select: { usuarioId: true, silenciadoEm: true, usuario: { select: { id: true, nome: true } } } },
   tags: { select: { tag: { select: { id: true, nome: true } } } },
+  auxiliares: { select: { usuarioId: true } },
 } satisfies Prisma.ChamadoSelect

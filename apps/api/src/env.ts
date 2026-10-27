@@ -44,6 +44,19 @@ const EnvSchema = z
     SEED_ADMIN_PASSWORD: z.string().min(12).max(128).optional(),
     SMTP_URL: z.url({ protocol: /^smtps?$/ }).optional(),
     MAIL_FROM: z.string().optional(),
+    LDAP_URL: z.url({ protocol: /^ldaps?$/ }).optional(),
+    LDAP_STARTTLS: z.stringbool().default(false),
+    LDAP_CA_FILE: z.string().min(1).optional(),
+    LDAP_BIND_DN: z.string().min(1).optional(),
+    LDAP_BIND_SENHA: z.string().min(1).optional(),
+    LDAP_BASE_DN: z.string().min(1).optional(),
+    LDAP_ATTR_LOGIN: z.string().min(1).default('sAMAccountName'),
+    LDAP_ATTR_EMAIL: z.string().min(1).optional(),
+    LDAP_ATTR_NOME: z.string().min(1).optional(),
+    LDAP_ATTR_TELEFONE: z.string().min(1).optional(),
+    LDAP_GRUPO_ADMIN: z.string().min(1).optional(),
+    LDAP_GRUPO_OPERADOR: z.string().min(1).optional(),
+    LDAP_AREA_PADRAO_ID: z.coerce.number().int().min(1).optional(),
   })
   .superRefine((e, ctx) => {
     const erro = (campo: string, mensagem: string) => ctx.addIssue({ code: 'custom', path: [campo], message: mensagem })
@@ -56,7 +69,27 @@ const EnvSchema = z
       if (dist && (upload === resolve(dist) || upload.startsWith(resolve(dist) + sep)))
         erro('UPLOAD_DIR', 'não pode ficar dentro do build do front')
     }
+    // LDAP: todas as variáveis ou nenhuma (LDAP_ATTR_LOGIN e LDAP_STARTTLS têm padrão).
+    const camposLdap = [
+      'LDAP_URL',
+      'LDAP_CA_FILE',
+      'LDAP_BIND_DN',
+      'LDAP_BIND_SENHA',
+      'LDAP_BASE_DN',
+      'LDAP_ATTR_EMAIL',
+      'LDAP_ATTR_NOME',
+      'LDAP_ATTR_TELEFONE',
+      'LDAP_GRUPO_ADMIN',
+      'LDAP_GRUPO_OPERADOR',
+      'LDAP_AREA_PADRAO_ID',
+    ] as const
+    const definidos = camposLdap.filter((c) => e[c] !== undefined)
+    if (definidos.length > 0 && definidos.length < camposLdap.length) {
+      for (const c of camposLdap) if (e[c] === undefined) erro(c, 'defina todas as variáveis LDAP_* ou nenhuma')
+    }
     if (e.NODE_ENV !== 'production') return
+    if (e.LDAP_URL?.startsWith('ldap://') && !e.LDAP_STARTTLS)
+      erro('LDAP_URL', 'ldap:// exige LDAP_STARTTLS=true em produção (ou use ldaps://)')
     if (!e.APP_ORIGIN.startsWith('https://')) erro('APP_ORIGIN', 'precisa ser https em produção')
     if (e.TRUST_PROXY === undefined) erro('TRUST_PROXY', 'obrigatória em produção')
     if (!isAbsolute(e.UPLOAD_DIR)) erro('UPLOAD_DIR', 'precisa ser absoluto em produção')
