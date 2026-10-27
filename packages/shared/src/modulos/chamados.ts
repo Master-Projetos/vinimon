@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { NOTAS_AVALIACAO, PAPEIS_STATUS, TIPOS_EVENTO, TIPOS_STATUS } from '../enums'
+import { NOTAS_AVALIACAO, PAPEIS_STATUS, TIPOS_CAMPO, TIPOS_EVENTO, TIPOS_STATUS } from '../enums'
 import { contrato, IdParamsSchema, PaginacaoQuerySchema, paginaDe, zDataHora, zId, zListaIds } from '../http'
 import {
   zAssunto,
@@ -93,6 +93,8 @@ export const CriarChamadoSchema = z.strictObject({
   tags: z.array(zTag()).max(10).optional(),
   /** Abre como subchamado: quem abre precisa ver e atender o pai. */
   paiId: zId().optional(),
+  /** Valores dos campos personalizados, por `chave`; validados com `schemaDosCampos` (B11). */
+  campos: z.record(z.string(), z.unknown()).optional(),
 })
 export type CriarChamado = z.output<typeof CriarChamadoSchema>
 
@@ -147,6 +149,12 @@ export const RejeitarChamadoSchema = z.strictObject({ versao: versao(), motivo: 
 export const SolicitarRetornoSchema = z.strictObject({ versao: versao(), mensagem: zMotivo() })
 export const ReabrirChamadoSchema = z.strictObject({ versao: versao(), justificativa: zMotivo() })
 export const CancelarChamadoSchema = z.strictObject({ versao: versao(), motivo: zMotivo() })
+/** Valores dos campos personalizados (B11): substitui os valores dos campos aplicáveis ao problema do chamado. */
+export const AtualizarCamposChamadoSchema = z.strictObject({
+  versao: versao(),
+  campos: z.record(z.string(), z.unknown()),
+})
+export type AtualizarCamposChamado = z.output<typeof AtualizarCamposChamadoSchema>
 
 export type AssumirChamado = z.output<typeof AssumirChamadoSchema>
 export type EncaminharChamado = z.output<typeof EncaminharChamadoSchema>
@@ -269,6 +277,10 @@ export const ChamadoDetalheSchema = ChamadoResumoSchema.extend({
   ),
   /** Só para a equipe (`chamado.atender`). */
   tags: z.array(RefSchema).optional(),
+  /** Valores dos campos personalizados que `u` pode ver (campos OCULTO_SOLICITANTE só para quem vê interno). */
+  campos: z
+    .array(z.object({ chave: z.string(), rotulo: z.string(), tipo: z.enum(TIPOS_CAMPO), valor: z.unknown() }))
+    .optional(),
   avaliacao: z
     .object({
       nota: z.enum(NOTAS_AVALIACAO),
@@ -365,6 +377,7 @@ export const chamadosApi = {
   status: acao('/chamados/:id/status', StatusChamadoSchema),
   prioridade: acao('/chamados/:id/prioridade', PrioridadeChamadoSchema),
   classificacao: acao('/chamados/:id/classificacao', ClassificacaoChamadoSchema),
+  campos: acao('/chamados/:id/campos', AtualizarCamposChamadoSchema, 'PUT'),
   tags: acao('/chamados/:id/tags', TagsChamadoSchema, 'PUT'),
   agendar: acao('/chamados/:id/agendar', AgendarChamadoSchema),
   concluir: acao('/chamados/:id/concluir', ConcluirChamadoSchema),

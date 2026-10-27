@@ -3,6 +3,7 @@ import {
   type AgendarChamado,
   type AprovarChamado,
   type AssumirChamado,
+  type AtualizarCamposChamado,
   type CancelarChamado,
   type ChamadoDetalhe,
   type ClassificacaoChamado,
@@ -14,6 +15,7 @@ import {
   type RejeitarChamado,
   type SolicitarRetorno,
   type StatusChamadoBody,
+  schemaDosCampos,
   type TagsChamado,
   type TipoStatus,
   temPermissao,
@@ -42,7 +44,16 @@ import { adicionarDiasUteis } from '../sla/calendario'
 import { aplicarTransicaoStatus, carregarCalendario, recalcularChamado, snapshotSla } from '../sla/service'
 import { garantirTags } from '../tags/service'
 import { aposCommitChamado, type EfeitosChamado, type LogErro, registrarEvento, registrarSistema } from './eventos'
-import { montarDetalhe } from './service'
+import {
+  type CampoAplicavel,
+  camposAplicaveis,
+  canonico,
+  colunasDeLinha,
+  colunasDoValor,
+  erroDeCampos,
+  montarDetalhe,
+  valorDasColunas,
+} from './service'
 
 const MSG_VERSAO = 'O chamado foi alterado por outra pessoa. Recarregue.'
 const EM_CURSO: readonly TipoStatus[] = ['ABERTO', 'EM_ATENDIMENTO', 'PENDENTE']
@@ -935,6 +946,78 @@ export async function atualizarTags(
     return {
       chamadoId: id,
       efeitos: { eventoIds: [evento], assentamentoIds: [], campos: ['tags'], acessoMudou: false, fila: null },
+    }
+  })
+  if (r === null) return montarDetalhe(u, id, agora)
+  return concluirAcao(u, r, agora, log)
+}
+
+// ───────── campos personalizados (B11, T-14.3) ─────────
+
+/**
+ * `campos` (PUT): substitui os valores dos campos aplicáveis ao problema do chamado (ausente = limpa, quando não é
+ * obrigatório). Só quem atende (`podeAtender`): fora do escopo 404, sem atendimento 403, `versao` antiga 409. Cada
+ * valor que muda gera um `CAMPOS_ALTERADOS` `{chave, de, para}`; o de campo OCULTO_SOLICITANTE é interno.
+ * Sem mudança, nada é gravado e a versão não sobe.
+ */
+export async function atualizarCampos(
+  id: number,
+  dados: AtualizarCamposChamado,
+  ctx: ContextoUsuario,
+  log?: LogErro,
+): Promise<ChamadoDetalhe> {
+  const u = ctx.usuario
+  const agora = new Date()
+  const r = await prisma.$transaction(async (tx): Promise<Resultado | null> => {
+    const c = await carregarParaAcao(tx, id)
+    if (!c || !podeVerChamado(u, c)) throw naoEncontrado('Chamado não encontrado.')
+    if (!podeAtender(u, c)) throw semPermissao('Você precisa atender o chamado para alterar os campos.')
+    if (c.versao !== dados.versao) throw conflito(MSG_VERSAO)
+
+    const campos = await camposAplicaveis(tx, c.problemaId, false)
+    const valores = schemaDosCampos(campos, 'edicao').safeParse(dados.campos)
+    if (!valores.success) throw erroDeCampos(valores.error)
+
+    const atuais = await tx.chamadoCampoValor.findMany({
+      where: { chamadoId: id, campoId: { in: campos.map((k) => k.id) } },
+      select: { campoId: true, valorTexto: true, valorNumero: true, valorData: true, valorOpcoes: true },
+    })
+    const mudancas: Array<{ campo: CampoAplicavel; de: unknown; para: unknown }> = []
+    for (const campo of campos) {
+      const linha = atuais.find((l) => l.campoId === campo.id)
+      const de = linha === undefined ? null : valorDasColunas(campo.tipo, colunasDeLinha(linha))
+      const para = canonico(campo.tipo, valores.data[campo.chave])
+      if (JSON.stringify(de) !== JSON.stringify(para)) mudancas.push({ campo, de, para })
+    }
+    if (mudancas.length === 0) return null
+
+    // lock otimista antes de gravar: uma escrita concorrente vira 409 e nada é gravado
+    await atualizarComVersao(tx, id, dados.versao, {})
+    const eventos: number[] = []
+    for (const m of mudancas) {
+      if (m.para === null) {
+        await tx.chamadoCampoValor.deleteMany({ where: { chamadoId: id, campoId: m.campo.id } })
+      } else {
+        const colunas = colunasDoValor(m.campo.tipo, valores.data[m.campo.chave])
+        await tx.chamadoCampoValor.upsert({
+          where: { chamadoId_campoId: { chamadoId: id, campoId: m.campo.id } },
+          create: { chamadoId: id, campoId: m.campo.id, ...colunas },
+          update: colunas,
+        })
+      }
+      eventos.push(
+        await registrarEvento(tx, {
+          chamadoId: id,
+          tipo: 'CAMPOS_ALTERADOS',
+          atorId: u.id,
+          interno: m.campo.visibilidade === 'OCULTO_SOLICITANTE',
+          dados: { chave: m.campo.chave, de: m.de, para: m.para },
+        }),
+      )
+    }
+    return {
+      chamadoId: id,
+      efeitos: { eventoIds: eventos, assentamentoIds: [], campos: ['classificacao'], acessoMudou: false, fila: null },
     }
   })
   if (r === null) return montarDetalhe(u, id, agora)

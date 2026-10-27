@@ -7,6 +7,7 @@ import {
   normalizarBusca,
   type Reincidencia,
   type ReincidenciaQuery,
+  type TipoCampo,
   temPermissao,
   tokensBusca,
   VISOES_CHAMADO,
@@ -16,7 +17,7 @@ import { DateTime } from 'luxon'
 import { comEscopo, escopoChamados, podeVerChamado, podeVerInterno, selectEscopo } from '../../autorizacao/chamados'
 import type { Prisma } from '../../generated/prisma/client'
 import { obterConfig } from '../../lib/config'
-import { naoEncontrado, semPermissao } from '../../lib/erros'
+import { ErroApp, naoEncontrado, semPermissao } from '../../lib/erros'
 import { escaparLike } from '../../lib/like'
 import { paginar } from '../../lib/paginacao'
 import { prisma } from '../../lib/prisma'
@@ -175,14 +176,129 @@ function ordenacao(f: ChamadoFiltros): Prisma.ChamadoOrderByWithRelationInput[] 
   return [por[f.ordem], { id: d }]
 }
 
-/** `where = { AND: [escopoChamados(u), filtroVisao, ...filtros] }`: o escopo nunca é espalhado junto dos filtros (S45). */
-export function whereDaLista(u: UsuarioSessao, f: ChamadoFiltros, fuso: string, agora: Date): Prisma.ChamadoWhereInput {
-  return { AND: [escopoChamados(u), filtroVisao(u, f.visao), ...filtrosDa(u, f, fuso, agora)] }
+// ───────── filtro `campo.<chave>` (B11, T-14.3) ─────────
+
+/** Um filtro de campo personalizado da querystring: igual, ou faixa `de`/`ate` (só número, data e data/hora). */
+export interface FiltroCampo {
+  chave: string
+  op: 'igual' | 'de' | 'ate'
+  valor: string
 }
 
-export async function listar(u: UsuarioSessao, f: ChamadoFiltros, agora = new Date()) {
+const REGEX_FILTRO_CAMPO = /^campo\.([a-z][a-z0-9_]{1,59})(?:\.(de|ate))?$/
+const REGEX_DATA_FILTRO = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Lê os `campo.<chave>[.de|.ate]` da URL (a querystring validada pelo zod descarta chaves desconhecidas). Valor vazio
+ * não filtra; a mesma chave repetida ou nome malformado dá 400 em `campo.<chave>`.
+ */
+export function filtrosCampoDaUrl(url: string): FiltroCampo[] {
+  const params = new URL(url, 'http://localhost').searchParams
+  const filtros: FiltroCampo[] = []
+  for (const nome of new Set(params.keys())) {
+    if (!nome.startsWith('campo.')) continue
+    const erro = (mensagem: string) =>
+      new ErroApp(400, 'REQUISICAO_INVALIDA', 'Dados inválidos.', [{ campo: nome, mensagem }])
+    const m = REGEX_FILTRO_CAMPO.exec(nome)
+    const chave = m?.[1]
+    if (chave === undefined) throw erro('Filtro de campo inválido.')
+    if (params.getAll(nome).length > 1) throw erro('Informe um único valor para este filtro.')
+    const valor = params.get(nome) ?? ''
+    if (valor.trim() === '') continue
+    const op = m?.[2] === 'de' ? 'de' : m?.[2] === 'ate' ? 'ate' : 'igual'
+    filtros.push({ chave, op, valor })
+  }
+  return filtros
+}
+
+/** Condição sobre `ChamadoCampoValor` para um filtro, conforme o tipo do campo. */
+function condicaoDoFiltroCampo(
+  tipo: TipoCampo,
+  f: FiltroCampo,
+  erro: (mensagem: string) => ErroApp,
+): Prisma.ChamadoCampoValorWhereInput {
+  const soIgual = () => {
+    if (f.op !== 'igual') throw erro('Este campo aceita só igualdade.')
+  }
+  switch (tipo) {
+    case 'AREA_TEXTO':
+    case 'CHECKBOX':
+      throw erro('Este tipo de campo não pode ser filtrado.')
+    case 'TEXTO':
+    case 'SELECAO':
+    case 'HORA':
+      soIgual()
+      return { valorTexto: f.valor }
+    case 'SELECAO_MULTIPLA':
+      soIgual()
+      return { valorOpcoes: { has: f.valor } }
+    case 'NUMERO': {
+      const n = Number(f.valor)
+      if (!Number.isFinite(n)) throw erro('Número inválido.')
+      if (f.op === 'igual') return { valorNumero: n }
+      return { valorNumero: f.op === 'de' ? { gte: n } : { lte: n } }
+    }
+    case 'DATA': {
+      const inicio = new Date(`${f.valor}T00:00:00.000Z`)
+      if (!REGEX_DATA_FILTRO.test(f.valor) || Number.isNaN(inicio.getTime())) throw erro('Data inválida.')
+      const fim = new Date(`${f.valor}T23:59:59.999Z`)
+      if (f.op === 'de') return { valorData: { gte: inicio } }
+      if (f.op === 'ate') return { valorData: { lte: fim } }
+      return { valorData: { gte: inicio, lte: fim } }
+    }
+    case 'DATA_HORA': {
+      const instante = new Date(f.valor)
+      if (Number.isNaN(instante.getTime())) throw erro('Data e hora inválidas.')
+      if (f.op === 'de') return { valorData: { gte: instante } }
+      if (f.op === 'ate') return { valorData: { lte: instante } }
+      return { valorData: instante }
+    }
+  }
+}
+
+/** Um `some` por filtro; campo OCULTO_SOLICITANTE só para quem vê interno, e nunca nos chamados em que `u` é solicitante. */
+async function whereDosCamposFiltro(u: UsuarioSessao, filtros: FiltroCampo[]): Promise<Prisma.ChamadoWhereInput[]> {
+  if (filtros.length === 0) return []
+  const definicoes = await prisma.campoPersonalizado.findMany({
+    where: { chave: { in: [...new Set(filtros.map((f) => f.chave))] } },
+    select: { id: true, chave: true, tipo: true, visibilidade: true },
+  })
+  const verOculto = temPermissao(u.perfil, 'chamado.verInterno')
+  const onde: Prisma.ChamadoWhereInput[] = []
+  for (const f of filtros) {
+    const erro = (mensagem: string) =>
+      new ErroApp(400, 'REQUISICAO_INVALIDA', 'Dados inválidos.', [{ campo: `campo.${f.chave}`, mensagem }])
+    const campo = definicoes.find((d) => d.chave === f.chave)
+    if (!campo || (campo.visibilidade === 'OCULTO_SOLICITANTE' && !verOculto))
+      throw erro('Campo de filtro inexistente.')
+    onde.push({ camposValores: { some: { campoId: campo.id, ...condicaoDoFiltroCampo(campo.tipo, f, erro) } } })
+    if (campo.visibilidade === 'OCULTO_SOLICITANTE') onde.push({ solicitanteId: { not: u.id } })
+  }
+  return onde
+}
+
+/**
+ * `where = { AND: [escopoChamados(u), filtroVisao, ...filtros, ...camposFiltro] }`: o escopo nunca é espalhado junto
+ * dos filtros (S45).
+ */
+export function whereDaLista(
+  u: UsuarioSessao,
+  f: ChamadoFiltros,
+  fuso: string,
+  agora: Date,
+  camposFiltro: Prisma.ChamadoWhereInput[] = [],
+): Prisma.ChamadoWhereInput {
+  return { AND: [escopoChamados(u), filtroVisao(u, f.visao), ...filtrosDa(u, f, fuso, agora), ...camposFiltro] }
+}
+
+export async function listar(
+  u: UsuarioSessao,
+  f: ChamadoFiltros,
+  agora = new Date(),
+  camposFiltro: FiltroCampo[] = [],
+) {
   const cfg = await obterConfig()
-  const where = whereDaLista(u, f, cfg['sistema.fusoHorario'], agora)
+  const where = whereDaLista(u, f, cfg['sistema.fusoHorario'], agora, await whereDosCamposFiltro(u, camposFiltro))
   const [linhas, total] = await prisma.$transaction([
     prisma.chamado.findMany({ where, select: selectResumo, orderBy: ordenacao(f), ...paginar(f) }),
     prisma.chamado.count({ where }),
