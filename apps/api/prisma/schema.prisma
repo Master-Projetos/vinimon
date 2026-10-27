@@ -259,6 +259,7 @@ model Departamento {
   usuarios Usuario[]
   chamados Chamado[]
   ativos   Ativo[]
+  cadastrosPendentes CadastroPendente[]
 
   @@unique([unidadeId, nome])
   @@map("departamentos")
@@ -1299,4 +1300,22 @@ model Projeto {
   criadoPor   Usuario @relation("ProjetoCriador", fields: [criadoPorId], references: [id], onDelete: Restrict)
 
   @@map("projetos")
+}
+
+/// Auto-cadastro (A14, T-19.3): o token de confirmação só existe em claro no e-mail; o banco guarda o hash.
+model CadastroPendente {
+  id             Int       @id @default(autoincrement())
+  login          String    @db.VarChar(64)
+  nome           String    @db.VarChar(120)
+  email          String    @db.VarChar(254)
+  departamentoId Int?      @map("departamento_id")
+  tokenHash      String    @unique @map("token_hash") @db.Char(64)
+  confirmadoEm   DateTime? @map("confirmado_em") @db.Timestamptz(3)
+  criadoEm       DateTime  @default(now()) @map("criado_em") @db.Timestamptz(3)
+
+  departamento Departamento? @relation(fields: [departamentoId], references: [id], onDelete: Restrict)
+
+  @@index([login], map: "ix_cadastros_pendentes_login")
+  @@index([email], map: "ix_cadastros_pendentes_email")
+  @@map("cadastros_pendentes")
 }

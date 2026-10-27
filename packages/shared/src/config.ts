@@ -30,6 +30,10 @@ const CAMPOS = {
   'inatividade.avaliacao': z.enum(NOTAS_AVALIACAO),
   'notificacoes.retencaoDias': z.int().min(30).max(365),
   'email.habilitado': z.boolean(),
+  /** Auto-cadastro (A14, T-19.3): desligado, o POST /publico/cadastro não faz nada. */
+  'cadastro.habilitado': z.boolean(),
+  /** Domínios de e-mail aceitos no auto-cadastro (ex.: empresa.com.br). Fora da lista, a solicitação é ignorada. */
+  'cadastro.dominiosPermitidos': z.array(z.string().trim().toLowerCase().min(3).max(253)).max(50),
   /** Nomes dos três grupos de categoria exibidos na abertura (B07). */
   'abertura.rotulosCategorias': z.tuple([
     z.string().trim().min(1).max(40),
@@ -74,6 +78,8 @@ export const CONFIG_PADRAO: Config = {
   'inatividade.avaliacao': 'OTIMO',
   'notificacoes.retencaoDias': 180,
   'email.habilitado': false,
+  'cadastro.habilitado': false,
+  'cadastro.dominiosPermitidos': [],
   'abertura.rotulosCategorias': ['Categoria 1', 'Categoria 2', 'Categoria 3'],
   'abertura.preFiltros': [],
 }
